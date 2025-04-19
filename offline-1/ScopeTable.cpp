@@ -148,10 +148,18 @@ public:
         cout << "ScopeTable #" << scope_id << "\n";
         for (int i = 0; i < num_buckets; i++)
         {
-            if (hash_table[i] != NULL)
+            SymbolInfo *temp = hash_table[i];
+            if (temp != NULL)
             {
-
-                hash_table[i]->show(); // chain handled in SymbolInfo class
+                temp->show();
+                while (temp->next != NULL)
+                {
+                    temp = temp->next;
+                    cout << " -> ";
+                    temp->show();
+                    
+                }
+                cout << "\n";
             }
         }
 
@@ -162,7 +170,7 @@ public:
 int main()
 {
     // Create a ScopeTable with 5 buckets and scope ID 1
-    ScopeTable *scopeTable = new ScopeTable(5, 1);
+    ScopeTable *scopeTable = new ScopeTable(2, 1);
 
     // Test insertSymbol
     SymbolInfo s1("x", "int");
@@ -183,6 +191,7 @@ int main()
     {
         cout << "Found: ";
         found->show();
+        cout << "\n";
     }
     else
     {
@@ -202,8 +211,10 @@ int main()
     }
 
     // Test deleteSymbol
+    cout << "before deleting : \n";
+    scopeTable->print();
     cout << "\nDeleting symbols...\n";
-    scopeTable->deleteSymbol(s1);
+    scopeTable->deleteSymbol(s3);
     scopeTable->deleteSymbol(s5);
     // Test print
     cout << "\nPrinting ScopeTable...\n";

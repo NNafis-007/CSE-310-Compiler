@@ -31,7 +31,7 @@ class SymbolInfo{
         this->type = type;
     }
     void show(){
-        cout << "SymbolInfo < " << name << ", " << type << " >\n";
+        cout << "SymbolInfo < " << name << ", " << type << " >";
         // while(next != NULL){
         //     cout << " -> " << "SymbolInfo < " << next->name << ", " << next->type << " >";
         //     next = next->next;
