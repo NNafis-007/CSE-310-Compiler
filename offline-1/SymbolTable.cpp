@@ -77,13 +77,13 @@ public:
 
     void printCurrentScopeTable()
     {
-        this->currentScope->print();
+        this->currentScope->print(1);
     }
 
     void printAllScopeTable()
     {
         ScopeTable *curr_Scope = this->currentScope;
-        int indentLevel = 0;
+        int indentLevel = 1;
         while (curr_Scope != NULL)
         {
             curr_Scope->print(indentLevel++);

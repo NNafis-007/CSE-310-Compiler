@@ -139,7 +139,6 @@ public:
         {
             hash_table[index] = head->next; // delete the head node
             delete head;
-            cout << s.getName() << " deleted successfully\n";
             cout << "\tDeleted '" << s.getName() << "' from ScopeTable# " << this->scope_id
                  << " at position " << index + 1 << ", " << chain_position + 1 << "\n";
 

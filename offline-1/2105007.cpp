@@ -1,7 +1,19 @@
 #include <bits/stdc++.h>
 #include "SymbolTable.cpp"
 
-string removeSpaces(string line)
+int get_no_of_args(string line)
+{
+    stringstream ss(line);
+    string temp;
+    int args = 0;
+    while (ss >> temp)
+    {
+        args++;
+    }
+    return args;
+}
+
+string removeSpaces(string &line)
 {
     size_t start = line.find_first_not_of(" \t\n\r\f\v");
     size_t end = line.find_last_not_of(" \t\n\r\f\v");
@@ -19,20 +31,22 @@ string removeSpaces(string line)
 
 int main()
 {
+
     ifstream inputFile("sample_input.txt");
     if (!inputFile.is_open())
     {
         cerr << "Error: Could not open input file.\n";
         return 1;
     }
+    freopen("output.txt", "w", stdout);
 
     int num_buckets;
     inputFile >> num_buckets;
-    cout << "Number of buckets is " << num_buckets << endl;
+    // cout << "Number of buckets is " << num_buckets << endl;
     SymbolTable symbolTable(num_buckets);
 
     string command;
-
+    string error_args_msg = "\tNumber of parameters mismatch for the command ";
     int i = 0;
 
     while (inputFile >> command)
@@ -44,6 +58,12 @@ int main()
             getline(inputFile, line);
             line = removeSpaces(line);
             cout << "Cmd " << i << ": " << command << " " << line << "\n";
+            int args = get_no_of_args(line);
+            if (args < 2)
+            {
+                cout << error_args_msg << command << "\n";
+                continue;
+            }
             SymbolInfo symbol(line);
             symbolTable.insertSymbol(symbol);
         }
@@ -53,6 +73,12 @@ int main()
             getline(inputFile, line);
             line = removeSpaces(line);
             cout << "Cmd " << i << ": " << command << " " << line << "\n";
+            int args = get_no_of_args(line);
+            if (args != 1)
+            {
+                cout << error_args_msg << command << "\n";
+                continue;
+            }
             SymbolInfo symbol(line);
             SymbolInfo *found = symbolTable.lookUp(symbol);
         }
@@ -62,6 +88,12 @@ int main()
             getline(inputFile, line);
             line = removeSpaces(line);
             cout << "Cmd " << i << ": " << command << " " << line << "\n";
+            int args = get_no_of_args(line);
+            if (args != 1)
+            {
+                cout << error_args_msg << command << "\n";
+                continue;
+            }
             SymbolInfo symbol(line);
             symbolTable.removeSymbol(symbol);
         }
@@ -69,6 +101,7 @@ int main()
         {
             string scopeType;
             inputFile >> scopeType;
+
             if (scopeType == "C")
             {
                 cout << "Cmd " << i << ": " << command << " " << scopeType << "\n";
@@ -78,6 +111,12 @@ int main()
             {
                 cout << "Cmd " << i << ": " << command << " " << scopeType << "\n";
                 symbolTable.printAllScopeTable();
+            }
+            else
+            {
+                cout << "Cmd " << i << ": " << command << " " << scopeType << "\n";
+                cout << error_args_msg << command << "\n";
+                continue;
             }
         }
         else if (command == "S") // Enter new scope
