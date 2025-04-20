@@ -1,6 +1,7 @@
 *.mp4
 # Prerequisites
 *.d
+.vscode
 
 # Compiled Object files
 *.slo

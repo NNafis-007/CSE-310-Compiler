@@ -25,11 +25,11 @@ class ScopeTable
     int scope_id;
 
 public:
-    ScopeTable(int num_buckets, int scope_id, ScopeTable *parentScope = NULL)
+    ScopeTable(int num_buckets, int scope_id)
     {
         this->num_buckets = num_buckets;
         this->scope_id = scope_id;
-        this->parentScope = parentScope;
+        this->parentScope = NULL;
         hash_table = new SymbolInfo *[num_buckets];
         for (int i = 0; i < num_buckets; i++)
         {
@@ -46,6 +46,16 @@ public:
             }
         }
         delete[] hash_table;
+    }
+
+    ScopeTable *getParentScope()
+    {
+        return this->parentScope;
+    }
+
+    void setParentScope(ScopeTable *s)
+    {
+        this->parentScope = s;
     }
 
     bool insertSymbol(SymbolInfo s)
@@ -142,12 +152,13 @@ public:
         }
     }
 
-    void print()
+    void print(int indentLevel = 0)
     {
-        cout << "ScopeTable #" << scope_id << "\n";
+        string indent(indentLevel * 4, ' ');
+        cout << indent << "ScopeTable #" << scope_id << "\n";
         for (int i = 0; i < num_buckets; i++)
         {
-            cout << i + 1 << "--> ";
+            cout << indent << i + 1 << "--> ";
             SymbolInfo *temp = hash_table[i];
             if (temp != NULL)
             {
@@ -157,7 +168,6 @@ public:
                     temp = temp->next;
                     cout << " " << temp->showSymbol();
                 }
-                
             }
             cout << "\n";
         }
@@ -165,51 +175,51 @@ public:
     }
 };
 
+// TESTING CODE
+int main()
+{
+    //  Create a ScopeTable with 5 buckets and scope ID 1
+    ScopeTable scopeTable(5, 1);
 
-//TESTING CODE
-// int main()
-// {
-//     // Create a ScopeTable with 5 buckets and scope ID 1
-//     ScopeTable scopeTable(5, 1);
+    // Insert symbols into the ScopeTable
+    SymbolInfo symbol1("x NUMBER");
+    SymbolInfo symbol2("y NUMBER");
+    SymbolInfo symbol3("z FUNCTION INT INT FLOAT");
+    SymbolInfo symbol4("a STRUCT INT id STRING name");
 
-//     // Insert symbols into the ScopeTable
-//     SymbolInfo symbol1("x NUMBER");
-//     SymbolInfo symbol2("y NUMBER");
-//     SymbolInfo symbol3("z FUNCTION INT INT FLOAT");
-//     SymbolInfo symbol4("a STRUCT INT id STRING name");
+    cout << "Inserting symbols:\n";
+    scopeTable.insertSymbol(symbol1);
+    scopeTable.insertSymbol(symbol2);
+    scopeTable.insertSymbol(symbol3);
+    scopeTable.insertSymbol(symbol4);
 
-//     cout << "Inserting symbols:\n";
-//     scopeTable.insertSymbol(symbol1);
-//     scopeTable.insertSymbol(symbol2);
-//     scopeTable.insertSymbol(symbol3);
-//     scopeTable.insertSymbol(symbol4);
+    // Print the ScopeTable
+    cout << "\nPrinting ScopeTable:\n";
+    scopeTable.print();
 
-//     // Print the ScopeTable
-//     cout << "\nPrinting ScopeTable:\n";
-//     scopeTable.print();
+    // Look up symbols
+    cout << "\nLooking up symbols:\n";
+    SymbolInfo *foundSymbol = scopeTable.lookUp(symbol1);
+    if (foundSymbol)
+        cout << "Found: " << foundSymbol->showSymbol() << "\n";
+    else
+        cout << "Symbol not found\n";
 
-//     // Look up symbols
-//     cout << "\nLooking up symbols:\n";
-//     SymbolInfo *foundSymbol = scopeTable.lookUp(symbol1);
-//     if (foundSymbol)
-//         cout << "Found: " << foundSymbol->showSymbol() << "\n";
-//     else
-//         cout << "Symbol not found\n";
+    foundSymbol = scopeTable.lookUp(SymbolInfo("nonexistent NUMBER"));
+    if (foundSymbol)
+        cout << "Found: " << foundSymbol->showSymbol() << "\n";
+    else
+        cout << "Symbol not found\n";
 
-//     foundSymbol = scopeTable.lookUp(SymbolInfo("nonexistent NUMBER"));
-//     if (foundSymbol)
-//         cout << "Found: " << foundSymbol->showSymbol() << "\n";
-//     else
-//         cout << "Symbol not found\n";
+    // Delete a symbol
+    cout << "\nDeleting symbols:\n";
+    scopeTable.deleteSymbol(symbol4);                          // Delete symbol 'y'
+    scopeTable.deleteSymbol(SymbolInfo("nonexistent NUMBER")); // Try to delete a non-existent symbol
 
-//     // Delete a symbol
-//     cout << "\nDeleting symbols:\n";
-//     scopeTable.deleteSymbol(symbol4); // Delete symbol 'y'
-//     scopeTable.deleteSymbol(SymbolInfo("nonexistent NUMBER")); // Try to delete a non-existent symbol
-
-//     // Print the ScopeTable after deletion
-//     cout << "\nPrinting ScopeTable after deletion:\n";
-//     scopeTable.print();
-
-//     return 0;
-// }
+    // Print the ScopeTable after deletion
+    cout << "\nPrinting ScopeTable after deletion:\n";
+    scopeTable.print(1);
+    // cout << "NAFIS NAHIAN\n";
+    // cout << "\tNAFIS NAHIAN\n";
+    return 0;
+}
