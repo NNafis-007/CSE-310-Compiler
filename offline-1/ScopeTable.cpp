@@ -3,7 +3,7 @@
 using namespace std;
 
 // Might have to pass num_buckets to avoid overflow
-unsigned long long SDBMHash(string str)
+unsigned long long SDBMHash(string str, unsigned int num_buckets)
 {
     unsigned long long hash = 0;
     unsigned int i = 0;
@@ -11,7 +11,7 @@ unsigned long long SDBMHash(string str)
 
     for (i = 0; i < len; i++)
     {
-        hash = (str[i]) + (hash << 6) + (hash << 16) - hash;
+        hash = ((str[i]) + (hash << 6) + (hash << 16) - hash) % num_buckets;
     }
 
     return hash;
@@ -27,6 +27,7 @@ class ScopeTable
 public:
     ScopeTable(int num_buckets, int scope_id)
     {
+        cout << "\tScopeTable# " << scope_id << " created\n";
         this->num_buckets = num_buckets;
         this->scope_id = scope_id;
         this->parentScope = NULL;
@@ -46,6 +47,7 @@ public:
             }
         }
         delete[] hash_table;
+        cout << "\tScopeTable# " << this->scope_id << " removed\n";
     }
 
     ScopeTable *getParentScope()
@@ -61,16 +63,17 @@ public:
     bool insertSymbol(SymbolInfo s)
     {
         // Check if the symbol already exists in the current scope
-        SymbolInfo *found = this->lookUp(s);
+        SymbolInfo *found = this->lookUp(s, false);
         if (found != NULL)
         {
-            cout << s.getName() << " Already exists in the current scope\n";
+            cout << "\t'" << s.getName() << "' already exists in the current ScopeTable\n";
             return false; // symbol with this name exists in the current scope
         }
 
         // calculate hash value and index
-        unsigned long long hash = SDBMHash(s.getName());
+        unsigned long long hash = SDBMHash(s.getName(), this->num_buckets);
         int index = hash % num_buckets;
+        int chain_position = 0;
 
         // if index is empty, insert the symbol
         if (hash_table[index] == NULL)
@@ -80,51 +83,66 @@ public:
         else
         {
             // collision, insert at the end of the linked list
+            chain_position += 1;
             SymbolInfo *temp = hash_table[index];
             while (temp->next != NULL)
             {
                 temp = temp->next;
+                chain_position += 1;
             }
             temp->next = new SymbolInfo(s);
         }
-        cout << s.getName() << " inserted successfully at index" << index << "\n";
+        cout << "\tInserted in ScopeTable# " << this->scope_id << " at position " << index + 1
+             << ", " << chain_position + 1 << "\n";
         return true; // symbol inserted successfully
     }
 
-    SymbolInfo *lookUp(SymbolInfo s)
+    SymbolInfo *lookUp(SymbolInfo s, bool showOutput = true)
     {
         string name = s.getName();
-        unsigned long long hash = SDBMHash(name) % num_buckets;
+        unsigned long long hash = SDBMHash(name, this->num_buckets) % num_buckets;
         int index = hash % num_buckets;
+        int chain_position = 0;
         SymbolInfo *temp = hash_table[index];
         while (temp != NULL)
         {
             // no duplicate names allowed in the same scope
+            chain_position++;
             if (temp->getName() == name)
             {
+                if (showOutput)
+                {
+                    cout << "\t'" << name << "' found in ScopeTable# " << this->scope_id
+                         << " at position " << index + 1 << ", " << chain_position << "\n";
+                }
                 return temp;
             }
             temp = temp->next;
         }
+
         return NULL;
     }
 
     bool deleteSymbol(SymbolInfo s)
     {
-        int index = SDBMHash(s.getName()) % num_buckets;
+        int index = SDBMHash(s.getName(), this->num_buckets) % num_buckets;
         if (hash_table[index] == NULL)
         {
-            cout << s.getName() << " not found in the current scope\n";
+            cout << "\tNot found in the current ScopeTable\n";
             return false; // symbol not found
         }
 
         SymbolInfo *head = hash_table[index];
+        int chain_position = 0;
         // if found at head, delete
         if (head->getName() == s.getName())
         {
             hash_table[index] = head->next; // delete the head node
             delete head;
             cout << s.getName() << " deleted successfully\n";
+            cout << "\tDeleted '" << s.getName() << "' from ScopeTable# " << this->scope_id
+                 << " at position " << index + 1 << ", " << chain_position + 1 << "\n";
+
             return true; // symbol deleted successfully
         }
         // else traverse the chain
@@ -134,11 +152,13 @@ public:
             {
                 SymbolInfo *prev = head;
                 head = head->next;
+                chain_position++;
                 if (head->getName() == s.getName())
                 {
                     prev->next = head->next;
                     delete head;
-                    cout << s.getName() << " deleted successfully\n";
+                    cout << "\tDeleted '" << s.getName() << "' from ScopeTable# " << this->scope_id
+                         << " at position " << index + 1 << ", " << chain_position + 1 << "\n";
                     return true; // symbol deleted successfully
                 }
             }
@@ -146,7 +166,9 @@ public:
             if (head != NULL && head->getName() == s.getName())
             {
                 delete head;
-                cout << s.getName() << " deleted successfully\n";
+                cout << "\tDeleted '" << s.getName() << "' from ScopeTable# " << this->scope_id
+                     << " at position " << index + 1 << ", " << chain_position + 1 << "\n";
+
                 return true; // symbol deleted successfully
             }
         }
@@ -171,55 +193,54 @@ public:
             }
             cout << "\n";
         }
-        cout << "\n";
     }
 };
 
 // TESTING CODE
-int main()
-{
-    //  Create a ScopeTable with 5 buckets and scope ID 1
-    ScopeTable scopeTable(5, 1);
+// int main()
+// {
+//     //  Create a ScopeTable with 5 buckets and scope ID 1
+//     ScopeTable scopeTable(5, 1);
 
-    // Insert symbols into the ScopeTable
-    SymbolInfo symbol1("x NUMBER");
-    SymbolInfo symbol2("y NUMBER");
-    SymbolInfo symbol3("z FUNCTION INT INT FLOAT");
-    SymbolInfo symbol4("a STRUCT INT id STRING name");
+//     // Insert symbols into the ScopeTable
+//     SymbolInfo symbol1("x NUMBER");
+//     SymbolInfo symbol2("y NUMBER");
+//     SymbolInfo symbol3("z FUNCTION INT INT FLOAT");
+//     SymbolInfo symbol4("a STRUCT INT id STRING name");
 
-    cout << "Inserting symbols:\n";
-    scopeTable.insertSymbol(symbol1);
-    scopeTable.insertSymbol(symbol2);
-    scopeTable.insertSymbol(symbol3);
-    scopeTable.insertSymbol(symbol4);
+//     cout << "Inserting symbols:\n";
+//     scopeTable.insertSymbol(symbol1);
+//     scopeTable.insertSymbol(symbol2);
+//     scopeTable.insertSymbol(symbol3);
+//     scopeTable.insertSymbol(symbol4);
 
-    // Print the ScopeTable
-    cout << "\nPrinting ScopeTable:\n";
-    scopeTable.print();
+//     // Print the ScopeTable
+//     cout << "\nPrinting ScopeTable:\n";
+//     scopeTable.print();
 
-    // Look up symbols
-    cout << "\nLooking up symbols:\n";
-    SymbolInfo *foundSymbol = scopeTable.lookUp(symbol1);
-    if (foundSymbol)
-        cout << "Found: " << foundSymbol->showSymbol() << "\n";
-    else
-        cout << "Symbol not found\n";
+//     // Look up symbols
+//     cout << "\nLooking up symbols:\n";
+//     SymbolInfo *foundSymbol = scopeTable.lookUp(symbol1);
+//     if (foundSymbol)
+//         cout << "Found: " << foundSymbol->showSymbol() << "\n";
+//     else
+//         cout << "Symbol not found\n";
 
-    foundSymbol = scopeTable.lookUp(SymbolInfo("nonexistent NUMBER"));
-    if (foundSymbol)
-        cout << "Found: " << foundSymbol->showSymbol() << "\n";
-    else
-        cout << "Symbol not found\n";
+//     foundSymbol = scopeTable.lookUp(SymbolInfo("nonexistent NUMBER"));
+//     if (foundSymbol)
+//         cout << "Found: " << foundSymbol->showSymbol() << "\n";
+//     else
+//         cout << "Symbol not found\n";
 
-    // Delete a symbol
-    cout << "\nDeleting symbols:\n";
-    scopeTable.deleteSymbol(symbol4);                          // Delete symbol 'y'
-    scopeTable.deleteSymbol(SymbolInfo("nonexistent NUMBER")); // Try to delete a non-existent symbol
+//     // Delete a symbol
+//     cout << "\nDeleting symbols:\n";
+//     scopeTable.deleteSymbol(symbol4);                          // Delete symbol 'y'
+//     scopeTable.deleteSymbol(SymbolInfo("nonexistent NUMBER")); // Try to delete a non-existent symbol
 
-    // Print the ScopeTable after deletion
-    cout << "\nPrinting ScopeTable after deletion:\n";
-    scopeTable.print(1);
-    // cout << "NAFIS NAHIAN\n";
-    // cout << "\tNAFIS NAHIAN\n";
-    return 0;
-}
+//     // Print the ScopeTable after deletion
+//     cout << "\nPrinting ScopeTable after deletion:\n";
+//     scopeTable.print(1);
+//     // cout << "NAFIS NAHIAN\n";
+//     // cout << "\tNAFIS NAHIAN\n";
+//     return 0;
+// }

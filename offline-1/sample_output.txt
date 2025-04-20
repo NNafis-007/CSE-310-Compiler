@@ -212,7 +212,7 @@ Cmd 41: S
 	ScopeTable# 7 created
 Cmd 42: I true BOOL
 	Inserted in ScopeTable# 7 at position 5, 1
-Cmd 43: I a 
+Cmd 43: L a 
 	Inserted in ScopeTable# 7 at position 7, 1
 Cmd 44: P A
 	ScopeTable# 7
