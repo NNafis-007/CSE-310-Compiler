@@ -175,19 +175,19 @@ public:
 
     void print(int indentLevel = 0)
     {
-        string indent(indentLevel * 4, ' ');
-        cout << indent << "ScopeTable #" << scope_id << "\n";
+        string indent(indentLevel, '\t');
+        cout << indent << "ScopeTable# " << scope_id << "\n";
         for (int i = 0; i < num_buckets; i++)
         {
             cout << indent << i + 1 << "--> ";
             SymbolInfo *temp = hash_table[i];
             if (temp != NULL)
             {
-                cout << temp->showSymbol();
+                cout << temp->showSymbol() << " ";
                 while (temp->next != NULL)
                 {
                     temp = temp->next;
-                    cout << " " << temp->showSymbol();
+                    cout << temp->showSymbol() << " ";
                 }
             }
             cout << "\n";
