@@ -29,21 +29,37 @@ string removeSpaces(string &line)
     return line;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+    string inputFileName, outputFileName;
+    string hashName = "SDBM";
+    if(argc < 3 || argc > 4){
+        cerr << "No of COMMAND LINE ARGUMENTS mismatch\n";
+        return 1;
+    }
+    
+    else if(argc == 3){
+        inputFileName = argv[1];
+        outputFileName = argv[2];        
+    }
+    else if(argc == 4){
+        inputFileName = argv[1];
+        outputFileName = argv[2];    
+        hashName = argv[3];
+    }
 
-    ifstream inputFile("sample_input.txt");
+    ifstream inputFile(inputFileName);
+    freopen(outputFileName.c_str(), "w", stdout);
     if (!inputFile.is_open())
     {
         cerr << "Error: Could not open input file.\n";
         return 1;
     }
-    freopen("output.txt", "w", stdout);
 
     int num_buckets;
     inputFile >> num_buckets;
     // cout << "Number of buckets is " << num_buckets << endl;
-    SymbolTable symbolTable(num_buckets);
+    SymbolTable symbolTable(num_buckets, hashName);
 
     string command;
     string error_args_msg = "\tNumber of parameters mismatch for the command ";

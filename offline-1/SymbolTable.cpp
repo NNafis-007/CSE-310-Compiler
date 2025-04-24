@@ -10,11 +10,11 @@ class SymbolTable
 
 public:
     // Create the root scope
-    SymbolTable(int num_buckets)
+    SymbolTable(int num_buckets, string hashName="SDBM")
     {
         this->num_buckets = num_buckets;
         this->no_of_scopes = 1;
-        this->currentScope = new ScopeTable(this->num_buckets, this->no_of_scopes);
+        this->currentScope = new ScopeTable(this->num_buckets, this->no_of_scopes, hashName);
         this->currentScope->setParentScope(NULL);
     }
     ~SymbolTable()

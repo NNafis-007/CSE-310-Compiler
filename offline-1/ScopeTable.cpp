@@ -1,21 +1,7 @@
 #include <bits/stdc++.h>
 #include "SymbolInfo.cpp"
+#include "HashFunction.cpp"
 using namespace std;
-
-// Might have to pass num_buckets to avoid overflow
-unsigned long long SDBMHash(string str, unsigned int num_buckets)
-{
-    unsigned long long hash = 0;
-    unsigned int i = 0;
-    unsigned int len = str.length();
-
-    for (i = 0; i < len; i++)
-    {
-        hash = ((str[i]) + (hash << 6) + (hash << 16) - hash) % num_buckets;
-    }
-
-    return hash;
-}
 
 class ScopeTable
 {
@@ -23,20 +9,25 @@ class ScopeTable
     ScopeTable *parentScope;
     int num_buckets;
     int scope_id;
+    HashFunction::HashFunc hashFunction; // Function pointer for the hash function
 
 public:
-    ScopeTable(int num_buckets, int scope_id)
+    // Constructor that takes the hash function name as a string
+    ScopeTable(int num_buckets, int scope_id, const string &hashFuncName = "SDBM")
     {
         cout << "\tScopeTable# " << scope_id << " created\n";
         this->num_buckets = num_buckets;
         this->scope_id = scope_id;
         this->parentScope = NULL;
+        this->hashFunction = HashFunction::getHashFunction(hashFuncName); // Set hash function
+
         hash_table = new SymbolInfo *[num_buckets];
         for (int i = 0; i < num_buckets; i++)
         {
             hash_table[i] = NULL;
         }
     }
+
     ~ScopeTable()
     {
         for (int i = 0; i < num_buckets; i++)
@@ -60,29 +51,31 @@ public:
         this->parentScope = s;
     }
 
+    void setHashFunction(const string &hashFuncName)
+    {
+        this->hashFunction = HashFunction::getHashFunction(hashFuncName);
+    }
+
+    // Modify insertSymbol to use the hashFunction object
     bool insertSymbol(SymbolInfo s)
     {
-        // Check if the symbol already exists in the current scope
         SymbolInfo *found = this->lookUp(s, false);
         if (found != NULL)
         {
             cout << "\t'" << s.getName() << "' already exists in the current ScopeTable\n";
-            return false; // symbol with this name exists in the current scope
+            return false;
         }
 
-        // calculate hash value and index
-        unsigned long long hash = SDBMHash(s.getName(), this->num_buckets);
+        unsigned long long hash = hashFunction(s.getName(), this->num_buckets);
         int index = hash % num_buckets;
         int chain_position = 0;
 
-        // if index is empty, insert the symbol
         if (hash_table[index] == NULL)
         {
             hash_table[index] = new SymbolInfo(s);
         }
         else
         {
-            // collision, insert at the end of the linked list
             chain_position += 1;
             SymbolInfo *temp = hash_table[index];
             while (temp->next != NULL)
@@ -94,19 +87,19 @@ public:
         }
         cout << "\tInserted in ScopeTable# " << this->scope_id << " at position " << index + 1
              << ", " << chain_position + 1 << "\n";
-        return true; // symbol inserted successfully
+        return true;
     }
 
+    // Modify lookUp to use the hashFunction object
     SymbolInfo *lookUp(SymbolInfo s, bool showOutput = true)
     {
         string name = s.getName();
-        unsigned long long hash = SDBMHash(name, this->num_buckets) % num_buckets;
+        unsigned long long hash = hashFunction(name, this->num_buckets) % num_buckets;
         int index = hash % num_buckets;
         int chain_position = 0;
         SymbolInfo *temp = hash_table[index];
         while (temp != NULL)
         {
-            // no duplicate names allowed in the same scope
             chain_position++;
             if (temp->getName() == name)
             {
@@ -125,7 +118,7 @@ public:
 
     bool deleteSymbol(SymbolInfo s)
     {
-        int index = SDBMHash(s.getName(), this->num_buckets) % num_buckets;
+        int index = hashFunction(s.getName(), this->num_buckets) % num_buckets;
         if (hash_table[index] == NULL)
         {
             cout << "\tNot found in the current ScopeTable\n";
