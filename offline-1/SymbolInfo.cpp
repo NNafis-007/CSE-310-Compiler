@@ -63,6 +63,7 @@ class SymbolInfo
             result = kind;
         }
         this->typeInfo = result;
+        return result;
     }
 
 public:
@@ -85,6 +86,10 @@ public:
         symbolType = "";
         // type = "";
         next = NULL;
+    }
+    ~SymbolInfo()
+    {
+        delete next; // This will delete the entire linked list
     }
 
     string getName()

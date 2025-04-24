@@ -132,7 +132,7 @@ Cmd 28: I foo VAR
 	'foo' already exists in the current ScopeTable
 Cmd 29: D 23
 	Not found in the current ScopeTable
-Cmd 30: D
+Cmd 30: D 
 	Number of parameters mismatch for the command D
 Cmd 31: P A
 	ScopeTable# 5
@@ -212,8 +212,8 @@ Cmd 41: S
 	ScopeTable# 7 created
 Cmd 42: I true BOOL
 	Inserted in ScopeTable# 7 at position 5, 1
-Cmd 43: L a 
-	Inserted in ScopeTable# 7 at position 7, 1
+Cmd 43: L a
+	'a' not found in any of the ScopeTables
 Cmd 44: P A
 	ScopeTable# 7
 	1--> 
@@ -222,7 +222,7 @@ Cmd 44: P A
 	4--> 
 	5--> <true,BOOL> 
 	6--> 
-	7--> <a,> 
+	7--> 
 		ScopeTable# 5
 		1--> 
 		2--> 
