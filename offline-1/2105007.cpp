@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-#include "SymbolTable.cpp"
+#include "2105007_SymbolTable.hpp"
 
 int get_no_of_args(string line)
 {

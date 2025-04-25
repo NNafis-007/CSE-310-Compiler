@@ -22,6 +22,7 @@ public:
         return hash;
     }
 
+    //peter J. Weinberger hash function, Compilers (Principles, Techniques and Tools) by Aho, Sethi and Ulman
     static unsigned long long PJWHash(string str, unsigned int num_buckets)
     {
         const unsigned int BitsInUnsignedInt = (unsigned int)(sizeof(unsigned int) * 8);
@@ -46,6 +47,8 @@ public:
         return hash;
     }
 
+    //Professor Daniel J. Bernstein hash function
+    //https://theartincode.stanis.me/008-djb2/
     static unsigned long long DJBHash(string str, unsigned int num_buckets)
     {
         unsigned long long hash = 5381;

@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
-#include "SymbolInfo.cpp"
-#include "HashFunction.cpp"
+#include "2105007_SymbolInfo.hpp"
+#include "2105007_HashFunction.hpp"
 using namespace std;
 
 class ScopeTable

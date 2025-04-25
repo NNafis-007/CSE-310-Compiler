@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-#include "ScopeTable.cpp"
+#include "2105007_ScopeTable.hpp"
 using namespace std;
 
 class SymbolTable
