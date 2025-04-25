@@ -29,24 +29,24 @@ string removeSpaces(string &line)
     return line;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-    string inputFileName = "sample_input.txt", outputFileName = "output.txt";
+    string inputFileName, outputFileName;
     string hashName = "SDBM";
-    // if(argc < 3 || argc > 4){
-    //     cerr << "No of COMMAND LINE ARGUMENTS mismatch\n";
-    //     return 1;
-    // }
+    if(argc < 3 || argc > 4){
+        cerr << "No of COMMAND LINE ARGUMENTS mismatch\n";
+        return 1;
+    }
 
-    // else if(argc == 3){
-    //     inputFileName = argv[1];
-    //     outputFileName = argv[2];
-    // }
-    // else if(argc == 4){
-    //     inputFileName = argv[1];
-    //     outputFileName = argv[2];
-    //     hashName = argv[3];
-    // }
+    else if(argc == 3){
+        inputFileName = argv[1];
+        outputFileName = argv[2];
+    }
+    else if(argc == 4){
+        inputFileName = argv[1];
+        outputFileName = argv[2];
+        hashName = argv[3];
+    }
 
     ifstream inputFile(inputFileName);
     // cout << "Input file name is " << inputFileName << "\n";
