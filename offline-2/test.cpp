@@ -15,6 +15,7 @@ void printKeywordToken(std::string keyword){
 
 int main(){
     
-    printKeywordToken("if");
-    std::cout << "\n";
+    std::string ch = "\v";
+    std::cout << "printing char : " << ch;
+    std::cout << "END\n";
 }
