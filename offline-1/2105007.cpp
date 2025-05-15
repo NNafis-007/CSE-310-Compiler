@@ -1,48 +1,24 @@
 #include <bits/stdc++.h>
 #include "2105007_SymbolTable.hpp"
+#include "utils.hpp"
 
-int get_no_of_args(string line)
-{
-    stringstream ss(line);
-    string temp;
-    int args = 0;
-    while (ss >> temp)
-    {
-        args++;
-    }
-    return args;
-}
-
-string removeSpaces(string &line)
-{
-    size_t start = line.find_first_not_of(" \t\n\r\f\v");
-    size_t end = line.find_last_not_of(" \t\n\r\f\v");
-    if (start == std::string::npos)
-    {
-        // The string is all whitespace
-        line.clear();
-    }
-    else
-    {
-        line = line.substr(start, end - start + 1);
-    }
-    return line;
-}
-
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     string inputFileName, outputFileName;
     string hashName = "SDBM";
-    if(argc < 3 || argc > 4){
+    if (argc < 3 || argc > 4)
+    {
         cerr << "No of COMMAND LINE ARGUMENTS mismatch\n";
         return 1;
     }
 
-    else if(argc == 3){
+    else if (argc == 3)
+    {
         inputFileName = argv[1];
         outputFileName = argv[2];
     }
-    else if(argc == 4){
+    else if (argc == 4)
+    {
         inputFileName = argv[1];
         outputFileName = argv[2];
         hashName = argv[3];
@@ -81,7 +57,8 @@ int main(int argc, char* argv[])
                 cout << error_args_msg << command << "\n";
                 continue;
             }
-            SymbolInfo symbol(line);
+            auto name_type = formatInputString(line);
+            SymbolInfo symbol(name_type.first, name_type.second);
             symbolTable.insertSymbol(symbol);
         }
         else if (command == "L")
@@ -96,7 +73,9 @@ int main(int argc, char* argv[])
                 cout << error_args_msg << command << "\n";
                 continue;
             }
-            SymbolInfo symbol(line);
+            auto name_type = formatInputString(line);
+            SymbolInfo symbol(name_type.first, name_type.second);
+
             SymbolInfo *found = symbolTable.lookUp(symbol);
         }
         else if (command == "D") // Delete
@@ -111,7 +90,9 @@ int main(int argc, char* argv[])
                 cout << error_args_msg << command << "\n";
                 continue;
             }
-            SymbolInfo symbol(line);
+            auto name_type = formatInputString(line);
+            SymbolInfo symbol(name_type.first, name_type.second);
+
             symbolTable.removeSymbol(symbol);
         }
         else if (command == "P") // Print

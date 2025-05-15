@@ -8,69 +8,13 @@ class SymbolInfo
     string name;
     string symbolType;
     string typeInfo;
-    string formatInputString(string &line)
-    {
-        stringstream ss(line);
-        string var_name, kind;
-        ss >> var_name >> kind;
-        this->name = var_name;
-        this->symbolType = kind;
-        
-        //cout << "Name : " << var_name << ", type :" << kind << endl;
-        string result;
-        if (kind == "STRUCT" || kind == "UNION")
-        {
-            result = kind + ",{";
-            bool first = true;
-            string type, var;
-
-            while (ss >> type >> var)
-            {
-                if (!first)
-                {
-                    result += ",";
-                }
-                result += "(" + type + "," + var + ")";
-                first = false;
-            }
-            result += "}";
-            //cout << "STRUCT FORMATTING : " << result << endl;
-        }
-        else if (kind == "FUNCTION")
-        {
-            string returnType;
-            ss >> returnType; // the first type is return type
-
-            // get argument types
-            string arg;
-            string args;
-            bool start = true;
-            while (ss >> arg)
-            {
-                if (!start)
-                {
-                    args += ",";
-                }
-                args += arg;
-                start = false;
-            }
-
-            // combine everything
-            result = "FUNCTION," + returnType + "<==(" + args + ")";
-        }
-        else
-        {
-            result = kind;
-        }
-        this->typeInfo = result;
-        return result;
-    }
 
 public:
     SymbolInfo *next;
-    SymbolInfo(string line, SymbolInfo *next = NULL)
+    SymbolInfo(string name, string type, SymbolInfo *next = NULL)
     {
-        formatInputString(line);
+        this->name = name;
+        this->symbolType = type;
         this->next = next;
     }
     //Copy constructor
@@ -113,7 +57,7 @@ public:
     }
     string showSymbol()
     {
-        return "<" + name + "," + this->typeInfo + ">";
+        return "<" + this->name + "," + this->symbolType + ">";
     }
 };
 
