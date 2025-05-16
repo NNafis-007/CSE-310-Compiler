@@ -1,5 +1,6 @@
 /* Definition Section */
 %option noyywrap yylineno
+%x STRING_STATE
 
 %{
 #include <cstdlib>
@@ -9,6 +10,7 @@
 using namespace std;
 
 int lineno = 1;
+string str_lit = "";
 ofstream output_log;
 ofstream output_token;
 
@@ -93,7 +95,7 @@ ALPHABET [a-zA-Z_]
 WHITESPACE [ \t\f\r\v]+
 FPNUM (({DIGIT}+\.{DIGIT}+{EXPONENT})|({DIGIT}+{EXPONENT})|({DIGIT}*\.{DIGIT}+)|(\.{DIGIT}+{EXPONENT}?)|({DIGIT}+\.))
 ESCAPE_CHAR [nt\'\\afbvr0]
-CHAR_CONTENT (\\({ESCAPE_CHAR})|([^\'\"\n\r]))
+CHAR_CONTENT (\\({ESCAPE_CHAR}|\")|([^\'\"\n\r]))
 UNFINISHED_CHAR (\'(\\{ESCAPE_CHAR}+|[^\'\"\n\r]+)|(\'))
 ALPHANUM ({ALPHABET}|{DIGIT})
 IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
@@ -212,6 +214,40 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 {FPNUM}+{IDENTIFIER}+ {show_invalid_IDNUM_err(yytext);}
 
 {IDENTIFIER} {cout << "<ID," << yytext << ">\n"; }
+
+\"  {
+    BEGIN(STRING_STATE);
+	str_lit = "";
+    cout << "---- ENTERING STRING STATE ---- (" << yytext << ")\n";
+}
+
+<STRING_STATE>\\{NEWLINE}  {
+    // continue the string on next line
+    cout << "(SS)Matched line continuation (\\n) (" << yytext << ")\n";
+}
+
+<STRING_STATE>\\({ESCAPE_CHAR}|\")  {
+	cout << "(SS)Matched special : " << yytext << "\n";
+	char special_ch = get_ASCII(yytext[1]);
+	str_lit += special_ch;
+}
+
+<STRING_STATE>[^(\\{ESCAPE_CHAR})|\"]*   {
+	str_lit += yytext;
+	cout << "(SS)Matched non escape : " << yytext << "\n";
+}
+
+<STRING_STATE><<EOF>> {
+	cout << "(SS)Error: Unterminated string literal: " << str_lit << "\n";
+    BEGIN(INITIAL);
+}
+
+<STRING_STATE>\"  {
+	cout << "(SS)String : " << str_lit << "\n";
+    cout << "(SS)---- EXITING STRING STATE ---- (" << yytext << ")\n";
+	str_lit = "";
+	BEGIN(INITIAL);
+}
 
 \'{CHAR_CONTENT}*\' { handle_char_lit(yytext); }
 {UNFINISHED_CHAR} { show_unfinished_char_err(yytext); }
