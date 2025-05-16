@@ -1,6 +1,8 @@
 /* Definition Section */
 %option noyywrap yylineno
 %x STRING_STATE
+%x SL_COMMENT
+%x ML_COMMENT
 
 %{
 #include <cstdlib>
@@ -10,15 +12,20 @@
 using namespace std;
 
 int lineno = 1;
+int error_no = 0;
 int lines_in_str = 0; 
+int starting_cmnt_line = 0;
 string str_lit = "";
 string raw_str = "";
+string raw_cmnt = "";
 ofstream output_log;
 ofstream output_token;
 
-void to_upper(string& str){
-    for (char& c : str)
+string to_upper(const string& str){
+	string ans = str;
+    for (char& c : ans)
         c = toupper(c);
+	return ans;
 }
 
 char get_ASCII(char ch) {
@@ -41,49 +48,97 @@ char get_ASCII(char ch) {
 	
 }
 
-void printKeywordToken(string keyword){
-    to_upper(keyword);
-    string token = "<" + keyword + ">";
-    cout << token << "\n";
+void log_keyword(string token, string lexeme, int lineno){
+	string line = to_string(lineno);
+	string printable = "Line No. " + line + ": Token <" + token + "> Lexeme " + lexeme + " found.";
+	output_log << printable << "\n\n";  
+	output_token << "<" << token << "> ";
 }
 
-void handle_char_lit(string text){
+
+
+void log_operators(string token, string lexeme, int lineno){
+
+	output_log << "Line No. " << lineno << ": Token <" << token << "> Lexeme " << lexeme << " found." << "\n\n";
+	output_token << "<" << token << ", " << lexeme << "> ";
+}
+
+void log_constant(string token, string lexeme, int lineno){
+	output_log << "Line No. " << lineno << ": Token <" << token << "> Lexeme " << lexeme << " found." << "\n\n";
+	output_token << "<" << token << ", " << lexeme << "> ";
+}
+
+void handle_char_lit(string text, int lineno){
 	string str = text;
 	str.erase(str.begin()); //rmv first '
 	str.pop_back(); //rmv last '
 	if(str.length() == 0){
-		cout << "Line no " << lineno << " --> ERROR : EMPTY CHARACTER " << text << "\n";
+		// cout << "Line no " << lineno << " --> ERROR : EMPTY CHARACTER " << text << "\n";
+		output_log << "Error at line no " << lineno 
+			<< ": Empty character constant error " << text << "\n\n";
+		error_no++;
+
 		return;
 	}
 	bool need_ascii = false;
+	string og_str = "'" + str + "'";
 	if(str[0] == '\\'){
 		if(str.length() == 1){ //only escape_slash in char 
-			cout << "Line no " << lineno << " --> ERROR : Unterminated CHAR " << text << "\n";
+			// cout << "Line no " << lineno << " --> ERROR : Unterminated CHAR " << text << "\n";
+			output_log << "Error at line no " << lineno 
+				<< ": Unterminated character " << text << "\n\n";		
+			error_no++;	
 			return;
 		}
+
 		str.erase(str.begin()); //rmv first
 		need_ascii = true;
 	}
 
 	if(str.length() > 1){
-		cout << "Line no " << lineno << " --> ERROR : MULTICHAR CONSTANT " << text << "\n";
+		output_log << "Error at line no " << lineno 
+			<< ": Multicharacter constant error " << text << "\n\n";
+		error_no++;
+		// cout << "Line no " << lineno << " --> ERROR : MULTICHAR CONSTANT " << text << "\n";
 	}
 	else{
 		char ch = str[0];
 		if(need_ascii)
 			ch = get_ASCII(ch);
-		cout << "<CONST_CHAR," << ch << ">\n";
+
+		
+		//Line no 5: Token <CONST_CHAR> Lexeme 'p' found --> <CONST_CHAR, p>
+		output_log << "Line no " << lineno << ": Token <CONST_CHAR> Lexeme " << text << " found --> ";
+		output_log << "<CONST_CHAR," << ch << ">\n\n";
+		output_token << "<CONST_CHAR, " << ch << "> ";
+
 	}
 }
 
+void handle_string_lit(string made_token, string raw_str, int lineno){
+	output_log << "LINE NO " << lineno << ": Token <STRING> Lexeme " 
+		<< raw_str << " found --> " << made_token << "\n\n";
+
+	output_token << made_token << " ";
+}
+
+void handle_comment(string raw_cmnt, int lineno){
+	output_log << "LINE NO " << lineno << ": Token <COMMENT> Lexeme " 
+		<< raw_cmnt << " found\n\n";
+}
+
 void show_unfinished_char_err(string text){
-	cout << "Line no " << lineno << " --> ERROR : Unterminated CHAR " << text << "\n";
+	// cout << "Line no " << lineno << " --> ERROR : Unterminated CHAR " << text << "\n";
+	output_log << "Error at line no " << lineno 
+		<< ": Unterminated character " << text << "\n\n";
+	error_no++;
 }
 
 void show_invalid_IDNUM_err(string text){
-	cout << "Line no " << lineno << " --> \
-ERROR : INVALID SUFFIX ON NUMERICS CONSTANT or \
-INVALID PREFIX ON IDENTIFIER " << text << "\n";
+	output_log << "Error at line no " << yylineno 
+		<< ": Invalid prefix on ID or invalid suffix on Number " 
+		<< text << "\n\n";
+	error_no++;
 
 }
 
@@ -130,23 +185,24 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 "long"      |
 "short"     |
 "static"    |
-"unsigned"  { printKeywordToken(yytext); }
+"unsigned"  { 
+				log_keyword(to_upper(yytext) ,yytext, yylineno);
+			}
 
 "+"		|
 "-"		{
-			cout << "<ADDOP, " << yytext << ">\n";
+			log_operators("ADDOP", yytext, yylineno);
 		}
 
 "*"		|
 "/"     |
 "%"		{
-			cout << "<MULOP, " << yytext << ">\n";
+			log_operators("MULOP", yytext, yylineno);				
 		}
 
 "++"	|
 "--"	{
-            // operators start here
-			cout << "<INCOP, " << yytext << ">\n";
+			log_operators("INCOP", yytext, yylineno);
 		}
 
 "<="	|
@@ -155,67 +211,87 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 ">"     |
 "<"		|
 "!="	{
-			cout << "<RELOP, " << yytext << ">\n";
+			log_operators("RELOP", yytext, yylineno);
 		}
 
 "="     {
-			cout << "<ASSIGNOP, " << yytext << ">\n";
-        }
+			log_operators("ASSIGNOP", yytext, yylineno);
+		}
 
 "&&"	|
 "||"	{
-			cout << "<LOGICOP, " << yytext << ">\n";
+			log_operators("LOGICOP", yytext, yylineno);
 		}
 
 "!"     {
-			cout << "<NOT, " << yytext << ">\n";
+			log_operators("NOT", yytext, yylineno);
         }
 
 "("     {
-			cout << "<LPAREN, " << yytext << ">\n";
+			log_operators("LPAREN", yytext, yylineno);
         }
 
 ")"     {
-			cout << "<RPAREN, " << yytext << ">\n";
+			log_operators("RPAREN", yytext, yylineno);
         }
 
 "{"     {
-			cout << "<LCURL, " << yytext << "> -> Entering Scope\n";
+			log_operators("LCURL", yytext, yylineno);
+			//enter scope in symbol table
         }
 
 "}"     {
-			cout << "<RCURL, " << yytext << "> -> Exiting Scope\n";
+			log_operators("RCURL", yytext, yylineno);
+			//exit scope in symbol table
         }
 
 "["     {
-			cout << "<LTHIRD, " << yytext << ">\n";
+			log_operators("LTHIRD", yytext, yylineno);	
         }
 
 "]"     {
-			cout << "<RTHIRD, " << yytext << ">\n";
+			log_operators("RTHIRD", yytext, yylineno);	
         }
 
 ","     {
-			cout << "<COMMA, " << yytext << ">\n";
+			log_operators("COMMA", yytext, yylineno);	
         }
 
 ";"     {
-			cout << "<SEMICOLON, " << yytext << ">\n";
+			log_operators("SEMICOLON", yytext, yylineno);	
         }
 
 
 
-{FPNUM} {cout << "<CONST_FLOAT," << yytext << ">\n";}
+{FPNUM} {
+			// cout << "<CONST_FLOAT," << yytext << ">\n";
+			log_constant("CONST_FLOAT", yytext, yylineno);
+		}
 
-{DIGIT}+(\.{DIGIT}+)(\.{DIGIT}+)+ {cout << "LINE NO " << lineno << " --> ERROR : TOO MANY DECIMAL POINTS " << yytext << "\n";}
-{FPNUM}(\.{DIGIT}*)+ {cout << "LINE NO " << lineno << " --> ERROR : ILL FORMED NUMBER " << yytext << "\n";}
+{DIGIT}+(\.{DIGIT}+)(\.{DIGIT}+)+ {
+		output_log << "Error at line no " << yylineno << ": Too many decimal points " << yytext << "\n\n";
+		error_no++;
+	}
 
-{DIGIT}+ { cout << "<CONST_INT," << yytext << ">\n"; }
+{FPNUM}(\.{DIGIT}*)+ {
+		output_log << "Error at line no " << yylineno << ": Ill formed number " << yytext << "\n\n";
+		error_no++;
+	}
+
+{DIGIT}+ { 
+			// cout << "<CONST_INT," << yytext << ">\n"; 
+			log_constant("CONST_INT", yytext, yylineno);
+		}
 
 {DIGIT}+{IDENTIFIER}+ |
 {FPNUM}+{IDENTIFIER}+ {show_invalid_IDNUM_err(yytext);}
 
-{IDENTIFIER} {cout << "<ID," << yytext << ">\n"; }
+{IDENTIFIER} {
+	//Line no 7: Token <ID> Lexeme ch3 found
+	output_log << "Line no " << yylineno << ": Token <ID> Lexeme " << yytext << " found.\n\n";
+	output_token << "<ID, " << yytext << "> ";
+	// cout << "<ID," << yytext << ">\n"; 
+	}
 
 \"  {
     BEGIN(STRING_STATE);
@@ -224,6 +300,63 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 	raw_str += yytext;
 	lines_in_str = 1;
     // cout << "---- ENTERING STRING STATE ---- (" << yytext << ")\n";
+}
+
+\/\/ {
+	BEGIN(SL_COMMENT);
+	raw_cmnt = "";
+	raw_cmnt += yytext;
+	starting_cmnt_line = yylineno;
+	// cout << "LINE NO : " << yylineno << " --> Reading a single line comment : " << yytext << "\n";
+}
+
+"/*" {
+	BEGIN(ML_COMMENT);
+	raw_cmnt = "";
+	raw_cmnt += yytext;
+	starting_cmnt_line = yylineno;
+	// cout << "LINE NO : " << yylineno << " --> Reading a MULTI line comment : " << yytext << "\n";
+}
+
+<ML_COMMENT>"*/" {
+	raw_cmnt += yytext;
+
+	handle_comment(raw_cmnt, yylineno);
+	// cout << "LINE NO : " << yylineno << " --> END OF MULTI LINE COMMENT : " << raw_cmnt << "\n";
+	BEGIN(INITIAL);
+
+}
+
+<ML_COMMENT><<EOF>> {
+	// cout << "LINE : " << starting_cmnt_line << " --> " << 
+	// 	"Error: Unterminated MULTI LINE COMMNET(eof): " << raw_cmnt << "\n";
+    
+	output_log << "Error at line no " << starting_cmnt_line
+		<< ": Unterminated comment " << raw_cmnt << "\n\n";
+
+	error_no++;
+
+	BEGIN(INITIAL);
+}
+
+<ML_COMMENT>(.|\n) {
+	raw_cmnt += yytext;
+}
+
+<SL_COMMENT>\\{NEWLINE}  {
+    // continue the string on next line (\\n)
+    // cout << "(SS)Matched line continuation (\\n) (" << yytext << ")\n";
+	raw_cmnt += yytext;
+}
+
+<SL_COMMENT>\n {
+	handle_comment(raw_cmnt, yylineno-1);
+	// cout << "LINE NO : " << yylineno-1 << " --> END OF SINGLE LINE COMMENT : " << raw_cmnt << "\n";
+	BEGIN(INITIAL);
+}
+
+<SL_COMMENT>. {
+	raw_cmnt += yytext;
 }
 
 <STRING_STATE>\\({ESCAPE_CHAR}|\")  {
@@ -235,15 +368,27 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 
 <STRING_STATE><<EOF>> {
 
-	cout << "LINE : " << yylineno - lines_in_str + 1 << " --> " << 
-		"Error: Unterminated string literal(eof): " << raw_str << "\n";
+	// cout << "LINE : " << yylineno - lines_in_str + 1 << " --> " << 
+	// 	"Error: Unterminated string literal(eof): " << raw_str << "\n";
+
+	output_log << "Error at line no " << yylineno - lines_in_str + 1
+		<< ": Unterminated string " << raw_str << "\n\n";
+
+	error_no++;
+
     BEGIN(INITIAL);
 }
 
 <STRING_STATE>\n {
 
-	cout << "LINE : " << yylineno - lines_in_str << " --> " << 
-		"Error: Unterminated string literal(nl): " << raw_str << "\n";
+	// output_log << "LINE : " << yylineno - lines_in_str << " --> " << 
+	// 	"Error: Unterminated string literal(nl): " << raw_str << "\n";
+	
+	output_log << "Error at line no " << yylineno - lines_in_str
+		<< ": Unterminated string " << raw_str << "\n\n";
+
+	error_no++;
+
 	BEGIN(INITIAL);
 }
 
@@ -255,9 +400,14 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 }
 
 <STRING_STATE>\"  {
+	raw_str += yytext;
 	str_lit = "<STRING, " + str_lit + ">";
-	cout << "String : " << str_lit << "\n";
+	// cout << "LINE NO " << yylineno << ": String : " << raw_str << " --> " << str_lit << "\n";
+
+	handle_string_lit(str_lit, raw_str, yylineno);
+
     // cout << "(SS)---- EXITING STRING STATE ---- (" << yytext << ")\n";
+
 	str_lit = "";
 	raw_str = "";
 	BEGIN(INITIAL);
@@ -269,12 +419,21 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 	// cout << "(SS)Matched non escape : " << yytext << "\n";
 }
 
-\'{CHAR_CONTENT}*\' { handle_char_lit(yytext); }
+\'{CHAR_CONTENT}*\' { handle_char_lit(yytext, yylineno); }
 {UNFINISHED_CHAR} { show_unfinished_char_err(yytext); }
 
 
-<<EOF>> { printf("Total lines : %d, nijer %d\n", yylineno, lineno); return 0; }
-. {cout << "LINE NO " << lineno << " --> ERROR : UNRECOGNIZED CHAR " << yytext << "\n";}
+<<EOF>> { 
+			output_log << "Total lines : " << yylineno << "\n";
+			output_log << "Total errors : " << error_no << "\n";
+			return 0; 
+		}
+. {
+	// cout << "LINE NO " << yylineno << " --> ERROR : UNRECOGNIZED CHAR " << yytext << "\n";
+	output_log << "Error at line no " << yylineno 
+		<< ": Unrecognized character " << yytext << "\n\n";
+	error_no++;
+}
 
 %%
 
@@ -292,11 +451,15 @@ int main(int argc,char *argv[]){
 		return 0;
 	}
 	
+	output_log.open("2105007_log.txt");
+	output_token.open("2105007_tokens.txt");
 
 	yyin= fin;
 	yylineno = 1;
 	yylex();
 	fclose(yyin);
+	output_log.close();
+	output_token.close();
 	return 0;
 }
 
