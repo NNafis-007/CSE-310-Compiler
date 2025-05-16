@@ -76,6 +76,13 @@ void show_unfinished_char_err(string text){
 	cout << "Line no " << lineno << " --> ERROR : Unterminated CHAR " << text << "\n";
 }
 
+void show_invalid_IDNUM_err(string text){
+	cout << "Line no " << lineno << " --> \
+ERROR : INVALID SUFFIX ON NUMERICS CONSTANT or \
+INVALID PREFIX ON IDENTIFIER " << text << "\n";
+
+}
+
 %}
 
 /*Define RegEx Subpatterns*/
@@ -88,10 +95,12 @@ FPNUM (({DIGIT}+\.{DIGIT}+{EXPONENT})|({DIGIT}+{EXPONENT})|({DIGIT}*\.{DIGIT}+)|
 ESCAPE_CHAR [nt\'\\afbvr0]
 CHAR_CONTENT (\\({ESCAPE_CHAR})|([^\'\"\n\r]))
 UNFINISHED_CHAR (\'(\\{ESCAPE_CHAR}+|[^\'\"\n\r]+)|(\'))
-
+ALPHANUM ({ALPHABET}|{DIGIT})
+IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 
 /* Rules Section */
 %%
+{WHITESPACE} {}
 {NEWLINE} { //printf("line %d\n", lineno); 
             lineno++; 
           }
@@ -119,15 +128,90 @@ UNFINISHED_CHAR (\'(\\{ESCAPE_CHAR}+|[^\'\"\n\r]+)|(\'))
 "static"    |
 "unsigned"  { printKeywordToken(yytext); }
 
+"+"		|
+"-"		{
+			cout << "<ADDOP, " << yytext << ">\n";
+		}
+
+"*"		|
+"/"     |
+"%"		{
+			cout << "<MULOP, " << yytext << ">\n";
+		}
+
+"++"	|
+"--"	{
+            // operators start here
+			cout << "<INCOP, " << yytext << ">\n";
+		}
+
+"<="	|
+"=="    |
+">="	|
+">"     |
+"<"		|
+"!="	{
+			cout << "<RELOP, " << yytext << ">\n";
+		}
+
+"="     {
+			cout << "<ASSIGNOP, " << yytext << ">\n";
+        }
+
+"&&"	|
+"||"	{
+			cout << "<LOGICOP, " << yytext << ">\n";
+		}
+
+"!"     {
+			cout << "<NOT, " << yytext << ">\n";
+        }
+
+"("     {
+			cout << "<LPAREN, " << yytext << ">\n";
+        }
+
+")"     {
+			cout << "<RPAREN, " << yytext << ">\n";
+        }
+
+"{"     {
+			cout << "<LCURL, " << yytext << "> -> Entering Scope\n";
+        }
+
+"}"     {
+			cout << "<RCURL, " << yytext << "> -> Exiting Scope\n";
+        }
+
+"["     {
+			cout << "<LTHIRD, " << yytext << ">\n";
+        }
+
+"]"     {
+			cout << "<RTHIRD, " << yytext << ">\n";
+        }
+
+","     {
+			cout << "<COMMA, " << yytext << ">\n";
+        }
+
+";"     {
+			cout << "<SEMICOLON, " << yytext << ">\n";
+        }
+
 
 
 {FPNUM} {cout << "<CONST_FLOAT," << yytext << ">\n";}
 
-{DIGIT}+(\.{DIGIT}+)(\.{DIGIT}+)+ {cout << "LINE NO " << lineno << "ERROR : TOO MANY DECIMAL POINTS " << yytext << "\n";}
-{FPNUM}(\.{DIGIT}*)+ {cout << "LINE NO " << lineno << "ERROR : ILL FORMED NUMBER " << yytext << "\n";}
-
+{DIGIT}+(\.{DIGIT}+)(\.{DIGIT}+)+ {cout << "LINE NO " << lineno << " --> ERROR : TOO MANY DECIMAL POINTS " << yytext << "\n";}
+{FPNUM}(\.{DIGIT}*)+ {cout << "LINE NO " << lineno << " --> ERROR : ILL FORMED NUMBER " << yytext << "\n";}
 
 {DIGIT}+ { cout << "<CONST_INT," << yytext << ">\n"; }
+
+{DIGIT}+{IDENTIFIER}+ |
+{FPNUM}+{IDENTIFIER}+ {show_invalid_IDNUM_err(yytext);}
+
+{IDENTIFIER} {cout << "<ID," << yytext << ">\n"; }
 
 \'{CHAR_CONTENT}*\' { handle_char_lit(yytext); }
 {UNFINISHED_CHAR} { show_unfinished_char_err(yytext); }
