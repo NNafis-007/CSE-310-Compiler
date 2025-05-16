@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <iostream>
 #include <fstream>
+#include "symbol_table.hpp"
 using namespace std;
 
 int lineno = 1;
@@ -18,8 +19,36 @@ int starting_cmnt_line = 0;
 string str_lit = "";
 string raw_str = "";
 string raw_cmnt = "";
-ofstream output_log;
-ofstream output_token;
+ofstream output_log("2105007_log.txt");
+ofstream output_token("2105007_tokens.txt");
+SymbolTable* st = new SymbolTable(7, output_log);
+bool scope_created = false;
+
+// void create_scope(){
+// 	if(!scope_created){
+// 		scope_created = true;
+// 		cout << "First LCURL, scope aldy created " << "\n";
+// 	}
+// 	else{
+// 		st->enterScope();
+// 		cout << "Creating Scope, s_id" << st->get_curr_scope_id() << "\n";
+// 	}
+// }
+
+void insert_symbol(string lexeme, string token){
+	SymbolInfo s(lexeme, token);
+	int indx, chain_pos;
+	if(st->currScope_lookup(s, indx, chain_pos) != NULL){
+        output_log << s.showSymbol() << " already exists in ScopeTable# " 
+            << st->get_curr_scope_id() << " at position " << indx << ", " << chain_pos-1 << "\n\n";
+	}
+	else{
+		st->insertSymbol(s);
+		st->printAllScopeTable();
+	}
+}
+
+
 
 string to_upper(const string& str){
 	string ans = str;
@@ -50,22 +79,21 @@ char get_ASCII(char ch) {
 
 void log_keyword(string token, string lexeme, int lineno){
 	string line = to_string(lineno);
-	string printable = "Line No. " + line + ": Token <" + token + "> Lexeme " + lexeme + " found.";
+	string printable = "Line no " + line + ": Token <" + token + "> Lexeme " + lexeme + " found";
 	output_log << printable << "\n\n";  
 	output_token << "<" << token << "> ";
 }
 
-
-
 void log_operators(string token, string lexeme, int lineno){
 
-	output_log << "Line No. " << lineno << ": Token <" << token << "> Lexeme " << lexeme << " found." << "\n\n";
+	output_log << "Line no " << lineno << ": Token <" << token << "> Lexeme " << lexeme << " found" << "\n\n";
 	output_token << "<" << token << ", " << lexeme << "> ";
 }
 
 void log_constant(string token, string lexeme, int lineno){
-	output_log << "Line No. " << lineno << ": Token <" << token << "> Lexeme " << lexeme << " found." << "\n\n";
+	output_log << "Line no " << lineno << ": Token <" << token << "> Lexeme " << lexeme << " found" << "\n\n";
 	output_token << "<" << token << ", " << lexeme << "> ";
+	insert_symbol(lexeme, token);
 }
 
 void handle_char_lit(string text, int lineno){
@@ -109,21 +137,22 @@ void handle_char_lit(string text, int lineno){
 		
 		//Line no 5: Token <CONST_CHAR> Lexeme 'p' found --> <CONST_CHAR, p>
 		output_log << "Line no " << lineno << ": Token <CONST_CHAR> Lexeme " << text << " found --> ";
-		output_log << "<CONST_CHAR," << ch << ">\n\n";
+		output_log << "<CONST_CHAR, " << ch << ">\n\n";
 		output_token << "<CONST_CHAR, " << ch << "> ";
+		insert_symbol(text, "CONST_CHAR");
 
 	}
 }
 
 void handle_string_lit(string made_token, string raw_str, int lineno){
-	output_log << "LINE NO " << lineno << ": Token <STRING> Lexeme " 
+	output_log << "Line no " << lineno << ": Token <STRING> Lexeme " 
 		<< raw_str << " found --> " << made_token << "\n\n";
 
 	output_token << made_token << " ";
 }
 
 void handle_comment(string raw_cmnt, int lineno){
-	output_log << "LINE NO " << lineno << ": Token <COMMENT> Lexeme " 
+	output_log << "Line no " << lineno << ": Token <COMMENT> Lexeme " 
 		<< raw_cmnt << " found\n\n";
 }
 
@@ -237,11 +266,13 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 
 "{"     {
 			log_operators("LCURL", yytext, yylineno);
+			st->enterScope();
 			//enter scope in symbol table
         }
 
 "}"     {
 			log_operators("RCURL", yytext, yylineno);
+			st->exitScope();
 			//exit scope in symbol table
         }
 
@@ -288,8 +319,9 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 
 {IDENTIFIER} {
 	//Line no 7: Token <ID> Lexeme ch3 found
-	output_log << "Line no " << yylineno << ": Token <ID> Lexeme " << yytext << " found.\n\n";
+	output_log << "Line no " << yylineno << ": Token <ID> Lexeme " << yytext << " found\n\n";
 	output_token << "<ID, " << yytext << "> ";
+	insert_symbol(yytext, "ID");
 	// cout << "<ID," << yytext << ">\n"; 
 	}
 
@@ -307,7 +339,7 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 	raw_cmnt = "";
 	raw_cmnt += yytext;
 	starting_cmnt_line = yylineno;
-	// cout << "LINE NO : " << yylineno << " --> Reading a single line comment : " << yytext << "\n";
+	// cout << "Line no : " << yylineno << " --> Reading a single line comment : " << yytext << "\n";
 }
 
 "/*" {
@@ -315,14 +347,14 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 	raw_cmnt = "";
 	raw_cmnt += yytext;
 	starting_cmnt_line = yylineno;
-	// cout << "LINE NO : " << yylineno << " --> Reading a MULTI line comment : " << yytext << "\n";
+	// cout << "Line no : " << yylineno << " --> Reading a MULTI line comment : " << yytext << "\n";
 }
 
 <ML_COMMENT>"*/" {
 	raw_cmnt += yytext;
 
 	handle_comment(raw_cmnt, yylineno);
-	// cout << "LINE NO : " << yylineno << " --> END OF MULTI LINE COMMENT : " << raw_cmnt << "\n";
+	// cout << "Line no : " << yylineno << " --> END OF MULTI LINE COMMENT : " << raw_cmnt << "\n";
 	BEGIN(INITIAL);
 
 }
@@ -351,7 +383,7 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 
 <SL_COMMENT>\n {
 	handle_comment(raw_cmnt, yylineno-1);
-	// cout << "LINE NO : " << yylineno-1 << " --> END OF SINGLE LINE COMMENT : " << raw_cmnt << "\n";
+	// cout << "Line no : " << yylineno-1 << " --> END OF SINGLE LINE COMMENT : " << raw_cmnt << "\n";
 	BEGIN(INITIAL);
 }
 
@@ -402,7 +434,7 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 <STRING_STATE>\"  {
 	raw_str += yytext;
 	str_lit = "<STRING, " + str_lit + ">";
-	// cout << "LINE NO " << yylineno << ": String : " << raw_str << " --> " << str_lit << "\n";
+	// cout << "Line no " << yylineno << ": String : " << raw_str << " --> " << str_lit << "\n";
 
 	handle_string_lit(str_lit, raw_str, yylineno);
 
@@ -424,12 +456,13 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 
 
 <<EOF>> { 
-			output_log << "Total lines : " << yylineno << "\n";
-			output_log << "Total errors : " << error_no << "\n";
+			st->printAllScopeTable();
+			output_log << "Total lines: " << yylineno << "\n";
+			output_log << "Total errors: " << error_no << "\n";
 			return 0; 
 		}
 . {
-	// cout << "LINE NO " << yylineno << " --> ERROR : UNRECOGNIZED CHAR " << yytext << "\n";
+	// cout << "Line no " << yylineno << " --> ERROR : UNRECOGNIZED CHAR " << yytext << "\n";
 	output_log << "Error at line no " << yylineno 
 		<< ": Unrecognized character " << yytext << "\n\n";
 	error_no++;
@@ -450,9 +483,9 @@ int main(int argc,char *argv[]){
 		printf("Cannot open specified file\n");
 		return 0;
 	}
-	
-	output_log.open("2105007_log.txt");
-	output_token.open("2105007_tokens.txt");
+
+	// output_log.open("2105007_log.txt");
+	// output_token.open("2105007_tokens.txt");
 
 	yyin= fin;
 	yylineno = 1;
