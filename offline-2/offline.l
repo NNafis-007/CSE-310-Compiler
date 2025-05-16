@@ -10,7 +10,9 @@
 using namespace std;
 
 int lineno = 1;
+int lines_in_str = 0; 
 string str_lit = "";
+string raw_str = "";
 ofstream output_log;
 ofstream output_token;
 
@@ -218,35 +220,53 @@ IDENTIFIER (({ALPHABET}|_){ALPHANUM}*)
 \"  {
     BEGIN(STRING_STATE);
 	str_lit = "";
-    cout << "---- ENTERING STRING STATE ---- (" << yytext << ")\n";
-}
-
-<STRING_STATE>\\{NEWLINE}  {
-    // continue the string on next line
-    cout << "(SS)Matched line continuation (\\n) (" << yytext << ")\n";
+	raw_str = "";
+	raw_str += yytext;
+	lines_in_str = 1;
+    // cout << "---- ENTERING STRING STATE ---- (" << yytext << ")\n";
 }
 
 <STRING_STATE>\\({ESCAPE_CHAR}|\")  {
-	cout << "(SS)Matched special : " << yytext << "\n";
-	char special_ch = get_ASCII(yytext[1]);
+	// cout << "(SS)Matched special : " << yytext << "\n";
+	char special_ch = get_ASCII(yytext[yyleng-1]);
 	str_lit += special_ch;
-}
-
-<STRING_STATE>[^(\\{ESCAPE_CHAR})|\"]*   {
-	str_lit += yytext;
-	cout << "(SS)Matched non escape : " << yytext << "\n";
+	raw_str += yytext;
 }
 
 <STRING_STATE><<EOF>> {
-	cout << "(SS)Error: Unterminated string literal: " << str_lit << "\n";
+
+	cout << "LINE : " << yylineno - lines_in_str + 1 << " --> " << 
+		"Error: Unterminated string literal(eof): " << raw_str << "\n";
     BEGIN(INITIAL);
 }
 
-<STRING_STATE>\"  {
-	cout << "(SS)String : " << str_lit << "\n";
-    cout << "(SS)---- EXITING STRING STATE ---- (" << yytext << ")\n";
-	str_lit = "";
+<STRING_STATE>\n {
+
+	cout << "LINE : " << yylineno - lines_in_str << " --> " << 
+		"Error: Unterminated string literal(nl): " << raw_str << "\n";
 	BEGIN(INITIAL);
+}
+
+<STRING_STATE>\\{NEWLINE}  {
+    // continue the string on next line (\\n)
+    // cout << "(SS)Matched line continuation (\\n) (" << yytext << ")\n";
+	raw_str += yytext;
+	lines_in_str++;
+}
+
+<STRING_STATE>\"  {
+	str_lit = "<STRING, " + str_lit + ">";
+	cout << "String : " << str_lit << "\n";
+    // cout << "(SS)---- EXITING STRING STATE ---- (" << yytext << ")\n";
+	str_lit = "";
+	raw_str = "";
+	BEGIN(INITIAL);
+}
+
+<STRING_STATE>.   {
+	str_lit += yytext;
+	raw_str += yytext;
+	// cout << "(SS)Matched non escape : " << yytext << "\n";
 }
 
 \'{CHAR_CONTENT}*\' { handle_char_lit(yytext); }

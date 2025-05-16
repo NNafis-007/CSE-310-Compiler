@@ -1,1 +1,7 @@
-char str1[100] = "He owns a dog.";
+"abcd
+"efgh\"
+"abcd\
+efgh
+ijk"
+"asd\
+ghj
