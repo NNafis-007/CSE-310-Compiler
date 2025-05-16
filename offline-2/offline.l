@@ -43,28 +43,37 @@ void printKeywordToken(string keyword){
     cout << token << "\n";
 }
 
-void handle_char_lit(string str){
+void handle_char_lit(string text){
+	string str = text;
 	str.erase(str.begin()); //rmv first '
 	str.pop_back(); //rmv last '
-	cout << "String : " << str << ", and length " << str.length() << "\n";
 	if(str.length() == 0){
-		cout << "ERROR : EMPTY CHARACTER\n";
+		cout << "Line no " << lineno << " --> ERROR : EMPTY CHARACTER " << text << "\n";
 		return;
 	}
+	bool need_ascii = false;
 	if(str[0] == '\\'){
 		if(str.length() == 1){ //only escape_slash in char 
-			cout << "ERROR : UNFINISHED CHAR\n";
+			cout << "Line no " << lineno << " --> ERROR : Unterminated CHAR " << text << "\n";
 			return;
 		}
 		str.erase(str.begin()); //rmv first
+		need_ascii = true;
 	}
 
 	if(str.length() > 1){
-		cout << "ERROR : MULTICHAR CONSTANT\n";
+		cout << "Line no " << lineno << " --> ERROR : MULTICHAR CONSTANT " << text << "\n";
 	}
 	else{
-		cout << "<CONST_CHAR," << get_ASCII(str[0]) << ">\n";
+		char ch = str[0];
+		if(need_ascii)
+			ch = get_ASCII(ch);
+		cout << "<CONST_CHAR," << ch << ">\n";
 	}
+}
+
+void show_unfinished_char_err(string text){
+	cout << "Line no " << lineno << " --> ERROR : Unterminated CHAR " << text << "\n";
 }
 
 %}
@@ -78,7 +87,7 @@ WHITESPACE [ \t\f\r\v]+
 FPNUM (({DIGIT}+\.{DIGIT}+{EXPONENT})|({DIGIT}+{EXPONENT})|({DIGIT}*\.{DIGIT}+)|(\.{DIGIT}+{EXPONENT}?)|({DIGIT}+\.))
 ESCAPE_CHAR [nt\'\\afbvr0]
 CHAR_CONTENT (\\({ESCAPE_CHAR})|([^\'\"\n\r]))
-CHAR_LIT (\'{CHAR_CONTENT}\')
+UNFINISHED_CHAR (\'(\\{ESCAPE_CHAR}+|[^\'\"\n\r]+)|(\'))
 
 
 /* Rules Section */
@@ -114,17 +123,18 @@ CHAR_LIT (\'{CHAR_CONTENT}\')
 
 {FPNUM} {cout << "<CONST_FLOAT," << yytext << ">\n";}
 
-{DIGIT}+(\.{DIGIT}+)(\.{DIGIT}+)+ {cout << "ERROR : TOO MANY DECIMAL POINTS " << yytext << "\n";}
-{FPNUM}(\.{DIGIT}*)+ {cout << "ERROR : ILL FORMED NUMBER " << yytext << "\n";}
+{DIGIT}+(\.{DIGIT}+)(\.{DIGIT}+)+ {cout << "LINE NO " << lineno << "ERROR : TOO MANY DECIMAL POINTS " << yytext << "\n";}
+{FPNUM}(\.{DIGIT}*)+ {cout << "LINE NO " << lineno << "ERROR : ILL FORMED NUMBER " << yytext << "\n";}
 
 
 {DIGIT}+ { cout << "<CONST_INT," << yytext << ">\n"; }
 
 \'{CHAR_CONTENT}*\' { handle_char_lit(yytext); }
+{UNFINISHED_CHAR} { show_unfinished_char_err(yytext); }
 
 
 <<EOF>> { printf("Total lines : %d, nijer %d\n", yylineno, lineno); return 0; }
-. {}
+. {cout << "LINE NO " << lineno << " --> ERROR : UNRECOGNIZED CHAR " << yytext << "\n";}
 
 %%
 
