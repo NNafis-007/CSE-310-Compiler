@@ -1,0 +1,9 @@
+ScopeTable # 1
+5 --> < main : ID >
+
+< _i : ID > already exists in the ScopeTable# 1.1 at position 1, 0
+ScopeTable # 1.1
+1 --> < _i : ID >
+ScopeTable # 1
+5 --> < main : ID >
+

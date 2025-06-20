@@ -438,35 +438,35 @@ public:
     }
 };
 
-// int main(int argc, char *argv[])
-// {
-//     ofstream out("output.txt");
-//     if (!out.is_open())
-//     {
-//         cout << "Error opening file" << endl;
-//         return 1;
-//     }
-//     SymbolTable st(7, out);
-//     SymbolInfo s1 = SymbolInfo("main", "ID");
-//     st.insertSymbol(s1);
-//     st.printAllScopeTable();
+int main(int argc, char *argv[])
+{
+    ofstream out("output.txt");
+    if (!out.is_open())
+    {
+        cout << "Error opening file" << endl;
+        return 1;
+    }
+    SymbolTable st(7, out);
+    SymbolInfo s1 = SymbolInfo("main", "ID");
+    st.insertSymbol(s1);
+    st.printAllScopeTable();
 
-//     st.enterScope();
-//     SymbolInfo s2 = SymbolInfo("_i", "ID");
-//     SymbolInfo s3 = SymbolInfo("_i", "ID");
-//     st.insertSymbol(s2);
-//     int indx, chain_pos;
-//     if(st.lookUp(s3, indx, chain_pos) != NULL)
-//     {
-//         out << s3.showSymbol() << " already exists in the ScopeTable# "
-//             << st.get_curr_scope_id() << " at position " << indx << ", " << chain_pos << endl;
-//     }
-//     else
-//     {
-//         cout << "Not found" << endl;
-//     }
-//     st.printAllScopeTable();
-//     out.close();
+    st.enterScope();
+    SymbolInfo s2 = SymbolInfo("_i", "ID");
+    SymbolInfo s3 = SymbolInfo("_i", "ID");
+    st.insertSymbol(s2);
+    int indx, chain_pos;
+    if(st.lookUp(s3, indx, chain_pos) != NULL)
+    {
+        out << s3.showSymbol() << " already exists in the ScopeTable# "
+            << st.get_curr_scope_id() << " at position " << indx << ", " << chain_pos << endl;
+    }
+    else
+    {
+        cout << "Not found" << endl;
+    }
+    st.printAllScopeTable();
+    out.close();
 
-//     return 0;
-// }
+    return 0;
+}
