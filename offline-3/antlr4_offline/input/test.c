@@ -1,0 +1,47 @@
+// this is a normal file
+
+// int i,j, a; 
+int x,y,z; float a;
+
+void foo();
+
+int var(int a, int b){
+	return a+b;
+}
+
+
+// int main(){
+ 
+// 	int k,ll,m,n,o,p;
+ 
+// 	i = 1;
+// 	println(i);
+// 	j = 5 + 8;
+// 	println(j);
+// 	k = i + 2*j;
+// 	println(k);
+
+// 	m = k%9;
+// 	println(m);
+ 
+// 	n = m <= ll;
+// 	println(n);
+ 
+// 	o = i != j;
+// 	println(o);
+ 
+// 	p = n || o;
+// 	println(p);
+ 
+// 	p = n && o;
+// 	println(p);
+	
+// 	p++;
+// 	println(p);
+ 
+// 	k = -p;
+// 	println(k);
+
+// 	return 0;
+// }
+
