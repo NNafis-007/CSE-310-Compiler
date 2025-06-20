@@ -43,6 +43,32 @@ import SymbolTable.SymbolInfo;
         }
     }
 
+    void STinsert(String name, String type){
+        try{
+            SymbolInfo s1 = new SymbolInfo(name, type);
+            Main.st.insertSymbol(s1);
+            
+        } catch(Exception e) {
+            System.err.println("Symbol Table insert error : " + e.getMessage());
+        }
+    }
+
+    void STprint(){
+        try{
+            Main.st.printAllScopeTable();
+        } catch(Exception e) {
+            System.err.println("Symbol Table PRINT error : " + e.getMessage());
+        }
+    }
+
+    void enterScope(){
+        try{
+            Main.st.enterScope();
+        } catch(Exception e) {
+            System.err.println("Symbol Table PRINT error : " + e.getMessage());
+        }
+    }
+
     class RuleReturnInfo{
         public int lineNo;
         public String text;
@@ -118,7 +144,7 @@ unit returns [RuleReturnInfo unit_rri]
     | f=func_definition
         {
             int lineNo = $f.fdef_rri.lineNo;
-            String text = $f.fdef_rri.text;
+            String text = $f.fdef_rri.text + "\n";
             wParserLog("Line " + lineNo + ": unit : func_definition\n");
             wParserLog(text + "\n");
             $unit_rri = new RuleReturnInfo($f.fdef_rri);
@@ -244,14 +270,20 @@ parameter_list returns [RuleReturnInfo param_rri]
     ;
 
 compound_statement returns [RuleReturnInfo Cstat_rri]
-    : LCURL s=statements RCURL
+    : LCURL 
+        {
+            //ENTER SYMBOL TABLE
+
+        } 
+    s=statements RCURL
         {
             int lineNo = $LCURL.line;
-            String text = "{\n" + $s.Stats_rri.text + "\n}\n";
+            String text = "{\n" + $s.Stats_rri.text + "}\n";
             wParserLog("Line " + lineNo + ": compound_statement : LCURL statements RCURL\n");
             wParserLog(text + "\n");
             $Cstat_rri = new RuleReturnInfo(lineNo, text);
 
+            //PRINT SYMBOL TABLE AND EXIT SCOPE
         }
     | LCURL RCURL
         { 
@@ -273,6 +305,14 @@ var_declaration returns [RuleReturnInfo vdec_rri]
         $vdec_rri.lineNo = $sm.getLine(); 
 
         wParserLog($t.type_rri.text + " " + $dl.dec_list + ";\n");
+
+        //INSERT INTO SYMBOL TABLE
+        String[] variables = $dl.dec_list.split(",");
+        for (String var : variables) {
+            STinsert(var.trim(), $t.type_rri.text.trim());
+        }
+        STprint();
+
       }
     | t=type_specifier de=declaration_list_err sm=SEMICOLON
       {
@@ -364,20 +404,36 @@ statements returns [RuleReturnInfo Stats_rri]
             wParserLog(text + "\n");
             $Stats_rri = new RuleReturnInfo(lineNo, text);
         }
-    | statements statement
+    | ss=statements s=statement
+        {
+            int lineNo = $s.stat_rri.lineNo;
+            String text = $ss.Stats_rri.text + $s.stat_rri.text;
+
+            wParserLog("Line " + lineNo + ": statements : statement\n");
+            wParserLog(text + "\n");
+            $Stats_rri = new RuleReturnInfo(lineNo, text);
+        }
     ;
 
 statement returns [RuleReturnInfo stat_rri]
     : vd=var_declaration
         { 
             int lineNo = $vd.vdec_rri.lineNo;
-            String text = $vd.vdec_rri.text;
+            String text = $vd.vdec_rri.text + "\n";
 
             $stat_rri = new RuleReturnInfo(lineNo, text);
             wParserLog("Line " + lineNo + ": statement : var_declaration\n");
             wParserLog(text + "\n");
         }
-    | expression_statement
+    | es=expression_statement
+        {
+            int lineNo = $es.Expr_stat_rri.lineNo;
+            String text = $es.Expr_stat_rri.text + "\n";
+
+            $stat_rri = new RuleReturnInfo(lineNo, text);
+            wParserLog("Line " + lineNo + ": statement : expression_statment\n");
+            wParserLog(text + "\n");
+        }
     | compound_statement
     | FOR LPAREN expression_statement expression_statement expression RPAREN statement
     | IF LPAREN expression RPAREN statement
@@ -387,7 +443,7 @@ statement returns [RuleReturnInfo stat_rri]
     | RETURN e=expression SEMICOLON
         {
             int lineNo = $RETURN.getLine();
-            String text = "return" + " " + $e.Expr_rri.text + ";";
+            String text = "return" + " " + $e.Expr_rri.text + ";\n";
 
             wParserLog("Line " + lineNo + ": statement : RETURN expression SEMICOLON\n");
             wParserLog(text + "\n");
@@ -450,7 +506,17 @@ expression returns [RuleReturnInfo Expr_rri]
             $Expr_rri = new RuleReturnInfo(lineNo, text);
         }
 
-    | variable ASSIGNOP logic_expression
+    | var=variable ASSIGNOP l=logic_expression
+        {
+            int lineNo = $l.LogicExpr_rri.lineNo;
+            String var_name = $var.var_rri.text;
+
+            String text = var_name + "=" + $l.LogicExpr_rri.text;
+            wParserLog("Line " + lineNo + ": expression : variable ASSIGNOP logic expression\n");
+            wParserLog(text + "\n");
+            $Expr_rri = new RuleReturnInfo(lineNo, text);
+            
+        }
     ;
 
 logic_expression returns [RuleReturnInfo LogicExpr_rri]
@@ -491,7 +557,8 @@ simple_expression returns [RuleReturnInfo sm_expr_rri]
     | sm_expr=simple_expression ADDOP t=term
         {
             int lineNo = $ADDOP.getLine();
-            String text = $sm_expr.sm_expr_rri.text + "+" + $t.term_rri.text;
+            String op = $ADDOP.getText();
+            String text = $sm_expr.sm_expr_rri.text + op + $t.term_rri.text;
             wParserLog("Line " + lineNo + ": simple_expression : simple_expression ADDOP term\n");
             wParserLog(text + "\n");
             $sm_expr_rri = new RuleReturnInfo(lineNo, text);
@@ -538,8 +605,27 @@ factor returns [RuleReturnInfo fact_rri]
         }
     | ID LPAREN argument_list RPAREN
     | LPAREN expression RPAREN
-    | CONST_INT
-    | CONST_FLOAT
+    | c=CONST_INT
+        {
+            int lineNo = $c.getLine();
+            String text = $c.getText();
+
+            wParserLog("Line " + lineNo + ": factor : CONST_INT\n");
+            wParserLog(text + "\n");
+
+            $fact_rri = new RuleReturnInfo(lineNo, text);
+        }
+    | c=CONST_FLOAT
+        {
+            int lineNo = $c.getLine();
+            String text = $c.getText();
+
+            wParserLog("Line " + lineNo + ": factor : CONST_FLOAT\n");
+            wParserLog(text + "\n");
+
+            $fact_rri = new RuleReturnInfo(lineNo, text);
+        }
+
     | variable INCOP
     | variable DECOP
     ;
