@@ -43,13 +43,15 @@ import SymbolTable.SymbolInfo;
         }
     }
 
-    void STinsert(String name, String type){
+    boolean STinsert(String name, String type){
         try{
             SymbolInfo s1 = new SymbolInfo(name, type);
-            Main.st.insertSymbol(s1);
+            boolean isInserted = Main.st.insertSymbol(s1);
+            return isInserted;
             
         } catch(Exception e) {
             System.err.println("Symbol Table insert error : " + e.getMessage());
+            return false;
         }
     }
 
@@ -65,7 +67,15 @@ import SymbolTable.SymbolInfo;
         try{
             Main.st.enterScope();
         } catch(Exception e) {
-            System.err.println("Symbol Table PRINT error : " + e.getMessage());
+            System.err.println("Symbol Table ENTER scope error : " + e.getMessage());
+        }
+    }
+
+    void exitScope(){
+        try{
+            Main.st.exitScope();
+        } catch(Exception e) {
+            System.err.println("Symbol Table EXIT scope error : " + e.getMessage());
         }
     }
 
@@ -159,6 +169,10 @@ func_declaration returns [RuleReturnInfo fdec_rri]
             int lineNo = $ID.getLine();
             String type = $t.type_rri.text;
             String fn_name = $ID.getText();
+            boolean isInserted = STinsert(fn_name, "ID");
+            if(!isInserted){
+                System.out.println("ERROR : " + fn_name + " already exists in current scope");
+            }
 
             String fd = type + " " + fn_name + "(" + $p.param_rri.text + ");";
             wParserLog("Line " + lineNo + ": func_declaration : type_specifier ID LPAREN parameter_list RPAREN SEMICOLON\n");
@@ -173,6 +187,12 @@ func_declaration returns [RuleReturnInfo fdec_rri]
             int lineNo = $ID.getLine();
             String type = $t.type_rri.text;
             String fn_name = $ID.getText();
+
+            boolean isInserted = STinsert(fn_name, "ID");
+            if(!isInserted){
+                System.out.println("ERROR : " + fn_name + " already exists in current scope");
+            }
+            
             wParserLog("Line " + lineNo + ": func_declaration : type_specifier ID LPAREN RPAREN SEMICOLON\n");
             wParserLog(type + " " + fn_name + "();\n");
 
@@ -183,7 +203,30 @@ func_declaration returns [RuleReturnInfo fdec_rri]
     ;
 
 func_definition returns [RuleReturnInfo fdef_rri]
-    : ts=type_specifier ID LPAREN p=parameter_list RPAREN cstat=compound_statement
+    : ts=type_specifier ID LPAREN p=parameter_list 
+        RPAREN 
+            {
+                System.out.println("Storing fn info in symbol table");
+                System.out.println("Fn name : " + $ID.getText());
+                boolean isInserted = STinsert($ID.getText(), "ID");
+                if(!isInserted){
+                    System.out.println("ERROR : " + $ID.getText() + " fn aldy inserted before");
+                }
+                else {
+                    System.out.print("Params : ");
+                    //----- INSERT INTO SYMBOL TABLE ---------
+                    String[] variables = $p.param_rri.text.split(",");
+                    enterScope();
+                    for (String var : variables) {
+                        String[] splitted = var.split(" ");
+                        STinsert(splitted[1], "ID");
+                    }
+                    Main.isFuncDefined = true;
+                    System.out.println("");
+                }
+
+            } 
+        cstat=compound_statement
         {
             //FN DEF WITH ARGS
             int lineNo = $ID.getLine();
@@ -194,10 +237,20 @@ func_definition returns [RuleReturnInfo fdef_rri]
 
             wParserLog("Line " + lineNo + ": func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement\n");
             wParserLog(text + "\n");
-
+            Main.isFuncDefined = false;
             $fdef_rri = new RuleReturnInfo(lineNo, text);
         }
-    | ts=type_specifier ID LPAREN RPAREN cstat=compound_statement
+    | ts=type_specifier ID LPAREN 
+        RPAREN 
+            {
+                System.out.println("Storing fn info in symbol table");
+                System.out.println("Fn name : " + $ID.getText());
+                boolean isInserted = STinsert($ID.getText(), "ID");
+                if(!isInserted){
+                    System.out.println($ID.getText() + " fn  aldy inserted before");
+                }
+            } 
+        cstat=compound_statement
         {
             //FN DEF WITHOUT ARGS
             int lineNo = $ID.getLine();
@@ -222,7 +275,7 @@ parameter_list returns [RuleReturnInfo param_rri]
             String prev_param_list = $p.param_rri.text;
 
             //update param_rri
-            String curr_param_list = prev_param_list + ", " + type + " " + id;
+            String curr_param_list = prev_param_list + "," + type + " " + id;
             $param_rri = new RuleReturnInfo(lineNo, curr_param_list);
 
             wParserLog("Line " + lineNo + ": parameter_list : parameter_list COMMA type_specifier ID\n");
@@ -272,8 +325,12 @@ parameter_list returns [RuleReturnInfo param_rri]
 compound_statement returns [RuleReturnInfo Cstat_rri]
     : LCURL 
         {
-            //ENTER SYMBOL TABLE
+            //ENTER new scope if not inserted from function already
+            if(!Main.isFuncDefined){
+                System.out.println("Entering new scope");
+                enterScope();
 
+            }
         } 
     s=statements RCURL
         {
@@ -284,12 +341,17 @@ compound_statement returns [RuleReturnInfo Cstat_rri]
             $Cstat_rri = new RuleReturnInfo(lineNo, text);
 
             //PRINT SYMBOL TABLE AND EXIT SCOPE
+            STprint();
+            exitScope();
         }
+
     | LCURL RCURL
         { 
+            enterScope();
             wParserLog("Line " + $LCURL.line + ": compound_statement : LCURL RCURL\n");
             wParserLog("{}\n");
             $Cstat_rri = new RuleReturnInfo($LCURL.line, "{}");
+            exitScope();
         }
     ;
 
@@ -309,10 +371,11 @@ var_declaration returns [RuleReturnInfo vdec_rri]
         //INSERT INTO SYMBOL TABLE
         String[] variables = $dl.dec_list.split(",");
         for (String var : variables) {
-            STinsert(var.trim(), $t.type_rri.text.trim());
+            boolean isInserted = STinsert(var.trim(), "ID");
+            if(!isInserted){
+                System.out.println("ERROR : " + var.trim() + " already exists in current scope");
+            }
         }
-        STprint();
-
       }
     | t=type_specifier de=declaration_list_err sm=SEMICOLON
       {

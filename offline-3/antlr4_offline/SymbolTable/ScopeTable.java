@@ -35,6 +35,10 @@ public class ScopeTable {
     public void setParentScope(ScopeTable s) {
         this.parentScope = s;
     }
+    
+    public String getScopeId() {
+        return this.scopeId;
+    }
 
     // Insert symbol into the scope table
     public boolean insertSymbol(SymbolInfo s) {

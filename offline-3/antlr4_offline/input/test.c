@@ -1,6 +1,12 @@
 // this is a normal file
 
-int i,j, a; float d; 
+int x,y,z; float a;
+
+void foo();
+
+int var(int a, int b){
+	return a+b;
+}
 
 // int main(){
  

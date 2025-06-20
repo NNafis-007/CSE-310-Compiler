@@ -11,6 +11,7 @@ public class Main {
     public static BufferedWriter errorFile;
     public static BufferedWriter lexLogFile;
     public static SymbolTable st;
+    public static boolean isFuncDefined = false;
 
     public static int syntaxErrorCount = 0;
 
