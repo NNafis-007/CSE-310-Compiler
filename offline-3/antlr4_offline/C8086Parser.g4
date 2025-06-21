@@ -141,7 +141,7 @@ unit returns [RuleReturnInfo unit_rri]
             String text = $vd.vdec_rri.text;
             wParserLog("Line " + lineNo + ": unit : var_declaration\n");
             wParserLog(text + "\n");
-            $unit_rri = new RuleReturnInfo($vd.vdec_rri);
+            $unit_rri = new RuleReturnInfo(lineNo, text);
         }
     | fdec=func_declaration
         {
@@ -472,7 +472,7 @@ statements returns [RuleReturnInfo Stats_rri]
             int lineNo = $s.stat_rri.lineNo;
             String text = $ss.Stats_rri.text + $s.stat_rri.text;
 
-            wParserLog("Line " + lineNo + ": statements : statement\n");
+            wParserLog("Line " + lineNo + ": statements : statements statement\n");
             wParserLog(text);
             $Stats_rri = new RuleReturnInfo(lineNo, text);
         }
@@ -545,11 +545,11 @@ variable returns [RuleReturnInfo var_rri]
             wParserLog("Line " + lineNo + ": variable : ID\n");
             wParserLog($ID.getText() + "\n");
         }
-    | ID LTHIRD expression RTHIRD
+    | ID LTHIRD e=expression RTHIRD
         {
             // ARRAY VARIABLES
             int lineNo = $ID.getLine();
-            String text = $ID.getText() + "[" + "expr (placeholder)" + "]";
+            String text = $ID.getText() + "[" + $e.Expr_rri.text + "]";
             $var_rri = new RuleReturnInfo(lineNo, text);
 
             wParserLog("Line " + lineNo + ": variable : ID LTHIRD expression RTHIRD\n");
@@ -592,7 +592,14 @@ logic_expression returns [RuleReturnInfo LogicExpr_rri]
             $LogicExpr_rri = new RuleReturnInfo(lineNo, text);
         }
 
-    | rel_expression LOGICOP rel_expression
+    | r1=rel_expression LOGICOP r2=rel_expression
+        {
+            int lineNo = $LOGICOP.getLine();
+            String text = $r1.relExpr_rri.text + $LOGICOP.getText() + $r2.relExpr_rri.text;
+            wParserLog("Line " + lineNo + ": logic_expression : rel_expression LOGICOP rel_expression\n");
+            wParserLog(text + "\n");
+            $LogicExpr_rri = new RuleReturnInfo(lineNo, text);
+        }
     ;
 
 rel_expression returns [RuleReturnInfo relExpr_rri]
@@ -604,7 +611,15 @@ rel_expression returns [RuleReturnInfo relExpr_rri]
             wParserLog(text + "\n");
             $relExpr_rri = new RuleReturnInfo(lineNo, text);
         }
-    | simple_expression RELOP simple_expression
+    | s1=simple_expression RELOP s2=simple_expression
+        {
+            int lineNo = $RELOP.getLine();
+            String text = $s1.sm_expr_rri.text + $RELOP.getText() + $s2.sm_expr_rri.text;
+            wParserLog("Line " + lineNo + ": rel_expression : simple_expression RELOP simple_expression\n");
+            wParserLog(text + "\n");
+            $relExpr_rri = new RuleReturnInfo(lineNo, text);
+
+        }
     ;
 
 simple_expression returns [RuleReturnInfo sm_expr_rri]
@@ -638,7 +653,15 @@ term returns [RuleReturnInfo term_rri]
             $term_rri = new RuleReturnInfo(lineNo, text);
 
         }
-    | term MULOP unary_expression
+    | t=term MULOP ue=unary_expression
+        {
+            int lineNo = $MULOP.getLine();
+            String text = $t.term_rri.text + $MULOP.getText() + $ue.unary_rri.text; 
+            wParserLog("Line " + lineNo + ": term : term MULOP unary_expression\n");
+            wParserLog(text + "\n");
+            $term_rri = new RuleReturnInfo(lineNo, text);
+
+        }
     ;
 
 unary_expression returns [RuleReturnInfo unary_rri]
@@ -666,8 +689,27 @@ factor returns [RuleReturnInfo fact_rri]
 
             $fact_rri = new RuleReturnInfo(lineNo, text);
         }
-    | ID LPAREN argument_list RPAREN
-    | LPAREN expression RPAREN
+    | ID LPAREN al=argument_list RPAREN
+        {
+            //FUNC CALL
+            int lineNo = $ID.getLine();
+            String text = $ID.getText() + "(" + $al.argList_rri.text + ")";
+
+            wParserLog("Line " + lineNo + ": factor : ID LPAREN argument_list RPAREN\n");
+            wParserLog(text + "\n");
+
+            $fact_rri = new RuleReturnInfo(lineNo, text);            
+        }
+    | LPAREN e=expression RPAREN
+        {
+            int lineNo = $RPAREN.getLine();
+            String text = "(" + $e.Expr_rri.text + ")";
+
+            wParserLog("Line " + lineNo + ": factor : LPAREN expression RPAREN\n");
+            wParserLog(text + "\n");
+
+            $fact_rri = new RuleReturnInfo(lineNo, text);
+        }
     | c=CONST_INT
         {
             int lineNo = $c.getLine();
@@ -693,12 +735,39 @@ factor returns [RuleReturnInfo fact_rri]
     | variable DECOP
     ;
 
-argument_list
-    : arguments
+argument_list returns [RuleReturnInfo argList_rri]
+    : a=arguments
+        {
+            // arguments -> work with single/multiple arguments
+            // argument_list -> work with all arguments together
+
+            int lineNo = $a.arg_rri.lineNo;
+            String text = $a.arg_rri.text;
+
+            wParserLog("Line " + lineNo + ": aargument_list : arguments\n");
+            wParserLog(text + "\n");
+            $argList_rri = new RuleReturnInfo(lineNo, text);
+        }
     | /* empty */
     ;
 
-arguments
-    : arguments COMMA logic_expression
-    | logic_expression
+arguments returns [RuleReturnInfo arg_rri]
+    : a=arguments COMMA le=logic_expression
+        {
+            int lineNo = $COMMA.getLine();
+            String text = $a.arg_rri.text + "," + $le.LogicExpr_rri.text;
+
+            wParserLog("Line " + lineNo + ": arguments : arguments COMMA logic_expression\n");
+            wParserLog(text + "\n");
+            $arg_rri = new RuleReturnInfo(lineNo, text);
+        }
+    | l=logic_expression
+        {
+            int lineNo = $l.LogicExpr_rri.lineNo;
+            String text = $l.LogicExpr_rri.text;
+
+            wParserLog("Line " + lineNo + ": arguments : logic_expression\n");
+            wParserLog(text + "\n");
+            $arg_rri = new RuleReturnInfo(lineNo, text);
+        }
     ;
