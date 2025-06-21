@@ -494,7 +494,7 @@ statement returns [RuleReturnInfo stat_rri]
             String text = $es.Expr_stat_rri.text + "\n";
 
             $stat_rri = new RuleReturnInfo(lineNo, text);
-            wParserLog("Line " + lineNo + ": statement : expression_statment\n");
+            wParserLog("Line " + lineNo + ": statement : expression_statement\n");
             wParserLog(text);
         }
     | compound_statement
@@ -564,7 +564,7 @@ expression returns [RuleReturnInfo Expr_rri]
         {
             int lineNo = $l.LogicExpr_rri.lineNo;
             String text = $l.LogicExpr_rri.text;
-            wParserLog("Line " + lineNo + ": expression : logic expression\n");
+            wParserLog("Line " + lineNo + ": expression : logic_expression\n");
             wParserLog(text + "\n");
             $Expr_rri = new RuleReturnInfo(lineNo, text);
         }
@@ -575,7 +575,7 @@ expression returns [RuleReturnInfo Expr_rri]
             String var_name = $var.var_rri.text;
 
             String text = var_name + "=" + $l.LogicExpr_rri.text;
-            wParserLog("Line " + lineNo + ": expression : variable ASSIGNOP logic expression\n");
+            wParserLog("Line " + lineNo + ": expression : variable ASSIGNOP logic_expression\n");
             wParserLog(text + "\n");
             $Expr_rri = new RuleReturnInfo(lineNo, text);
             
@@ -744,7 +744,7 @@ argument_list returns [RuleReturnInfo argList_rri]
             int lineNo = $a.arg_rri.lineNo;
             String text = $a.arg_rri.text;
 
-            wParserLog("Line " + lineNo + ": aargument_list : arguments\n");
+            wParserLog("Line " + lineNo + ": argument_list : arguments\n");
             wParserLog(text + "\n");
             $argList_rri = new RuleReturnInfo(lineNo, text);
         }
