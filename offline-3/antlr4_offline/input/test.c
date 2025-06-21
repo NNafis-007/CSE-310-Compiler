@@ -1,11 +1,14 @@
-// this is a normal file
-
 int x,y,z; float a;
 
 void foo();
 
 int var(int a, int b){
 	return a+b;
+}
+
+void foo(){
+	x=2;
+	y=x-5;
 }
 
 // int main(){

@@ -229,7 +229,7 @@ func_definition returns [RuleReturnInfo fdef_rri]
         cstat=compound_statement
         {
             //FN DEF WITH ARGS
-            int lineNo = $ID.getLine();
+            int lineNo = $cstat.Cstat_rri.lineNo;
             String fn_type = $ts.type_rri.text;
             String arg_list = "(" + $p.param_rri.text + ")";
             String fn_body = $cstat.Cstat_rri.text;
@@ -253,7 +253,7 @@ func_definition returns [RuleReturnInfo fdef_rri]
         cstat=compound_statement
         {
             //FN DEF WITHOUT ARGS
-            int lineNo = $ID.getLine();
+            int lineNo = $cstat.Cstat_rri.lineNo;
             String fn_type = $ts.type_rri.text;
             String fn_body = $cstat.Cstat_rri.text;
             String text = fn_type + " " + $ID.getText() + "()" + fn_body;
@@ -334,7 +334,7 @@ compound_statement returns [RuleReturnInfo Cstat_rri]
         } 
     s=statements RCURL
         {
-            int lineNo = $LCURL.line;
+            int lineNo = $RCURL.line;
             String text = "{\n" + $s.Stats_rri.text + "}\n";
             wParserLog("Line " + lineNo + ": compound_statement : LCURL statements RCURL\n");
             wParserLog(text + "\n");
@@ -464,7 +464,7 @@ statements returns [RuleReturnInfo Stats_rri]
             String text = $s.stat_rri.text;
 
             wParserLog("Line " + lineNo + ": statements : statement\n");
-            wParserLog(text + "\n");
+            wParserLog(text);
             $Stats_rri = new RuleReturnInfo(lineNo, text);
         }
     | ss=statements s=statement
@@ -473,7 +473,7 @@ statements returns [RuleReturnInfo Stats_rri]
             String text = $ss.Stats_rri.text + $s.stat_rri.text;
 
             wParserLog("Line " + lineNo + ": statements : statement\n");
-            wParserLog(text + "\n");
+            wParserLog(text);
             $Stats_rri = new RuleReturnInfo(lineNo, text);
         }
     ;
@@ -486,7 +486,7 @@ statement returns [RuleReturnInfo stat_rri]
 
             $stat_rri = new RuleReturnInfo(lineNo, text);
             wParserLog("Line " + lineNo + ": statement : var_declaration\n");
-            wParserLog(text + "\n");
+            wParserLog(text);
         }
     | es=expression_statement
         {
@@ -495,7 +495,7 @@ statement returns [RuleReturnInfo stat_rri]
 
             $stat_rri = new RuleReturnInfo(lineNo, text);
             wParserLog("Line " + lineNo + ": statement : expression_statment\n");
-            wParserLog(text + "\n");
+            wParserLog(text);
         }
     | compound_statement
     | FOR LPAREN expression_statement expression_statement expression RPAREN statement
@@ -509,7 +509,7 @@ statement returns [RuleReturnInfo stat_rri]
             String text = "return" + " " + $e.Expr_rri.text + ";\n";
 
             wParserLog("Line " + lineNo + ": statement : RETURN expression SEMICOLON\n");
-            wParserLog(text + "\n");
+            wParserLog(text);
             $stat_rri = new RuleReturnInfo(lineNo, text);
 
         }
