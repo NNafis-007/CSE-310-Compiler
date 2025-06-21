@@ -34,7 +34,7 @@ public class SymbolTable {
         this.numBuckets = numBuckets;
         this.out = outputStream;
         this.scopeChildCounters = new HashMap<>();
-        this.currentScopeId = generateNextScopeId(null); // Generate "1" for global scope
+        this.currentScopeId = generateNextScopeId(null); //generate "1" for global scope
         this.currentScope = new ScopeTable(this.numBuckets, this.currentScopeId, this.out);
         this.currentScope.setParentScope(null);
     }

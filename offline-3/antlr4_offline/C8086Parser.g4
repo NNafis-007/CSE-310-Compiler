@@ -33,19 +33,12 @@ import SymbolTable.SymbolInfo;
         }
     }
 
-    void testSymbolTable(){
-        try {
-            SymbolInfo s1 = new SymbolInfo("x", "INT");
-            Main.st.insertSymbol(s1);
-            Main.st.printAllScopeTable();
-        } catch(Exception e) {
-            System.err.println("ST test error : " + e.getMessage());
-        }
-    }
-
-    boolean STinsert(String name, String type){
+    boolean STinsert(String name, String token_type, String data_type, ArrayList<String> params, boolean isFunc) {
         try{
-            SymbolInfo s1 = new SymbolInfo(name, type);
+            SymbolInfo s1 = new SymbolInfo(name, token_type, data_type, params);
+            if(isFunc) {
+                s1.setIsFunction(true);
+            }
             boolean isInserted = Main.st.insertSymbol(s1);
             return isInserted;
             
@@ -102,25 +95,31 @@ import SymbolTable.SymbolInfo;
 }
 
 start
-    : program
+    : p=program
       {
-        wParserLog(
-            "Parsing completed successfully with "
-            + Main.syntaxErrorCount
-            + " syntax errors."
-        );
+        // wParserLog(
+        //     "Parsing completed successfully with "
+        //     + Main.syntaxErrorCount
+        //     + " syntax errors."
+        // );
 
+        int lineNo = $p.prog_rri.lineNo;
+        wParserLog("Line " + lineNo + ": start : program\n");
+        STprint();
+
+        wParserLog("\nTotal number of lines: " + lineNo);
+        wParserLog("Total number of errors: " + Main.syntaxErrorCount);
       }
     ;
 
-program returns [String prog]
+program returns [RuleReturnInfo prog_rri]
     : p=program u=unit
         {
             int lineNo = $u.unit_rri.lineNo;
-            String text = $u.unit_rri.text;
+            String text = $p.prog_rri.text + "\n" + $u.unit_rri.text;
             wParserLog("Line " + lineNo + ": program : program unit\n");
-            $prog = $p.prog + text + "\n";
-            wParserLog($prog + "\n");
+            wParserLog(text + "\n");
+            $prog_rri = new RuleReturnInfo(lineNo, text);
         }
     | u=unit 
         {
@@ -129,8 +128,7 @@ program returns [String prog]
             String text = $u.unit_rri.text;
             wParserLog("Line " + lineNo + ": program : unit\n");
             wParserLog(text + "\n");
-            $prog = text + "\n";
-
+            $prog_rri = new RuleReturnInfo(lineNo, text);
         }
     ;
 
@@ -164,12 +162,23 @@ unit returns [RuleReturnInfo unit_rri]
 func_declaration returns [RuleReturnInfo fdec_rri]
     : t=type_specifier ID LPAREN p=parameter_list RPAREN SEMICOLON
         {
-            //fn with args
-            System.out.println("PARSING FN with ARGS");
+            //FUNC declaration WITH ARGS
+
             int lineNo = $ID.getLine();
             String type = $t.type_rri.text;
             String fn_name = $ID.getText();
-            boolean isInserted = STinsert(fn_name, "ID");
+            String params = $p.param_rri.text;
+
+            System.out.println("PARSING func " + fn_name + " decl with ARGS");
+
+            ArrayList<String> paramList = new ArrayList<>();
+            for (String param : params.split(",")) {
+                String[] splitted = param.split(" ");
+                System.out.println("Param type : " + splitted[0]);
+                paramList.add(splitted[0]);
+            }
+
+            boolean isInserted = STinsert(fn_name, "ID", type, paramList, true); //DONE
             if(!isInserted){
                 System.out.println("ERROR : " + fn_name + " already exists in current scope");
             }
@@ -182,13 +191,15 @@ func_declaration returns [RuleReturnInfo fdec_rri]
         }
     | t=type_specifier ID LPAREN RPAREN SEMICOLON
         {
-            //fn without args
-            System.out.println("PARSING FN W/O ARGS");
+            //FUNC declaration WITHOUT ARGS
+
             int lineNo = $ID.getLine();
             String type = $t.type_rri.text;
             String fn_name = $ID.getText();
 
-            boolean isInserted = STinsert(fn_name, "ID");
+            System.out.println("PARSING func " + fn_name + " decl W/O ARGS");
+
+            boolean isInserted = STinsert(fn_name, "ID", type, null, true); //DONE
             if(!isInserted){
                 System.out.println("ERROR : " + fn_name + " already exists in current scope");
             }
@@ -206,23 +217,39 @@ func_definition returns [RuleReturnInfo fdef_rri]
     : ts=type_specifier ID LPAREN p=parameter_list 
         RPAREN 
             {
-                System.out.println("Storing fn info in symbol table");
-                System.out.println("Fn name : " + $ID.getText());
-                boolean isInserted = STinsert($ID.getText(), "ID");
+                //FN DEF WITH ARGS
+
+                System.out.println("Parsing Fn **definition** with args");
+                System.out.println("  Fn name : " + $ID.getText());
+                String ret_type = $ts.type_rri.text;
+
+                // Store fn info in list
+                ArrayList<String> paramList = new ArrayList<>();
+                ArrayList<String> IDList = new ArrayList<>();
+                String[] variables = $p.param_rri.text.split(",");
+                System.out.print("  Params : ");
+                for (String var : variables) {
+                    String[] splitted = var.split(" ");
+                    paramList.add(splitted[0]);
+                    IDList.add(splitted[1]);
+                    System.out.print("type : " + splitted[0] + ", ID : " + splitted[1] + "|");
+                }
+                System.out.println("");
+
+
+                boolean isInserted = STinsert($ID.getText(), "ID", ret_type, paramList, true); //DONE
                 if(!isInserted){
                     System.out.println("ERROR : " + $ID.getText() + " fn aldy inserted before");
                 }
                 else {
-                    System.out.print("Params : ");
                     //----- INSERT INTO SYMBOL TABLE ---------
-                    String[] variables = $p.param_rri.text.split(",");
                     enterScope();
-                    for (String var : variables) {
-                        String[] splitted = var.split(" ");
-                        STinsert(splitted[1], "ID");
+                    for (int i = 0; i < IDList.size(); i++) {
+                        String id = IDList.get(i);
+                        String idType = paramList.get(i);
+                        STinsert(id, "ID", idType, null, false); //DONE
                     }
                     Main.isFuncDefined = true;
-                    System.out.println("");
                 }
 
             } 
@@ -243,11 +270,12 @@ func_definition returns [RuleReturnInfo fdef_rri]
     | ts=type_specifier ID LPAREN 
         RPAREN 
             {
-                System.out.println("Storing fn info in symbol table");
-                System.out.println("Fn name : " + $ID.getText());
-                boolean isInserted = STinsert($ID.getText(), "ID");
+                System.out.println("Parsing Fn **definition** without args");
+                System.out.println("  Fn name : " + $ID.getText());
+                String ret_type = $ts.type_rri.text;
+                boolean isInserted = STinsert($ID.getText(), "ID", ret_type, null, true); //DONE
                 if(!isInserted){
-                    System.out.println($ID.getText() + " fn  aldy inserted before");
+                    System.out.println("ERROR : " + $ID.getText() + " fn  aldy inserted before");
                 }
             } 
         cstat=compound_statement
@@ -371,9 +399,19 @@ var_declaration returns [RuleReturnInfo vdec_rri]
         //INSERT INTO SYMBOL TABLE
         String[] variables = $dl.dec_list.split(",");
         for (String var : variables) {
-            boolean isInserted = STinsert(var.trim(), "ID");
+            String varName = var.trim();
+            String varType = $t.type_rri.text;
+            
+            //array declaration process differently
+            if(var.contains("[")){    
+                String[] parts = var.split("\\[");
+                varName = new String(parts[0].trim());
+                varType += "[]";
+                System.out.println("Inserting array variable: " + varName + " of type " + varType);
+            }
+            boolean isInserted = STinsert(varName, "ID", varType, null, false); //DONE
             if(!isInserted){
-                System.out.println("ERROR : " + var.trim() + " already exists in current scope");
+                System.out.println("ERROR : " + varName + " already exists in current scope");
             }
         }
       }
@@ -428,8 +466,6 @@ declaration_list returns [String dec_list]
         {
             //multiple decl
             $dec_list = $dl.dec_list + "," + $ID.text;
-            System.out.println($dec_list);
-
             wParserLog("Line " + $ID.line + ": declaration_list : declaration_list COMMA ID\n");
             wParserLog($dec_list + "\n");
         }
@@ -444,7 +480,6 @@ declaration_list returns [String dec_list]
         {
             //single decl
             $dec_list = $ID.text;
-            System.out.println($dec_list);
             wParserLog("Line " + $ID.line + ": declaration_list : ID\n");
             wParserLog($dec_list + "\n");
         }
