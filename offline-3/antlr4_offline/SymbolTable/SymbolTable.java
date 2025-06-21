@@ -79,11 +79,11 @@ public class SymbolTable {
         return this.currentScope.deleteSymbol(s);
     }
 
-    public SymbolInfo lookUp(SymbolInfo s, int[] index, int[] chainPos) {
+    public SymbolInfo lookUp(SymbolInfo s) {
         SymbolInfo found = null;
         ScopeTable currScope = this.currentScope;
         while (currScope != null) {
-            found = currScope.lookUp(s, index, chainPos, false);
+            found = currScope.lookUp(s, false);
             if (found != null) {
                 return found;
             }
@@ -92,10 +92,10 @@ public class SymbolTable {
         return null;
     }
 
-    public SymbolInfo currentScopeLookup(SymbolInfo s, int[] index, int[] chainPos) {
+    public SymbolInfo currentScopeLookup(SymbolInfo s) {
         ScopeTable currScope = this.currentScope;
         SymbolInfo found = null;
-        found = currScope.lookUp(s, index, chainPos, false);
+        found = currScope.lookUp(s, false);
         if (found != null) {
             return found;
         }

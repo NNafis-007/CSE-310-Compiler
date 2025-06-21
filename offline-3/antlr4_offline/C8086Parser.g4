@@ -72,6 +72,53 @@ import SymbolTable.SymbolInfo;
         }
     }
 
+    boolean STlookupCurrScope(String name){
+        try{
+            //currentScopeLookup
+            SymbolInfo s = new SymbolInfo(name, "ID", null, null);
+            SymbolInfo found = Main.st.currentScopeLookup(s);
+            //
+            if(found == null){
+                return false;
+            }
+            return true;
+        } catch(Exception e) {
+            System.err.println("Symbol Table lookup error : " + e.getMessage());
+            return false;
+        }
+    }
+
+    boolean isInteger(String str) {
+        if (str == null || str.isEmpty()) {
+            return false;
+        }
+
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    String typeDetector(String s){
+        try {
+            Integer.parseInt(s);
+            return "int";
+        } catch (Exception e) {
+
+        }
+
+        try {
+            Float.parseFloat(s);
+            return "float";
+        } catch (Exception e) {
+
+        }
+        return "unknown";
+    }
+
+
     class RuleReturnInfo{
         public int lineNo;
         public String text;
@@ -152,9 +199,9 @@ unit returns [RuleReturnInfo unit_rri]
     | f=func_definition
         {
             int lineNo = $f.fdef_rri.lineNo;
-            String text = $f.fdef_rri.text + "\n";
+            String text = $f.fdef_rri.text;
             wParserLog("Line " + lineNo + ": unit : func_definition\n");
-            wParserLog(text + "\n");
+            wParserLog(text);
             $unit_rri = new RuleReturnInfo($f.fdef_rri);
         }
     ;
@@ -263,7 +310,7 @@ func_definition returns [RuleReturnInfo fdef_rri]
             String text = fn_type + " " + $ID.getText() + arg_list + fn_body;
 
             wParserLog("Line " + lineNo + ": func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement\n");
-            wParserLog(text + "\n");
+            wParserLog(text);
             Main.isFuncDefined = false;
             $fdef_rri = new RuleReturnInfo(lineNo, text);
         }
@@ -287,7 +334,7 @@ func_definition returns [RuleReturnInfo fdef_rri]
             String text = fn_type + " " + $ID.getText() + "()" + fn_body;
 
             wParserLog("Line " + lineNo + ": func_definition : type_specifier ID LPAREN RPAREN compound_statement\n");
-            wParserLog(text + "\n");
+            wParserLog(text);
 
             $fdef_rri = new RuleReturnInfo(lineNo, text);
         }
@@ -365,7 +412,7 @@ compound_statement returns [RuleReturnInfo Cstat_rri]
             int lineNo = $RCURL.line;
             String text = "{\n" + $s.Stats_rri.text + "}\n";
             wParserLog("Line " + lineNo + ": compound_statement : LCURL statements RCURL\n");
-            wParserLog(text + "\n");
+            wParserLog(text);
             $Cstat_rri = new RuleReturnInfo(lineNo, text);
 
             //PRINT SYMBOL TABLE AND EXIT SCOPE
@@ -480,6 +527,12 @@ declaration_list returns [String dec_list]
         {
             //single decl
             $dec_list = $ID.text;
+            boolean aldyExists = STlookupCurrScope($ID.text);
+            if(aldyExists){
+                wErrorLog("Error at line " + $ID.line + ": Multiple declaration of " + $ID.text + "\n");
+                wParserLog("Error at line " + $ID.line + ": Multiple declaration of " + $ID.text + "\n");
+                Main.syntaxErrorCount++;
+            }
             wParserLog("Line " + $ID.line + ": declaration_list : ID\n");
             wParserLog($dec_list + "\n");
         }
@@ -578,16 +631,45 @@ variable returns [RuleReturnInfo var_rri]
             $var_rri = new RuleReturnInfo(lineNo, $ID.getText());
 
             wParserLog("Line " + lineNo + ": variable : ID\n");
+
+            String id = $ID.getText();
+            SymbolInfo var_info = Main.st.currentScopeLookup(new SymbolInfo(id, "ID", null, null));
+            boolean isNotDeclared = (var_info == null);
+            if(isNotDeclared){
+                //Error at line 12: Undeclared variable b
+                wErrorLog("Error at line " + lineNo + ": Undeclared variable " + id + "\n");
+                wParserLog("Error at line " + lineNo + ": Undeclared variable " + id + "\n");
+                System.out.println("ERROR: Variable " + id + " not declared before using at line " + lineNo);
+
+                Main.syntaxErrorCount++;
+            }
+
+            boolean isArray = (var_info != null  && var_info.getDataType().endsWith("[]"));
+            if(isArray){
+                //Error at line 10: Type mismatch, a is an array
+                wErrorLog("Error at line " + lineNo + ": Type mismatch, " + id + " is an array\n");
+                wParserLog("Error at line " + lineNo + ": Type mismatch, " + id + " is an array\n");
+                Main.syntaxErrorCount++;
+            }
+
             wParserLog($ID.getText() + "\n");
         }
     | ID LTHIRD e=expression RTHIRD
         {
             // ARRAY VARIABLES
             int lineNo = $ID.getLine();
-            String text = $ID.getText() + "[" + $e.Expr_rri.text + "]";
-            $var_rri = new RuleReturnInfo(lineNo, text);
+            String expr = $e.Expr_rri.text;
 
+            String text = $ID.getText() + "[" + expr + "]";
+            $var_rri = new RuleReturnInfo(lineNo, text);
             wParserLog("Line " + lineNo + ": variable : ID LTHIRD expression RTHIRD\n");
+
+            if(!isInteger(expr)) {
+                wErrorLog("Error at line " + lineNo + ": Expression inside third brackets not an integer\n");
+                wParserLog("Error at line " + lineNo + ": Expression inside third brackets not an integer\n");
+                Main.syntaxErrorCount++;     
+            }
+
             wParserLog(text + "\n");
 
         }
@@ -608,9 +690,33 @@ expression returns [RuleReturnInfo Expr_rri]
         {
             int lineNo = $l.LogicExpr_rri.lineNo;
             String var_name = $var.var_rri.text;
+            SymbolInfo var_info = Main.st.currentScopeLookup(new SymbolInfo(var_name, "ID", null, null));
+            boolean isNotDeclared = (var_info == null);
 
-            String text = var_name + "=" + $l.LogicExpr_rri.text;
+            String logic_expr = $l.LogicExpr_rri.text;
+            String expr_type = typeDetector(logic_expr);
+            String text = var_name + "=" + logic_expr;
             wParserLog("Line " + lineNo + ": expression : variable ASSIGNOP logic_expression\n");
+            
+            // CHECK FOR TYPE MISMATCH ERROR (for declared variables)
+            if(!isNotDeclared){
+                ArrayList<String> validTypes = new ArrayList<>();
+                validTypes.add("int");
+                validTypes.add("float");
+
+                boolean isValidExprType = validTypes.contains(expr_type);
+                boolean isValidVarType = validTypes.contains(var_info.getDataType());
+                if (isValidExprType && isValidVarType && !var_info.getDataType().equalsIgnoreCase(expr_type)) {
+                    //Error at line 8: Type Mismatch
+                    System.out.println("ERROR : Assigning " + var_name + "(" + var_info.getDataType() + ")" 
+                                + " with " + logic_expr + "(" + expr_type + ")");
+
+                    wErrorLog("Error at line " + lineNo + ": Type Mismatch" + "\n");
+                    wParserLog("Error at line " + lineNo + ": Type Mismatch" + "\n");
+                    Main.syntaxErrorCount++;
+                }
+            }
+
             wParserLog(text + "\n");
             $Expr_rri = new RuleReturnInfo(lineNo, text);
             
@@ -693,6 +799,17 @@ term returns [RuleReturnInfo term_rri]
             int lineNo = $MULOP.getLine();
             String text = $t.term_rri.text + $MULOP.getText() + $ue.unary_rri.text; 
             wParserLog("Line " + lineNo + ": term : term MULOP unary_expression\n");
+
+            // Error at line 9: Non-Integer operand on modulus operator
+            if($MULOP.getText().equals("%")){
+                String expr_type = typeDetector($ue.unary_rri.text);
+                if(!expr_type.equals("int")){
+                    wErrorLog("Error at line " + lineNo + ": Non-Integer operand on modulus operator\n");
+                    wParserLog("Error at line " + lineNo + ": Non-Integer operand on modulus operator\n");
+                    Main.syntaxErrorCount++;
+                }
+            }
+
             wParserLog(text + "\n");
             $term_rri = new RuleReturnInfo(lineNo, text);
 
