@@ -8,6 +8,6 @@ fi
 
 ANTLR_JAR="/usr/local/lib/antlr-4.13.2-complete.jar"
 
-java -Xmx500M -cp "$ANTLR_JAR:$CLASSPATH" org.antlr.v4.Tool C8086Lexer.g4 C8086Parser.g4
-javac -cp ".:$ANTLR_JAR" C8086*.java Main.java
+java -Xmx500M -cp "$ANTLR_JAR:$CLASSPATH" org.antlr.v4.Tool C2105007Lexer.g4 C2105007Parser.g4
+javac -cp ".:$ANTLR_JAR" C2105007*.java Main.java
 java -cp ".:$ANTLR_JAR" Main "$1"

@@ -1,7 +1,7 @@
-parser grammar C8086Parser;
+parser grammar C2105007Parser;
 
 options {
-	tokenVocab = C8086Lexer;
+	tokenVocab = C2105007Lexer;
 }
 
 @header {
@@ -14,7 +14,7 @@ import java.util.Arrays;
 @members {
     // helper to write into parserLogFile
     public boolean isValidStatement = true;
-    public boolean parsingFunc = false;
+    public boolean isUnrecognizedChar = false;
     public ArrayList<String> varsInCurrFunc = new ArrayList<>();
 
     public List<String> splitByArithmeticOperators(String s) {
@@ -983,12 +983,23 @@ statements
             $Stats_rri = new RuleReturnInfo(lineNo, text);
         }
 	| ss = statements s = statement {
-            int lineNo = $s.stat_rri.lineNo;
-            String text = $ss.Stats_rri.text + $s.stat_rri.text;
 
-            wParserLog("Line " + lineNo + ": statements : statements statement\n");
-            wParserLog(text);
-            $Stats_rri = new RuleReturnInfo(lineNo, text);
+            if(isUnrecognizedChar){
+                int lineNo = $s.stat_rri.lineNo;
+                String msg = "statements : statements statement (jamuna)";
+                // wParserLog("Line " + lineNo + ": " + msg + "\n");
+                // wParserLog($s.stat_rri.text + "\n");
+                $Stats_rri = new RuleReturnInfo(lineNo, $ss.Stats_rri.text);
+                isUnrecognizedChar = false; // reset after logging
+            }
+            else{
+                int lineNo = $s.stat_rri.lineNo;
+                String text = $ss.Stats_rri.text + $s.stat_rri.text;
+
+                wParserLog("Line " + lineNo + ": statements : statements statement\n");
+                wParserLog(text);
+                $Stats_rri = new RuleReturnInfo(lineNo, text);
+            }
         };
 
 statement
@@ -1002,12 +1013,22 @@ statement
             wParserLog(text);
         }
 	| es = expression_statement {
-            int lineNo = $es.Expr_stat_rri.lineNo;
-            String text = $es.Expr_stat_rri.text + "\n";
 
-            $stat_rri = new RuleReturnInfo(lineNo, text);
-            wParserLog("Line " + lineNo + ": statement : expression_statement\n");
-            wParserLog(text);
+            if(isUnrecognizedChar){
+                int lineNo = $es.Expr_stat_rri.lineNo;
+                String msg = "statement : expression_statement (jamuna)";
+                // wParserLog("Line " + lineNo + ": " + msg + "\n");
+                // wParserLog($es.Expr_stat_rri.text + "\n");
+                $stat_rri = new RuleReturnInfo(lineNo, $es.Expr_stat_rri.text + "\n");
+            }
+            else{
+                int lineNo = $es.Expr_stat_rri.lineNo;
+                String text = $es.Expr_stat_rri.text + "\n";
+
+                $stat_rri = new RuleReturnInfo(lineNo, text);
+                wParserLog("Line " + lineNo + ": statement : expression_statement\n");
+                wParserLog(text);
+            }
         }
 	| c = compound_statement {
             int lineNo = $c.Cstat_rri.lineNo;
@@ -1107,13 +1128,24 @@ expression_statement
             $Expr_stat_rri = new RuleReturnInfo(lineNo, text);
         }
 	| e = expression SEMICOLON {
-            int lineNo = $SEMICOLON.getLine();
-            String text = $e.Expr_rri.text + ";";
+            if(isUnrecognizedChar){
+                int lineNo = $e.Expr_rri.lineNo;
+                String msg = "expression_statement : expression SEMICOLON (jamuna)";
+                // wParserLog("Line " + lineNo + ": " + msg + "\n");
+                // wParserLog($e.Expr_rri.text + "\n");
+                $Expr_stat_rri = new RuleReturnInfo(lineNo, $e.Expr_rri.text);   
+            }
 
-            wParserLog("Line " + lineNo + ": expression_statement : expression SEMICOLON\n");
-            wParserLog(text + "\n");
-            $Expr_stat_rri = new RuleReturnInfo(lineNo, text); 
-            isValidStatement = true;           
+            else{
+                int lineNo = $SEMICOLON.getLine();
+                String text = $e.Expr_rri.text + ";";
+
+                wParserLog("Line " + lineNo + ": expression_statement : expression SEMICOLON\n");
+                wParserLog(text + "\n");
+                $Expr_stat_rri = new RuleReturnInfo(lineNo, text); 
+                isValidStatement = true;           
+            }
+            
         };
 
 variable
@@ -1187,57 +1219,66 @@ expression
             $Expr_rri = new RuleReturnInfo(lineNo, text);
         }
 	| var = variable ASSIGNOP l = logic_expression {
-            int lineNo = $l.LogicExpr_rri.lineNo;
-            String var_name = $var.var_rri.text;
-            SymbolInfo var_info = Main.st.currentScopeLookup(new SymbolInfo(var_name, "ID", null, null));
-            boolean isNotDeclared = (var_info == null);
-            boolean isArrVar = (var_name.contains("[") && var_name.contains("]"));
+            if(isUnrecognizedChar){
+                int lineNo = $l.LogicExpr_rri.lineNo;
+                String msg = "expression : logic_expression";
+                wParserLog("Line " + lineNo + ": " + msg + "\n");
+                wParserLog($l.LogicExpr_rri.text + "\n");
+                $Expr_rri = new RuleReturnInfo(lineNo, $l.LogicExpr_rri.text);   
 
-            String logic_expr = $l.LogicExpr_rri.text;
-            String expr_type = typeDetector(logic_expr);
-            
-            wParserLog("Line " + lineNo + ": expression : variable ASSIGNOP logic_expression\n");
-            if(expr_type.equals("void") && isValidStatement){
-                //Error at line 57: Void function used in expression
-                System.out.println("Error at line " + lineNo + ": Void function used in expression");
-                logErr("Error at line " + lineNo + ": Void function used in expression\n");
-                isValidStatement = false;
             }
+            else{
+                int lineNo = $l.LogicExpr_rri.lineNo;
+                String var_name = $var.var_rri.text;
+                SymbolInfo var_info = Main.st.currentScopeLookup(new SymbolInfo(var_name, "ID", null, null));
+                boolean isNotDeclared = (var_info == null);
+                boolean isArrVar = (var_name.contains("[") && var_name.contains("]"));
 
-            String text = var_name + "=" + logic_expr;
-            
-            // CHECK FOR TYPE MISMATCH ERROR (for declared variables (Not array ones))
-            if(!isNotDeclared){
-                ArrayList<String> validTypes = new ArrayList<>();
-                validTypes.add("int");
-                validTypes.add("float");
-
-                boolean isValidExprType = validTypes.contains(expr_type);
-                boolean isValidVarType = validTypes.contains(var_info.getDataType());
-                if (isValidExprType && isValidVarType && !var_info.getDataType().equalsIgnoreCase(expr_type) && isValidStatement) {
-                    //Error at line 8: Type Mismatch
-                    System.out.println("ERROR : Assigning " + var_name + "(" + var_info.getDataType() + ")" 
-                                + " with " + logic_expr + "(" + expr_type + ")");
-
-                    wErrorLog("Error at line " + lineNo + ": Type Mismatch" + "\n");
-                    wParserLog("Error at line " + lineNo + ": Type Mismatch" + "\n");
-                    Main.syntaxErrorCount++;
+                String logic_expr = $l.LogicExpr_rri.text;
+                String expr_type = typeDetector(logic_expr);
+                
+                wParserLog("Line " + lineNo + ": expression : variable ASSIGNOP logic_expression\n");
+                if(expr_type.equals("void") && isValidStatement){
+                    //Error at line 57: Void function used in expression
+                    System.out.println("Error at line " + lineNo + ": Void function used in expression");
+                    logErr("Error at line " + lineNo + ": Void function used in expression\n");
+                    isValidStatement = false;
                 }
-            }
 
-            // CHECK FOR TYPE MISMATCH ERROR (for array variables)
-            if(isArrVar && isValidStatement){
-                String varType = typeDetector(var_name);
-                if(!varType.equalsIgnoreCase(expr_type)){
-                    //Error at line 58: Type Mismatch
-                    System.out.println("Error at line " + lineNo + ": Type Mismatch");
-                    logErr("Error at line " + lineNo    + ": Type Mismatch\n");
+                String text = var_name + "=" + logic_expr;
+                
+                // CHECK FOR TYPE MISMATCH ERROR (for declared variables (Not array ones))
+                if(!isNotDeclared){
+                    ArrayList<String> validTypes = new ArrayList<>();
+                    validTypes.add("int");
+                    validTypes.add("float");
+
+                    boolean isValidExprType = validTypes.contains(expr_type);
+                    boolean isValidVarType = validTypes.contains(var_info.getDataType());
+                    if (isValidExprType && isValidVarType && !var_info.getDataType().equalsIgnoreCase(expr_type) && isValidStatement) {
+                        //Error at line 8: Type Mismatch
+                        System.out.println("ERROR : Assigning " + var_name + "(" + var_info.getDataType() + ")" 
+                                    + " with " + logic_expr + "(" + expr_type + ")");
+
+                        wErrorLog("Error at line " + lineNo + ": Type Mismatch" + "\n");
+                        wParserLog("Error at line " + lineNo + ": Type Mismatch" + "\n");
+                        Main.syntaxErrorCount++;
+                    }
                 }
-            }
 
-            wParserLog(text + "\n");
-            $Expr_rri = new RuleReturnInfo(lineNo, text);
-            
+                // CHECK FOR TYPE MISMATCH ERROR (for array variables)
+                if(isArrVar && isValidStatement){
+                    String varType = typeDetector(var_name);
+                    if(!varType.equalsIgnoreCase(expr_type)){
+                        //Error at line 58: Type Mismatch
+                        System.out.println("Error at line " + lineNo + ": Type Mismatch");
+                        logErr("Error at line " + lineNo    + ": Type Mismatch\n");
+                    }
+                }
+
+                wParserLog(text + "\n");
+                $Expr_rri = new RuleReturnInfo(lineNo, text);   
+            }            
         };
 
 logic_expression
@@ -1309,7 +1350,7 @@ simple_expression
             wParserLog("Line " + newLineNo + ": simple_expression : term\n");
             wParserLog(text + "\n");
             $sm_expr_rri = new RuleReturnInfo(newLineNo, text);
-
+            isUnrecognizedChar = true;
         }
     ;
 
