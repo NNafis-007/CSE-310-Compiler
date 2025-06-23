@@ -12,6 +12,189 @@ import SymbolTable.SymbolInfo;
 
 @members {
     // helper to write into parserLogFile
+    public boolean parsingFunc = false;
+    public ArrayList<String> varsInCurrFunc = new ArrayList<>();
+
+    public List<String> splitByArithmeticOperators(String s) {
+        List<String> expressions = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        int parenCount = 0;
+        
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            
+            if (c == '(') {
+                parenCount++;
+                current.append(c);
+            } else if (c == ')') {
+                parenCount--;
+                current.append(c);
+            } else if ((c == '+' || c == '-' || c == '*' || c == '/' || c == '%') && parenCount == 0) {
+                // Found an operator at top level (not inside parentheses)
+                if (current.length() > 0) {
+                    expressions.add(current.toString().trim());
+                    current = new StringBuilder();
+                }
+                // Skip the operator itself
+            } else {
+                current.append(c);
+            }
+        }
+        
+        // Add the last expression
+        if (current.length() > 0) {
+            expressions.add(current.toString().trim());
+        }
+        
+        return expressions;
+    }
+
+    String getFuncType(String fnName){
+        try{
+
+            SymbolInfo fn_info = Main.st.lookUp(new SymbolInfo(fnName, "ID", null, null));
+            return fn_info.getDataType();
+
+        } catch (Exception e) {
+            System.err.println("getFuncType error : " + e.getMessage());
+            return null;
+        }
+    }
+
+    // Helper method to check if an expression is a logical expression
+    public boolean isLogicalExpression(String expr) {
+        expr = expr.trim();
+        
+        // Check for logical operators: &&, ||, !, ==, !=, <, >, <=, >=, %
+        if (expr.contains("&&") || expr.contains("||") || 
+            expr.contains("==") || expr.contains("!=") || 
+            expr.contains("<=") || expr.contains(">=") || 
+            expr.contains("<") || expr.contains(">") ||
+            expr.contains("%")) {
+            return true;
+        }
+        
+        // Check for negation operator at the beginning
+        if (expr.startsWith("!")) {
+            return true;
+        }
+        
+        // Check for boolean literals
+        if (expr.equals("true") || expr.equals("false")) {
+            return true;
+        }
+        
+        return false;
+    }
+
+
+
+    public String evaluateExpressionType(String expr) {
+        if (expr.isEmpty()) {
+            return "unknown";
+        }
+        
+        // Remove outer parentheses if present
+        while (expr.startsWith("(") && expr.endsWith(")")) {
+            expr = expr.substring(1, expr.length() - 1).trim();
+        }
+
+        // Check if it's a logical expression (logical expressions always return int)
+        if (isLogicalExpression(expr)) {
+            return "int";
+        }
+
+        
+        // Check if it's an integer literal
+        try {
+            Integer.parseInt(expr);
+            return "int";
+        } catch (NumberFormatException ignored) {}
+        
+        // Check if it's a float literal
+        try {
+            Float.parseFloat(expr);
+            return "float";
+        } catch (NumberFormatException ignored) {}
+        
+        // Check if it's a function call
+        if (expr.contains("(") && expr.contains(")")) {
+            String[] splitted = expr.split("[(]");
+            System.out.println("Type checking for fn " + splitted[0]);
+            return getFuncType(splitted[0]);
+        }
+        
+        // Check if it's a variable (identifier)
+        if (expr.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+            // This should be replaced with actual symbol table lookup
+            // For now, return unknown for variables
+            System.out.println("Type checking for variable " + expr + " returning unknown");
+            return "unknown";
+        }
+        
+        // If it contains arithmetic operators, recursively evaluate
+        if (expr.matches(".*[+\\-*/%].*")) {
+            return typeDetector(expr);
+        }
+        
+        return "unknown";
+    }
+
+    public String typeDetector(String s) {
+        s = s.trim();
+        
+        // Check if it's a logical expression first (logical expressions always return int)
+        if (isLogicalExpression(s)) {
+            return "int";
+        }
+
+
+        // Base case: single literal int
+        try {
+            Integer.parseInt(s);
+            return "int";
+        } catch (Exception ignored) {}
+
+        // Base case: single literal float
+        try {
+            Float.parseFloat(s);
+            return "float";
+        } catch (Exception ignored) {}
+
+        // Remove outermost parentheses for cleaner parsing
+        while (s.startsWith("(") && s.endsWith(")")) {
+            s = s.substring(1, s.length() - 1).trim();
+        }
+
+        // Split expression by arithmetic operations (+, -, *, /, %)
+        List<String> expressions = splitByArithmeticOperators(s);
+        
+        boolean hasFloat = false;
+        boolean hasUnknown = false;
+        
+        // Evaluate the type of each expression
+        for (String expr : expressions) {
+            System.out.println("Individual Expression: " + expr);
+            String exprType = evaluateExpressionType(expr.trim());
+            
+            if (exprType.equals("unknown")) {
+                hasUnknown = true;
+            } else if (exprType.equals("float")) {
+                hasFloat = true;
+            }
+        }
+        
+        // If there's no unknown expression type, check priority: float > int
+        if (!hasUnknown) {
+            return hasFloat ? "float" : "int";
+        }
+        
+        return "unknown";
+    }
+
+
+
+    
     void wParserLog(String message) {
         try {
             Main.parserLogFile.write(message);
@@ -88,6 +271,23 @@ import SymbolTable.SymbolInfo;
         }
     }
 
+    boolean isFunction(String name){
+        try{
+            //currentScopeLookup
+            SymbolInfo s = new SymbolInfo(name, "ID", null, null);
+            SymbolInfo found = Main.st.currentScopeLookup(s);
+            //
+            if(found == null){
+                return false;
+            }
+            return found.getIsFunction();
+        } catch(Exception e) {
+            System.err.println("Symbol Table lookup error : " + e.getMessage());
+            return false;
+        }
+
+    }
+
     boolean isInteger(String str) {
         if (str == null || str.isEmpty()) {
             return false;
@@ -101,27 +301,10 @@ import SymbolTable.SymbolInfo;
         }
     }
 
-    String typeDetector(String s){
-        try {
-            Integer.parseInt(s);
-            return "int";
-        } catch (Exception e) {
-
-        }
-
-        try {
-            Float.parseFloat(s);
-            return "float";
-        } catch (Exception e) {
-
-        }
-        return "unknown";
-    }
-
-
     class RuleReturnInfo{
         public int lineNo;
         public String text;
+        public String expr_type;
         public RuleReturnInfo(){
             lineNo = 0;
             text = "";
@@ -130,12 +313,21 @@ import SymbolTable.SymbolInfo;
         public RuleReturnInfo(int ln, String txt){
             this.lineNo = ln;
             this.text = txt;
+            this.expr_type = null; // default value
         }
+
+        public RuleReturnInfo(int ln, String txt, String type){
+            this.lineNo = ln;
+            this.text = txt;
+            this.expr_type = type;
+        }
+
 
         // Copy constructor
         public RuleReturnInfo(RuleReturnInfo other) {
             this.lineNo = other.lineNo;
             this.text = other.text;
+            this.expr_type = other.expr_type; // copy expr_type
         }
     }
 
@@ -261,7 +453,9 @@ func_declaration returns [RuleReturnInfo fdec_rri]
     ;
 
 func_definition returns [RuleReturnInfo fdef_rri]
-    : ts=type_specifier ID LPAREN p=parameter_list 
+    : ts=type_specifier 
+        ID { parsingFunc = true; } 
+        LPAREN p=parameter_list 
         RPAREN 
             {
                 //FN DEF WITH ARGS
@@ -285,8 +479,10 @@ func_definition returns [RuleReturnInfo fdef_rri]
 
 
                 boolean isInserted = STinsert($ID.getText(), "ID", ret_type, paramList, true); //DONE
-                if(!isInserted){
-                    System.out.println("ERROR : " + $ID.getText() + " fn aldy inserted before");
+                boolean isFunc = isFunction($ID.getText());
+
+                if(!isInserted && !isFunc){
+                        System.out.println("ERROR : " + $ID.getText() + " fn aldy inserted before");
                 }
                 else {
                     //----- INSERT INTO SYMBOL TABLE ---------
@@ -295,6 +491,7 @@ func_definition returns [RuleReturnInfo fdef_rri]
                         String id = IDList.get(i);
                         String idType = paramList.get(i);
                         STinsert(id, "ID", idType, null, false); //DONE
+                        System.out.println("Inserted " + id + " for curr func");
                     }
                     Main.isFuncDefined = true;
                 }
@@ -321,7 +518,9 @@ func_definition returns [RuleReturnInfo fdef_rri]
                 System.out.println("  Fn name : " + $ID.getText());
                 String ret_type = $ts.type_rri.text;
                 boolean isInserted = STinsert($ID.getText(), "ID", ret_type, null, true); //DONE
-                if(!isInserted){
+                boolean isFunc = isFunction($ID.getText());
+
+                if(!isInserted && !isFunc){
                     System.out.println("ERROR : " + $ID.getText() + " fn  aldy inserted before");
                 }
             } 
@@ -585,12 +784,79 @@ statement returns [RuleReturnInfo stat_rri]
             wParserLog("Line " + lineNo + ": statement : expression_statement\n");
             wParserLog(text);
         }
-    | compound_statement
-    | FOR LPAREN expression_statement expression_statement expression RPAREN statement
-    | IF LPAREN expression RPAREN statement
-    | IF LPAREN expression RPAREN statement ELSE statement
-    | WHILE LPAREN expression RPAREN statement
+    | c=compound_statement
+        {
+            int lineNo = $c.Cstat_rri.lineNo;
+            String text = $c.Cstat_rri.text;
+            $stat_rri = new RuleReturnInfo(lineNo, text);
+            wParserLog("Line " + lineNo + ": statement : compound_statement\n");
+            wParserLog(text);
+            
+        }
+    | FOR LPAREN es1=expression_statement es2=expression_statement e=expression RPAREN s=statement
+        {
+            int lineNo = $s.stat_rri.lineNo;
+            String condns = $es1.Expr_stat_rri.text
+                            + $es2.Expr_stat_rri.text
+                            + $e.Expr_rri.text;
+
+            String text = "for(" + condns + ")" + $s.stat_rri.text;
+            $stat_rri = new RuleReturnInfo(lineNo, text);
+            wParserLog("Line " + lineNo + ": statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement\n");
+            wParserLog(text);
+
+        }
+    | IF LPAREN e=expression RPAREN s=statement
+        {
+            int lineNo = $s.stat_rri.lineNo;
+
+            String expr = $e.Expr_rri.text;
+            String st = $s.stat_rri.text;
+            String text = "if(" + expr + ")" + st;
+            $stat_rri = new RuleReturnInfo(lineNo, text);
+            wParserLog("Line " + lineNo + ": statement : IF LPAREN expression RPAREN statement\n");
+            wParserLog(text);
+        }
+    | IF LPAREN e=expression RPAREN s1=statement ELSE s2=statement
+        {
+            int lineNo = $s2.stat_rri.lineNo;
+
+            String expr = $e.Expr_rri.text;
+            String st1 = $s1.stat_rri.text;
+            String st2 = $s2.stat_rri.text;
+
+            String text = "if(" + expr + ")" + st1.stripTrailing() + "else " + st2;
+            $stat_rri = new RuleReturnInfo(lineNo, text);
+            wParserLog("Line " + lineNo + ": statement : IF LPAREN expression RPAREN statement ELSE statement\n");
+            wParserLog(text);
+
+        }
+    | WHILE LPAREN e=expression RPAREN s=statement
+        {
+            // while(a[0]--){
+            //     c = c - 2;
+            // }
+
+            int lineNo = $s.stat_rri.lineNo;
+            String condns = $e.Expr_rri.text;
+
+            String text = "while(" + condns + ")" + $s.stat_rri.text;
+            $stat_rri = new RuleReturnInfo(lineNo, text);
+            wParserLog("Line " + lineNo + ": statement : WHILE LPAREN expression RPAREN statement\n");
+            wParserLog(text);
+
+
+        }
     | PRINTLN LPAREN ID RPAREN SEMICOLON
+        {
+            System.out.println("Matched printf");
+            int lineNo = $SEMICOLON.getLine();
+            String text = "printf("  + $ID.getText() + ");\n";
+            $stat_rri = new RuleReturnInfo(lineNo, text);
+            wParserLog("Line " + lineNo + ": statement : PRINTLN LPAREN ID RPAREN SEMICOLON\n");
+            wParserLog(text);
+
+        }
     | RETURN e=expression SEMICOLON
         {
             int lineNo = $RETURN.getLine();
@@ -633,7 +899,7 @@ variable returns [RuleReturnInfo var_rri]
             wParserLog("Line " + lineNo + ": variable : ID\n");
 
             String id = $ID.getText();
-            SymbolInfo var_info = Main.st.currentScopeLookup(new SymbolInfo(id, "ID", null, null));
+            SymbolInfo var_info = Main.st.lookUp(new SymbolInfo(id, "ID", null, null));
             boolean isNotDeclared = (var_info == null);
             if(isNotDeclared){
                 //Error at line 12: Undeclared variable b
@@ -695,6 +961,9 @@ expression returns [RuleReturnInfo Expr_rri]
 
             String logic_expr = $l.LogicExpr_rri.text;
             String expr_type = typeDetector(logic_expr);
+
+            System.out.println("for Logical Expr : '" + logic_expr + "' type is : " + expr_type);
+
             String text = var_name + "=" + logic_expr;
             wParserLog("Line " + lineNo + ": expression : variable ASSIGNOP logic_expression\n");
             
@@ -817,16 +1086,35 @@ term returns [RuleReturnInfo term_rri]
     ;
 
 unary_expression returns [RuleReturnInfo unary_rri]
-    : ADDOP unary_expression
-    | NOT unary_expression
+    : ADDOP u=unary_expression
+        {
+            int lineNo = $ADDOP.getLine();
+            String text = $ADDOP.getText() + $u.unary_rri.text; 
+            wParserLog("Line " + lineNo + ": unary_expression : ADDOP unary_expression\n");
+            wParserLog(text + "\n");
+
+            String type = $u.unary_rri.expr_type;
+            $unary_rri = new RuleReturnInfo(lineNo, text, type);
+        }
+    | NOT u=unary_expression
+        {
+            int lineNo = $NOT.getLine();
+            String text = $NOT.getText() + $u.unary_rri.text; 
+            wParserLog("Line " + lineNo + ": unary_expression : NOT unary_expression\n");
+            wParserLog(text + "\n");
+            String type = $u.unary_rri.expr_type;
+
+            $unary_rri = new RuleReturnInfo(lineNo, text, type);
+        }
+
     | f=factor
         {
             int lineNo = $f.fact_rri.lineNo;
             String text = $f.fact_rri.text; 
             wParserLog("Line " + lineNo + ": unary_expression : factor\n");
             wParserLog(text + "\n");
-
-            $unary_rri = new RuleReturnInfo(lineNo, text);
+            String expr_type = $f.fact_rri.expr_type;
+            $unary_rri = new RuleReturnInfo(lineNo, text, expr_type);
         }
     ;
 
@@ -846,11 +1134,13 @@ factor returns [RuleReturnInfo fact_rri]
             //FUNC CALL
             int lineNo = $ID.getLine();
             String text = $ID.getText() + "(" + $al.argList_rri.text + ")";
+            String fnName = $ID.getText().trim();
+            String type = getFuncType(fnName);
 
             wParserLog("Line " + lineNo + ": factor : ID LPAREN argument_list RPAREN\n");
             wParserLog(text + "\n");
 
-            $fact_rri = new RuleReturnInfo(lineNo, text);            
+            $fact_rri = new RuleReturnInfo(lineNo, text, type);            
         }
     | LPAREN e=expression RPAREN
         {
@@ -871,6 +1161,7 @@ factor returns [RuleReturnInfo fact_rri]
             wParserLog(text + "\n");
 
             $fact_rri = new RuleReturnInfo(lineNo, text);
+            $fact_rri.expr_type = "int"; // Set type for CONST_INT
         }
     | c=CONST_FLOAT
         {
@@ -880,11 +1171,31 @@ factor returns [RuleReturnInfo fact_rri]
             wParserLog("Line " + lineNo + ": factor : CONST_FLOAT\n");
             wParserLog(text + "\n");
 
-            $fact_rri = new RuleReturnInfo(lineNo, text);
+            $fact_rri = new RuleReturnInfo(lineNo, text, "float"); // Set type for CONST_FLOAT
         }
 
-    | variable INCOP
-    | variable DECOP
+    | v=variable INCOP
+        {
+            int lineNo = $INCOP.getLine();
+            String text = $v.var_rri.text + $INCOP.getText(); 
+
+            wParserLog("Line " + lineNo + ": factor : variable INCOP\n");
+            wParserLog(text + "\n");
+
+            $fact_rri = new RuleReturnInfo(lineNo, text);
+
+        }
+    | v=variable DECOP
+        {
+            int lineNo = $DECOP.getLine();
+            String text = $v.var_rri.text + $DECOP.getText(); 
+
+            wParserLog("Line " + lineNo + ": factor : variable DECOP\n");
+            wParserLog(text + "\n");
+
+            $fact_rri = new RuleReturnInfo(lineNo, text);
+
+        }
     ;
 
 argument_list returns [RuleReturnInfo argList_rri]
