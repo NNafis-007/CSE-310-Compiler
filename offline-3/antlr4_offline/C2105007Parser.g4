@@ -393,17 +393,12 @@ import java.util.Arrays;
 
 start:
 	p = program {
-        // wParserLog(
-        //     "Parsing completed successfully with "
-        //     + Main.syntaxErrorCount
-        //     + " syntax errors."
-        // );
 
         int lineNo = $p.prog_rri.lineNo;
         wParserLog("Line " + lineNo + ": start : program\n");
         STprint();
 
-        wParserLog("\nTotal number of lines: " + lineNo);
+        wParserLog("Total number of lines: " + lineNo);
         wParserLog("Total number of errors: " + Main.syntaxErrorCount);
       };
 
@@ -411,7 +406,7 @@ program
 	returns[RuleReturnInfo prog_rri]:
 	p = program u = unit {
             int lineNo = $u.unit_rri.lineNo;
-            String text = $p.prog_rri.text + "\n" + $u.unit_rri.text;
+            String text = $p.prog_rri.text + "\n" + $u.unit_rri.text.stripTrailing();
             wParserLog("Line " + lineNo + ": program : program unit\n");
             wParserLog(text + "\n");
             $prog_rri = new RuleReturnInfo(lineNo, text);
@@ -419,7 +414,7 @@ program
 	| u = unit {
             //print rri from unit
             int lineNo = $u.unit_rri.lineNo;
-            String text = $u.unit_rri.text;
+            String text = $u.unit_rri.text.stripTrailing();
             wParserLog("Line " + lineNo + ": program : unit\n");
             wParserLog(text + "\n");
             $prog_rri = new RuleReturnInfo(lineNo, text);
