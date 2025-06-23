@@ -1293,7 +1293,26 @@ simple_expression
             wParserLog(text + "\n");
             $sm_expr_rri = new RuleReturnInfo(lineNo, text);
         }
+    | sm=simple_expression ADDOP t=term ic=invalid_char
+        {
+            int lineNo = $ADDOP.getLine();
+            int errLineNo = $ic.invalid_rri.lineNo;
+        
+
+            String errMsg = "Error at line " + errLineNo + ": Unrecognized character " + $ic.invalid_rri.text;
+            System.out.println(errMsg);
+            logErr(errMsg + "\n");
+                        
+            String op = $ADDOP.getText();
+            String text = $t.term_rri.text;
+            int newLineNo = errLineNo + 1;
+            wParserLog("Line " + newLineNo + ": simple_expression : term\n");
+            wParserLog(text + "\n");
+            $sm_expr_rri = new RuleReturnInfo(newLineNo, text);
+
+        }
     ;
+
 
 term
 	returns[RuleReturnInfo term_rri]:
@@ -1304,20 +1323,6 @@ term
             wParserLog(text + "\n");
             $term_rri = new RuleReturnInfo(lineNo, text);
 
-        }
-    | u=unary_expression ic=invalid_char
-        {
-            int errLineNo = $ic.invalid_rri.lineNo;
-            int lineNo = $u.unary_rri.lineNo;
-            String text = $u.unary_rri.text; 
-
-            String errMsg = "Error at line " + errLineNo + ": Unrecognized character " + $ic.invalid_rri.text;
-            System.out.println(errMsg);
-
-            wParserLog("Line " + lineNo + ": term : unary_expression\n");
-            wParserLog(text + "\n");
-            logErr(errMsg + "\n");
-            $term_rri = new RuleReturnInfo(lineNo, text);
         }
 	| t = term MULOP ue = unary_expression {
             int lineNo = $MULOP.getLine();
