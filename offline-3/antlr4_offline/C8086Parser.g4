@@ -93,8 +93,6 @@ import java.util.Arrays;
         return false;
     }
 
-
-
     public String evaluateExpressionType(String expr) {
         if (expr.isEmpty()) {
             return "unknown";
@@ -247,9 +245,7 @@ import java.util.Arrays;
         return false; // Not found or not an array variable
     }
 
-
-
-    
+ 
     void wParserLog(String message) {
         try {
             Main.parserLogFile.write(message);
@@ -503,11 +499,11 @@ func_declaration
             $fdec_rri = new RuleReturnInfo();
             $fdec_rri.text = type + " " + fn_name + "();";
             $fdec_rri.lineNo = lineNo;
-        };
+        };  
 
 func_definition
 	returns[RuleReturnInfo fdef_rri]:
-	ts = type_specifier ID { parsingFunc = true; } LPAREN p = parameter_list RPAREN {
+	ts = type_specifier ID LPAREN p = parameter_list RPAREN {
                 //FN DEF WITH ARGS
                 int lineNo_now = $RPAREN.getLine();
 
@@ -619,8 +615,119 @@ func_definition
             wParserLog(text);
 
             $fdef_rri = new RuleReturnInfo(lineNo, text);
-        };
+        }
+    | ts = type_specifier ID LPAREN p = parameter_list 
+    non=non_params
+        {
+            int errLineNo = $non.non_param_rri.lineNo;
+            String non_param = $non.non_param_rri.text;
+            
+            String message = "Error at line " + errLineNo + 
+                ": syntax error, unexpected " + non_param + ", expecting RPAREN or COMMA";
 
+            //Error at line 3: syntax error, unexpected ADDOP, expecting RPAREN or COMMA
+            System.out.println(message);
+            logErr(message + "\n");
+
+        } 
+    RPAREN {
+                //FN DEF WITH ARGS
+                int lineNo_now = $RPAREN.getLine();
+
+                System.out.println("Parsing Fn **definition** with args");
+                System.out.println("  Fn name : " + $ID.getText());
+                String ret_type = $ts.type_rri.text;
+
+                // Store fn info in list
+                ArrayList<String> paramList = new ArrayList<>();
+                ArrayList<String> IDList = new ArrayList<>();
+                String[] variables = $p.param_rri.text.split(",");
+                System.out.print("  Params : ");
+                for (String var : variables) {
+                    String[] splitted = var.split(" ");
+                    if(splitted.length < 2) {
+                        continue;
+                    }
+                    paramList.add(splitted[0]);
+                    IDList.add(splitted[1]);
+                    System.out.print("type : " + splitted[0] + ", ID : " + splitted[1] + "|");
+                }
+                System.out.println("");
+
+
+                boolean isInserted = STinsert($ID.getText(), "ID", ret_type, paramList, true); //DONE
+                boolean isFunc = isFunction($ID.getText());
+
+                
+
+                // Previously declared function 
+                if(!isInserted && isFunc){
+                    System.out.println("Defining a previously declared fn " + $ID.getText());
+                    String fnType = getFuncType($ID.getText());
+                    System.out.println("    prev Type " + fnType);
+                    System.out.println("    now Type " + ret_type);
+                    if(!fnType.equalsIgnoreCase(ret_type)){
+                        //Error at line 24: Return type mismatch of foo3
+                        System.out.println("Error at line " + lineNo_now + ": Return type mismatch of " + $ID.getText());
+                        logErr("Error at line " + lineNo_now + ": Return type mismatch of " + $ID.getText() + "\n");
+                    }
+
+                    SymbolInfo fn_info = Main.st.lookUp(new SymbolInfo($ID.getText(), "ID", null, null));
+                    ArrayList<String> prev_params = fn_info.getParameters();
+                    System.out.println("  prev params : " + prev_params + "| now params : " + paramList);
+
+                    if(prev_params.size() != paramList.size()){
+                        //Error at line 32: Total number of arguments mismatch with declaration in function var
+                        System.out.println("Error at line " + lineNo_now + 
+                                ": Total number of arguments mismatch with declaration in function " + $ID.getText());
+                        logErr("Error at line " + lineNo_now + 
+                                ": Total number of arguments mismatch with declaration in function " + $ID.getText() + "\n");
+                    }
+                }
+
+                if(!isInserted && !isFunc){
+                    //Error at line 28: Multiple declaration of z
+                    System.out.println("Error at line " + lineNo_now + ": Multiple declaration of " + $ID.getText());
+                    logErr("Error at line " + lineNo_now + ": Multiple declaration of " + $ID.getText() + "\n");
+                }
+                //----- INSERT INTO SYMBOL TABLE ---------
+                enterScope();
+                for (int i = 0; i < IDList.size(); i++) {
+                    String id = IDList.get(i);
+                    String idType = paramList.get(i);
+                    if(STinsert(id, "ID", idType, null, false)){
+                        System.out.println("Inserted " + id + " for curr func");
+                    }
+                    else{
+                        System.out.println("Can not insert " + id + " for curr func");
+                    }
+                }
+                Main.isFuncDefined = true;
+
+            } 
+    cstat = compound_statement
+        {
+            //FN DEF WITH ARGS
+            int lineNo = $cstat.Cstat_rri.lineNo;
+            String fn_type = $ts.type_rri.text;
+            String arg_list = "(" + $p.param_rri.text + ")";
+            String fn_body = $cstat.Cstat_rri.text;
+            String text = fn_type + " " + $ID.getText() + arg_list + fn_body + "\n";
+
+            if(fn_body.contains("return") && fn_type.equalsIgnoreCase("void")){
+                //Error at line 38: Cannot return value from function foo4 with void return type 
+                System.out.println("Error : void Function " + $ID.getText() + " returns a value");
+                logErr("Error at line " + lineNo + ": Cannot return value from function " + $ID.getText() + " with void return type\n");
+
+            }
+
+            wParserLog("Line " + lineNo + ": func_definition : type_specifier ID LPAREN RPAREN compound_statement\n");
+            wParserLog(text);
+            Main.isFuncDefined = false;
+            $fdef_rri = new RuleReturnInfo(lineNo, text);
+        }
+    
+    ;
 parameter_list
 	returns[RuleReturnInfo param_rri]:
 	p = parameter_list COMMA t = type_specifier ID {
@@ -682,6 +789,7 @@ parameter_list
         }
 	| t = type_specifier { 
             //used in func decl int foo(int)
+            System.out.println("In parameter list: type_specifier");
             int lineNo = $t.type_rri.lineNo;
             String text = $t.type_rri.text;
             wParserLog("Line " + lineNo + ": parameter_list : type_specifier\n");
@@ -710,11 +818,18 @@ compound_statement
             STprint();
             exitScope();
         }
-	| LCURL RCURL { 
-            enterScope();
-            wParserLog("Line " + $LCURL.line + ": compound_statement : LCURL RCURL\n");
+	| LCURL
+        {
+            if(!Main.isFuncDefined){
+                System.out.println("Entering new scope");
+                enterScope();
+            }
+        } 
+    RCURL { 
+            wParserLog("Line " + $RCURL.line + ": compound_statement : LCURL RCURL\n");
             wParserLog("{}\n");
-            $Cstat_rri = new RuleReturnInfo($LCURL.line, "{}");
+            $Cstat_rri = new RuleReturnInfo($RCURL.line, "{}");
+            STprint();
             exitScope();
         };
 
@@ -805,6 +920,23 @@ declaration_list
             wParserLog("Line " + $ID.line + ": declaration_list : declaration_list COMMA ID\n");
             wParserLog($dec_list + "\n");
         }
+    | dl=declaration_list np=non_params COMMA ID
+        {
+            // decl ERROR
+            String msg = "Error at line " + $ID.getLine() + ": syntax error, unexpected " 
+                    + $np.non_param_rri.text + ", expecting COMMA or SEMICOLON";
+
+            System.out.println(msg);
+            $dec_list = $dl.dec_list + "," + $ID.text;
+
+            System.out.println("Line no " + $ID.getLine() + " declaration list: " + $dec_list);
+
+            logErr(msg + "\n");
+            wParserLog("Line " + $ID.line + ": declaration_list : declaration_list COMMA ID\n");
+            wParserLog($dec_list + "\n");
+        }
+
+
 	| dl = declaration_list COMMA ID LTHIRD CONST_INT RTHIRD {
             //array er shathe aaro kichu
             $dec_list = $dl.dec_list + "," + $ID.text + "[" + $CONST_INT.text + "]";
@@ -1160,7 +1292,8 @@ simple_expression
             wParserLog("Line " + lineNo + ": simple_expression : simple_expression ADDOP term\n");
             wParserLog(text + "\n");
             $sm_expr_rri = new RuleReturnInfo(lineNo, text);
-        };
+        }
+    ;
 
 term
 	returns[RuleReturnInfo term_rri]:
@@ -1171,6 +1304,20 @@ term
             wParserLog(text + "\n");
             $term_rri = new RuleReturnInfo(lineNo, text);
 
+        }
+    | u=unary_expression ic=invalid_char
+        {
+            int errLineNo = $ic.invalid_rri.lineNo;
+            int lineNo = $u.unary_rri.lineNo;
+            String text = $u.unary_rri.text; 
+
+            String errMsg = "Error at line " + errLineNo + ": Unrecognized character " + $ic.invalid_rri.text;
+            System.out.println(errMsg);
+
+            wParserLog("Line " + lineNo + ": term : unary_expression\n");
+            wParserLog(text + "\n");
+            logErr(errMsg + "\n");
+            $term_rri = new RuleReturnInfo(lineNo, text);
         }
 	| t = term MULOP ue = unary_expression {
             int lineNo = $MULOP.getLine();
@@ -1325,6 +1472,21 @@ factor
             $fact_rri = new RuleReturnInfo(lineNo, text);
             $fact_rri.expr_type = "int"; // Set type for CONST_INT
         }
+    | ASSIGNOP c=CONST_INT 
+        {
+            int lineNo = $c.getLine();
+            String text = $c.getText();
+
+            String msg = "Error at line " + lineNo +": syntax error, unexpected ASSIGNOP";
+            logErr(msg + "\n");
+            System.out.println(msg);
+            wParserLog("Line " + lineNo + ": factor : CONST_INT\n");
+            wParserLog(text + "\n");
+
+            $fact_rri = new RuleReturnInfo(lineNo, text);
+            $fact_rri.expr_type = "int"; 
+        }
+
 	| c = CONST_FLOAT {
             int lineNo = $c.getLine();
             String text = $c.getText();
@@ -1388,3 +1550,44 @@ arguments
             wParserLog(text + "\n");
             $arg_rri = new RuleReturnInfo(lineNo, text);
         };
+
+// Error handling grammers
+non_params returns [RuleReturnInfo non_param_rri]:
+    LPAREN
+        {
+            $non_param_rri = new RuleReturnInfo($LPAREN.line, "LPAREN");
+        } 
+    | LCURL {
+            $non_param_rri = new RuleReturnInfo($LCURL.line, "LCURL");
+        }
+    | RCURL {
+            $non_param_rri = new RuleReturnInfo($RCURL.line, "RCURL");
+            }
+    | SEMICOLON {
+            $non_param_rri = new RuleReturnInfo($SEMICOLON.line, "SEMICOLON");
+        }
+    | LTHIRD {$non_param_rri = new RuleReturnInfo($LTHIRD.line, "LTHIRD");}
+    | RTHIRD {
+            $non_param_rri = new RuleReturnInfo($RTHIRD.line, "RTHIRD");
+    }
+    | ADDOP {$non_param_rri = new RuleReturnInfo($ADDOP.line, "ADDOP");} 
+    | MULOP {$non_param_rri = new RuleReturnInfo($MULOP.line, "MULOP");} 
+    | RELOP {$non_param_rri = new RuleReturnInfo($RELOP.line, "RELOP");}
+    | LOGICOP {$non_param_rri = new RuleReturnInfo($LOGICOP.line, "LOGICOP");} 
+    | INCOP {$non_param_rri = new RuleReturnInfo($INCOP.line, "INCOP");} 
+    | DECOP {$non_param_rri = new RuleReturnInfo($DECOP.line, "DECOP");}
+    | NOT 
+        {
+            $non_param_rri = new RuleReturnInfo($NOT.line, "NOT");
+         };
+
+// Error handling for invalid chars
+invalid_char returns [RuleReturnInfo invalid_rri]
+    :
+    ic=INVALID_CHAR {
+        //Error at line 10: Unrecognized character #
+        // String errorMessage = "Error at line " + $ic.getLine() + ": Unrecognized character " + $ic.getText();
+        // wParserLog(errorMessage + "\n");
+        // logErr(errorMessage + "\n");
+        $invalid_rri = new RuleReturnInfo($ic.getLine(), $ic.getText());
+    };
