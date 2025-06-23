@@ -1,17 +1,19 @@
 parser grammar C8086Parser;
 
 options {
-    tokenVocab = C8086Lexer;
+	tokenVocab = C8086Lexer;
 }
 
 @header {
 import java.io.BufferedWriter;
 import java.io.IOException;
 import SymbolTable.SymbolInfo;
+import java.util.Arrays;
 }
 
 @members {
     // helper to write into parserLogFile
+    public boolean isValidStatement = true;
     public boolean parsingFunc = false;
     public ArrayList<String> varsInCurrFunc = new ArrayList<>();
 
@@ -53,11 +55,15 @@ import SymbolTable.SymbolInfo;
         try{
 
             SymbolInfo fn_info = Main.st.lookUp(new SymbolInfo(fnName, "ID", null, null));
+            if(fn_info == null){
+                System.out.println("Function " + fnName + " not found in symbol table");
+                return "";
+            }
             return fn_info.getDataType();
 
         } catch (Exception e) {
             System.err.println("getFuncType error : " + e.getMessage());
-            return null;
+            return "";
         }
     }
 
@@ -120,18 +126,42 @@ import SymbolTable.SymbolInfo;
         // Check if it's a function call
         if (expr.contains("(") && expr.contains(")")) {
             String[] splitted = expr.split("[(]");
-            System.out.println("Type checking for fn " + splitted[0]);
-            return getFuncType(splitted[0]);
+            String fn_type = getFuncType(splitted[0]);
+            System.out.println("(in type detector) Type checking for fn " + splitted[0] + " | type: " + fn_type);
+            return fn_type; // Return the function type
         }
         
         // Check if it's a variable (identifier)
         if (expr.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
             // This should be replaced with actual symbol table lookup
             // For now, return unknown for variables
+            SymbolInfo varInfo = Main.st.currentScopeLookup(new SymbolInfo(expr, "ID", null, null));
+            if(varInfo == null){
+                varInfo = Main.st.lookUp(new SymbolInfo(expr, "ID", null, null));
+            }
+            if (varInfo != null) {
+                String varType = varInfo.getDataType();
+                System.out.println("Type checking for variable " + expr + " returning " + varType);
+                return varType;
+            }
             System.out.println("Type checking for variable " + expr + " returning unknown");
             return "unknown";
         }
-        
+
+        //check for array variable
+        if (expr.matches("[a-zA-Z_][a-zA-Z0-9_]*\\[[0-9]+\\]")) {
+            String varName = expr.split("\\[")[0];
+            SymbolInfo varInfo = Main.st.currentScopeLookup(new SymbolInfo(varName, "ID", null, null));
+            if(varInfo == null){
+                varInfo = Main.st.lookUp(new SymbolInfo(varName, "ID", null, null));
+            }
+            if (varInfo != null) {
+                String varType = varInfo.getDataType();
+                return varType;
+            }
+            return "unknown";
+        }
+
         // If it contains arithmetic operators, recursively evaluate
         if (expr.matches(".*[+\\-*/%].*")) {
             return typeDetector(expr);
@@ -171,25 +201,50 @@ import SymbolTable.SymbolInfo;
         
         boolean hasFloat = false;
         boolean hasUnknown = false;
+        boolean hasVoid = false;
         
         // Evaluate the type of each expression
         for (String expr : expressions) {
             System.out.println("Individual Expression: " + expr);
             String exprType = evaluateExpressionType(expr.trim());
+
             
             if (exprType.equals("unknown")) {
                 hasUnknown = true;
             } else if (exprType.equals("float")) {
                 hasFloat = true;
+            } else if (exprType.equals("void")) {
+                hasVoid = true; // Void type is not allowed in expressions
             }
         }
         
         // If there's no unknown expression type, check priority: float > int
         if (!hasUnknown) {
-            return hasFloat ? "float" : "int";
+            if(hasVoid){
+                return "void"; // If any expression is void, return void
+            }
+            if (hasFloat) {
+                return "float"; // If any expression is float, return float
+            }
+            return "int"; // Otherwise, return int
         }
         
         return "unknown";
+    }
+
+    public boolean isArrayVar(String varName) {
+        SymbolInfo varInfo = Main.st.currentScopeLookup(new SymbolInfo(varName, "ID", null, null));
+        if(varInfo == null){
+            varInfo = Main.st.lookUp(new SymbolInfo(varName, "ID", null, null));
+        }
+        if (varInfo != null) {
+            String varType = varInfo.getDataType();
+            System.out.println("Checking if var " + varName + " is Array? : " + varType);
+            if (varType.trim().endsWith("[]")) {
+                return true; // It's an array variable
+            }
+        }
+        return false; // Not found or not an array variable
     }
 
 
@@ -216,8 +271,15 @@ import SymbolTable.SymbolInfo;
         }
     }
 
+    void logErr(String message){
+        wErrorLog(message);
+        wParserLog(message);
+        Main.syntaxErrorCount++;
+    }
+
     boolean STinsert(String name, String token_type, String data_type, ArrayList<String> params, boolean isFunc) {
         try{
+
             SymbolInfo s1 = new SymbolInfo(name, token_type, data_type, params);
             if(isFunc) {
                 s1.setIsFunction(true);
@@ -333,9 +395,8 @@ import SymbolTable.SymbolInfo;
 
 }
 
-start
-    : p=program
-      {
+start:
+	p = program {
         // wParserLog(
         //     "Parsing completed successfully with "
         //     + Main.syntaxErrorCount
@@ -348,59 +409,53 @@ start
 
         wParserLog("\nTotal number of lines: " + lineNo);
         wParserLog("Total number of errors: " + Main.syntaxErrorCount);
-      }
-    ;
+      };
 
-program returns [RuleReturnInfo prog_rri]
-    : p=program u=unit
-        {
+program
+	returns[RuleReturnInfo prog_rri]:
+	p = program u = unit {
             int lineNo = $u.unit_rri.lineNo;
             String text = $p.prog_rri.text + "\n" + $u.unit_rri.text;
             wParserLog("Line " + lineNo + ": program : program unit\n");
             wParserLog(text + "\n");
             $prog_rri = new RuleReturnInfo(lineNo, text);
         }
-    | u=unit 
-        {
+	| u = unit {
             //print rri from unit
             int lineNo = $u.unit_rri.lineNo;
             String text = $u.unit_rri.text;
             wParserLog("Line " + lineNo + ": program : unit\n");
             wParserLog(text + "\n");
             $prog_rri = new RuleReturnInfo(lineNo, text);
-        }
-    ;
+        };
 
-unit returns [RuleReturnInfo unit_rri]
-    : vd=var_declaration
-        {
+unit
+	returns[RuleReturnInfo unit_rri]:
+	vd = var_declaration {
             int lineNo = $vd.vdec_rri.lineNo;
             String text = $vd.vdec_rri.text;
             wParserLog("Line " + lineNo + ": unit : var_declaration\n");
             wParserLog(text + "\n");
             $unit_rri = new RuleReturnInfo(lineNo, text);
         }
-    | fdec=func_declaration
-        {
+	| fdec = func_declaration {
             int lineNo = $fdec.fdec_rri.lineNo;
             String text = $fdec.fdec_rri.text;
             wParserLog("Line " + lineNo + ": unit : func_declaration\n");
             wParserLog(text + "\n");
             $unit_rri = new RuleReturnInfo($fdec.fdec_rri);
         }
-    | f=func_definition
-        {
+	| f = func_definition {
             int lineNo = $f.fdef_rri.lineNo;
             String text = $f.fdef_rri.text;
             wParserLog("Line " + lineNo + ": unit : func_definition\n");
             wParserLog(text);
             $unit_rri = new RuleReturnInfo($f.fdef_rri);
-        }
-    ;
+        };
 
-func_declaration returns [RuleReturnInfo fdec_rri]
-    : t=type_specifier ID LPAREN p=parameter_list RPAREN SEMICOLON
-        {
+func_declaration
+	returns[RuleReturnInfo fdec_rri]:
+	t = type_specifier ID LPAREN p = parameter_list RPAREN SEMICOLON {
             //FUNC declaration WITH ARGS
 
             int lineNo = $ID.getLine();
@@ -428,8 +483,7 @@ func_declaration returns [RuleReturnInfo fdec_rri]
 
             $fdec_rri = new RuleReturnInfo(lineNo, fd);
         }
-    | t=type_specifier ID LPAREN RPAREN SEMICOLON
-        {
+	| t = type_specifier ID LPAREN RPAREN SEMICOLON {
             //FUNC declaration WITHOUT ARGS
 
             int lineNo = $ID.getLine();
@@ -449,16 +503,13 @@ func_declaration returns [RuleReturnInfo fdec_rri]
             $fdec_rri = new RuleReturnInfo();
             $fdec_rri.text = type + " " + fn_name + "();";
             $fdec_rri.lineNo = lineNo;
-        }
-    ;
+        };
 
-func_definition returns [RuleReturnInfo fdef_rri]
-    : ts=type_specifier 
-        ID { parsingFunc = true; } 
-        LPAREN p=parameter_list 
-        RPAREN 
-            {
+func_definition
+	returns[RuleReturnInfo fdef_rri]:
+	ts = type_specifier ID { parsingFunc = true; } LPAREN p = parameter_list RPAREN {
                 //FN DEF WITH ARGS
+                int lineNo_now = $RPAREN.getLine();
 
                 System.out.println("Parsing Fn **definition** with args");
                 System.out.println("  Fn name : " + $ID.getText());
@@ -481,24 +532,53 @@ func_definition returns [RuleReturnInfo fdef_rri]
                 boolean isInserted = STinsert($ID.getText(), "ID", ret_type, paramList, true); //DONE
                 boolean isFunc = isFunction($ID.getText());
 
-                if(!isInserted && !isFunc){
-                        System.out.println("ERROR : " + $ID.getText() + " fn aldy inserted before");
-                }
-                else {
-                    //----- INSERT INTO SYMBOL TABLE ---------
-                    enterScope();
-                    for (int i = 0; i < IDList.size(); i++) {
-                        String id = IDList.get(i);
-                        String idType = paramList.get(i);
-                        STinsert(id, "ID", idType, null, false); //DONE
-                        System.out.println("Inserted " + id + " for curr func");
+                
+
+                // Previously declared function 
+                if(!isInserted && isFunc){
+                    System.out.println("Defining a previously declared fn " + $ID.getText());
+                    String fnType = getFuncType($ID.getText());
+                    System.out.println("    prev Type " + fnType);
+                    System.out.println("    now Type " + ret_type);
+                    if(!fnType.equalsIgnoreCase(ret_type)){
+                        //Error at line 24: Return type mismatch of foo3
+                        System.out.println("Error at line " + lineNo_now + ": Return type mismatch of " + $ID.getText());
+                        logErr("Error at line " + lineNo_now + ": Return type mismatch of " + $ID.getText() + "\n");
                     }
-                    Main.isFuncDefined = true;
+
+                    SymbolInfo fn_info = Main.st.lookUp(new SymbolInfo($ID.getText(), "ID", null, null));
+                    ArrayList<String> prev_params = fn_info.getParameters();
+                    System.out.println("  prev params : " + prev_params + "| now params : " + paramList);
+
+                    if(prev_params.size() != paramList.size()){
+                        //Error at line 32: Total number of arguments mismatch with declaration in function var
+                        System.out.println("Error at line " + lineNo_now + 
+                                ": Total number of arguments mismatch with declaration in function " + $ID.getText());
+                        logErr("Error at line " + lineNo_now + 
+                                ": Total number of arguments mismatch with declaration in function " + $ID.getText() + "\n");
+                    }
                 }
 
-            } 
-        cstat=compound_statement
-        {
+                if(!isInserted && !isFunc){
+                    //Error at line 28: Multiple declaration of z
+                    System.out.println("Error at line " + lineNo_now + ": Multiple declaration of " + $ID.getText());
+                    logErr("Error at line " + lineNo_now + ": Multiple declaration of " + $ID.getText() + "\n");
+                }
+                //----- INSERT INTO SYMBOL TABLE ---------
+                enterScope();
+                for (int i = 0; i < IDList.size(); i++) {
+                    String id = IDList.get(i);
+                    String idType = paramList.get(i);
+                    if(STinsert(id, "ID", idType, null, false)){
+                        System.out.println("Inserted " + id + " for curr func");
+                    }
+                    else{
+                        System.out.println("Can not insert " + id + " for curr func");
+                    }
+                }
+                Main.isFuncDefined = true;
+
+            } cstat = compound_statement {
             //FN DEF WITH ARGS
             int lineNo = $cstat.Cstat_rri.lineNo;
             String fn_type = $ts.type_rri.text;
@@ -506,14 +586,19 @@ func_definition returns [RuleReturnInfo fdef_rri]
             String fn_body = $cstat.Cstat_rri.text;
             String text = fn_type + " " + $ID.getText() + arg_list + fn_body;
 
+            if(fn_body.contains("return") && fn_type.equalsIgnoreCase("void")){
+                //Error at line 38: Cannot return value from function foo4 with void return type 
+                System.out.println("Error : void Function " + $ID.getText() + " returns a value");
+                logErr("Error at line " + lineNo + ": Cannot return value from function " + $ID.getText() + " with void return type\n");
+
+            }
+
             wParserLog("Line " + lineNo + ": func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement\n");
             wParserLog(text);
             Main.isFuncDefined = false;
             $fdef_rri = new RuleReturnInfo(lineNo, text);
         }
-    | ts=type_specifier ID LPAREN 
-        RPAREN 
-            {
+	| ts = type_specifier ID LPAREN RPAREN {
                 System.out.println("Parsing Fn **definition** without args");
                 System.out.println("  Fn name : " + $ID.getText());
                 String ret_type = $ts.type_rri.text;
@@ -523,9 +608,7 @@ func_definition returns [RuleReturnInfo fdef_rri]
                 if(!isInserted && !isFunc){
                     System.out.println("ERROR : " + $ID.getText() + " fn  aldy inserted before");
                 }
-            } 
-        cstat=compound_statement
-        {
+            } cstat = compound_statement {
             //FN DEF WITHOUT ARGS
             int lineNo = $cstat.Cstat_rri.lineNo;
             String fn_type = $ts.type_rri.text;
@@ -536,31 +619,45 @@ func_definition returns [RuleReturnInfo fdef_rri]
             wParserLog(text);
 
             $fdef_rri = new RuleReturnInfo(lineNo, text);
-        }
-    ;
+        };
 
-parameter_list returns [RuleReturnInfo param_rri]
-    : p=parameter_list COMMA t=type_specifier ID
-        {
+parameter_list
+	returns[RuleReturnInfo param_rri]:
+	p = parameter_list COMMA t = type_specifier ID {
             //fn defn multiple args int foo(int a, float b)
             int lineNo = $COMMA.line;
             String type = $t.type_rri.text;
             String id = $ID.text;
             String prev_param_list = $p.param_rri.text;
 
+            String[] params = prev_param_list.split(",");
+            ArrayList<String> ids = new ArrayList<>();
+            for(String param : params){
+                String[] splitted = param.split(" ");
+                // System.out.println("param : " + splitted[1]);
+                ids.add(splitted[1]);
+            }
+
             //update param_rri
+            if(ids.contains(id)){
+                //Error at line 20: Multiple declaration of a in parameter
+                System.out.println("Error at line " + lineNo + ": Multiple declaration of " + id + " in parameter\n");
+
+                wErrorLog("Error at line " + lineNo + ": Multiple declaration of " + id + " in parameter\n");
+                wParserLog("Error at line " + lineNo + ": Multiple declaration of " + id + " in parameter\n");
+                Main.syntaxErrorCount++;
+            }
             String curr_param_list = prev_param_list + "," + type + " " + id;
             $param_rri = new RuleReturnInfo(lineNo, curr_param_list);
 
             wParserLog("Line " + lineNo + ": parameter_list : parameter_list COMMA type_specifier ID\n");
             wParserLog($param_rri.text + "\n");
         }
-    | p=parameter_list COMMA t=type_specifier
-        {
+	| p = parameter_list COMMA t = type_specifier {
             //func decl multiple args int foo(int, float)
             int lineNo = $COMMA.line;
             String type = $t.type_rri.text;
-            String prev_param_list = $p.param_rri.text;
+            String prev_param_list = $p.param_rri.text;            
 
             //update param_rri
             String curr_param_list = prev_param_list + "," + type;
@@ -569,8 +666,7 @@ parameter_list returns [RuleReturnInfo param_rri]
             wParserLog("Line " + lineNo + ": parameter_list : parameter_list COMMA type_specifier\n");
             wParserLog($param_rri.text + "\n");
         }
-    | t=type_specifier ID
-        { 
+	| t = type_specifier ID { 
             //fn defn must int foo(int a)
             int lineNo = $t.type_rri.lineNo;
             String type = $t.type_rri.text;
@@ -584,8 +680,7 @@ parameter_list returns [RuleReturnInfo param_rri]
             $param_rri = new RuleReturnInfo(lineNo, curr_param_list);
 
         }
-    | t=type_specifier
-        { 
+	| t = type_specifier { 
             //used in func decl int foo(int)
             int lineNo = $t.type_rri.lineNo;
             String text = $t.type_rri.text;
@@ -593,21 +688,18 @@ parameter_list returns [RuleReturnInfo param_rri]
             wParserLog(text + "\n");    
 
             $param_rri = new RuleReturnInfo(lineNo, text);
-        }
-    ;
+        };
 
-compound_statement returns [RuleReturnInfo Cstat_rri]
-    : LCURL 
-        {
+compound_statement
+	returns[RuleReturnInfo Cstat_rri]:
+	LCURL {
             //ENTER new scope if not inserted from function already
             if(!Main.isFuncDefined){
                 System.out.println("Entering new scope");
                 enterScope();
 
             }
-        } 
-    s=statements RCURL
-        {
+        } s = statements RCURL {
             int lineNo = $RCURL.line;
             String text = "{\n" + $s.Stats_rri.text + "}\n";
             wParserLog("Line " + lineNo + ": compound_statement : LCURL statements RCURL\n");
@@ -618,29 +710,35 @@ compound_statement returns [RuleReturnInfo Cstat_rri]
             STprint();
             exitScope();
         }
-
-    | LCURL RCURL
-        { 
+	| LCURL RCURL { 
             enterScope();
             wParserLog("Line " + $LCURL.line + ": compound_statement : LCURL RCURL\n");
             wParserLog("{}\n");
             $Cstat_rri = new RuleReturnInfo($LCURL.line, "{}");
             exitScope();
-        }
-    ;
+        };
 
-var_declaration returns [RuleReturnInfo vdec_rri]
-    : t=type_specifier dl=declaration_list sm=SEMICOLON
-      {
+var_declaration
+	returns[RuleReturnInfo vdec_rri]:
+	t = type_specifier dl = declaration_list sm = SEMICOLON {
         wParserLog(
             "Line " + $sm.getLine()
             +": var_declaration : type_specifier declaration_list SEMICOLON\n"
         );
-        $vdec_rri = new RuleReturnInfo();
-        $vdec_rri.text = $t.type_rri.text + " " + $dl.dec_list + ";";
-        $vdec_rri.lineNo = $sm.getLine(); 
 
-        wParserLog($t.type_rri.text + " " + $dl.dec_list + ";\n");
+        int lineNo = $sm.getLine();
+        String text = $t.type_rri.text + " " + $dl.dec_list + ";";
+        $vdec_rri = new RuleReturnInfo(lineNo, text);
+
+        String type = $t.type_rri.text;
+
+        if(type.equalsIgnoreCase("void")){
+            //Error at line 42: Variable type cannot be void
+            System.out.println("Error at line " + lineNo + ": Variable type cannot be void");
+            logErr("Error at line " + lineNo + ": Variable type cannot be void" + "\n");
+        }
+
+        wParserLog(text + "\n");
 
         //INSERT INTO SYMBOL TABLE
         String[] variables = $dl.dec_list.split(",");
@@ -661,8 +759,7 @@ var_declaration returns [RuleReturnInfo vdec_rri]
             }
         }
       }
-    | t=type_specifier de=declaration_list_err sm=SEMICOLON
-      {
+	| t = type_specifier de = declaration_list_err sm = SEMICOLON {
         wErrorLog(
             "Line# "
             + $sm.getLine()
@@ -671,59 +768,60 @@ var_declaration returns [RuleReturnInfo vdec_rri]
             + " - Syntax error at declaration list of variable declaration"
         );
         Main.syntaxErrorCount++;
-      }
-    ;
+      };
 
 declaration_list_err
-    returns [String error_name]
-    : { $error_name = "Error in declaration list"; }
-    ;
+	returns[String error_name]: { $error_name = "Error in declaration list"; };
 
 type_specifier
-    returns [RuleReturnInfo type_rri]
-    : INT
-      {
+	returns[RuleReturnInfo type_rri]:
+	INT {
         $type_rri = new RuleReturnInfo();
         $type_rri.lineNo = $INT.line;
         $type_rri.text = "int";
         wParserLog("Line " + $INT.line + ": type_specifier : INT\n");
         wParserLog($INT.text + "\n");
       }
-    | FLOAT
-      {
+	| FLOAT {
         $type_rri = new RuleReturnInfo();
         $type_rri.lineNo = $FLOAT.line;
         $type_rri.text = "float";
         wParserLog("Line " + $FLOAT.line + ": type_specifier : FLOAT\n");
         wParserLog($FLOAT.text + "\n");
       }
-    | VOID
-      {
+	| VOID {
         $type_rri = new RuleReturnInfo();
         $type_rri.lineNo = $VOID.line;
         $type_rri.text = "void";
         wParserLog("Line " + $VOID.line + ": type_specifier : VOID\n");
         wParserLog($VOID.text + "\n");
-      }
-    ;
+      };
 
-declaration_list returns [String dec_list]
-    : dl=declaration_list COMMA ID 
-        {
+declaration_list
+	returns[String dec_list]:
+	dl = declaration_list COMMA ID {
             //multiple decl
             $dec_list = $dl.dec_list + "," + $ID.text;
             wParserLog("Line " + $ID.line + ": declaration_list : declaration_list COMMA ID\n");
             wParserLog($dec_list + "\n");
         }
-    | dl=declaration_list COMMA ID LTHIRD CONST_INT RTHIRD 
-        {
+	| dl = declaration_list COMMA ID LTHIRD CONST_INT RTHIRD {
             //array er shathe aaro kichu
             $dec_list = $dl.dec_list + "," + $ID.text + "[" + $CONST_INT.text + "]";
+
+            boolean aldyExists = STlookupCurrScope($ID.text);
+            if(aldyExists){
+                wErrorLog("Error at line " + $ID.line + ": Multiple declaration of " + $ID.text + "\n");
+                wParserLog("Error at line " + $ID.line + ": Multiple declaration of " + $ID.text + "\n");
+                Main.syntaxErrorCount++;
+            }
+
+
+            System.out.println("Line no " + $ID.getLine() + " : Prev declaration: " + $dl.dec_list);
             wParserLog("Line " + $ID.line + ": declaration_list : declaration_list COMMA ID LTHIRD CONST_INT RTHIRD\n");
             wParserLog($dec_list + "\n");
         }
-    | ID 
-        {
+	| ID {
             //single decl
             $dec_list = $ID.text;
             boolean aldyExists = STlookupCurrScope($ID.text);
@@ -735,18 +833,16 @@ declaration_list returns [String dec_list]
             wParserLog("Line " + $ID.line + ": declaration_list : ID\n");
             wParserLog($dec_list + "\n");
         }
-    | ID LTHIRD CONST_INT RTHIRD 
-        {
+	| ID LTHIRD CONST_INT RTHIRD {
             //array decl
             $dec_list = $ID.text + "[" + $CONST_INT.text + "]";
             wParserLog("Line " + $ID.line + ": declaration_list : ID LTHIRD CONST_INT RTHIRD\n");
             wParserLog($dec_list + "\n");
-        }
-    ;
+        };
 
-statements returns [RuleReturnInfo Stats_rri]
-    : s=statement
-        {
+statements
+	returns[RuleReturnInfo Stats_rri]:
+	s = statement {
             int lineNo = $s.stat_rri.lineNo;
             String text = $s.stat_rri.text;
 
@@ -754,20 +850,18 @@ statements returns [RuleReturnInfo Stats_rri]
             wParserLog(text);
             $Stats_rri = new RuleReturnInfo(lineNo, text);
         }
-    | ss=statements s=statement
-        {
+	| ss = statements s = statement {
             int lineNo = $s.stat_rri.lineNo;
             String text = $ss.Stats_rri.text + $s.stat_rri.text;
 
             wParserLog("Line " + lineNo + ": statements : statements statement\n");
             wParserLog(text);
             $Stats_rri = new RuleReturnInfo(lineNo, text);
-        }
-    ;
+        };
 
-statement returns [RuleReturnInfo stat_rri]
-    : vd=var_declaration
-        { 
+statement
+	returns[RuleReturnInfo stat_rri]:
+	vd = var_declaration { 
             int lineNo = $vd.vdec_rri.lineNo;
             String text = $vd.vdec_rri.text + "\n";
 
@@ -775,8 +869,7 @@ statement returns [RuleReturnInfo stat_rri]
             wParserLog("Line " + lineNo + ": statement : var_declaration\n");
             wParserLog(text);
         }
-    | es=expression_statement
-        {
+	| es = expression_statement {
             int lineNo = $es.Expr_stat_rri.lineNo;
             String text = $es.Expr_stat_rri.text + "\n";
 
@@ -784,8 +877,7 @@ statement returns [RuleReturnInfo stat_rri]
             wParserLog("Line " + lineNo + ": statement : expression_statement\n");
             wParserLog(text);
         }
-    | c=compound_statement
-        {
+	| c = compound_statement {
             int lineNo = $c.Cstat_rri.lineNo;
             String text = $c.Cstat_rri.text;
             $stat_rri = new RuleReturnInfo(lineNo, text);
@@ -793,8 +885,8 @@ statement returns [RuleReturnInfo stat_rri]
             wParserLog(text);
             
         }
-    | FOR LPAREN es1=expression_statement es2=expression_statement e=expression RPAREN s=statement
-        {
+	| FOR LPAREN es1 = expression_statement es2 = expression_statement e = expression RPAREN s =
+		statement {
             int lineNo = $s.stat_rri.lineNo;
             String condns = $es1.Expr_stat_rri.text
                             + $es2.Expr_stat_rri.text
@@ -806,8 +898,7 @@ statement returns [RuleReturnInfo stat_rri]
             wParserLog(text);
 
         }
-    | IF LPAREN e=expression RPAREN s=statement
-        {
+	| IF LPAREN e = expression RPAREN s = statement {
             int lineNo = $s.stat_rri.lineNo;
 
             String expr = $e.Expr_rri.text;
@@ -817,8 +908,7 @@ statement returns [RuleReturnInfo stat_rri]
             wParserLog("Line " + lineNo + ": statement : IF LPAREN expression RPAREN statement\n");
             wParserLog(text);
         }
-    | IF LPAREN e=expression RPAREN s1=statement ELSE s2=statement
-        {
+	| IF LPAREN e = expression RPAREN s1 = statement ELSE s2 = statement {
             int lineNo = $s2.stat_rri.lineNo;
 
             String expr = $e.Expr_rri.text;
@@ -831,8 +921,7 @@ statement returns [RuleReturnInfo stat_rri]
             wParserLog(text);
 
         }
-    | WHILE LPAREN e=expression RPAREN s=statement
-        {
+	| WHILE LPAREN e = expression RPAREN s = statement {
             // while(a[0]--){
             //     c = c - 2;
             // }
@@ -847,18 +936,26 @@ statement returns [RuleReturnInfo stat_rri]
 
 
         }
-    | PRINTLN LPAREN ID RPAREN SEMICOLON
-        {
-            System.out.println("Matched printf");
+	| PRINTLN LPAREN ID RPAREN SEMICOLON {
+            System.out.println("Matched " + $PRINTLN.getText());
             int lineNo = $SEMICOLON.getLine();
             String text = "printf("  + $ID.getText() + ");\n";
             $stat_rri = new RuleReturnInfo(lineNo, text);
             wParserLog("Line " + lineNo + ": statement : PRINTLN LPAREN ID RPAREN SEMICOLON\n");
+
+            //Check for Undeclared variable
+            SymbolInfo var_info = Main.st.lookUp(new SymbolInfo($ID.getText(), "ID", null, null));
+            boolean isNotDeclared = (var_info == null);
+            if(isNotDeclared){
+                //Error at line 67: Undeclared variable h
+                logErr("Error at line " + lineNo + ": Undeclared variable " + $ID.getText() + "\n");
+                System.out.println("Error at line " + lineNo + ": Undeclared variable " + $ID.getText() + "\n");
+            }
+            
             wParserLog(text);
 
         }
-    | RETURN e=expression SEMICOLON
-        {
+	| RETURN e = expression SEMICOLON {
             int lineNo = $RETURN.getLine();
             String text = "return" + " " + $e.Expr_rri.text + ";\n";
 
@@ -866,32 +963,30 @@ statement returns [RuleReturnInfo stat_rri]
             wParserLog(text);
             $stat_rri = new RuleReturnInfo(lineNo, text);
 
-        }
-    ;
+        };
 
-expression_statement returns [RuleReturnInfo Expr_stat_rri]
-    : SEMICOLON
-        {
+expression_statement
+	returns[RuleReturnInfo Expr_stat_rri]:
+	SEMICOLON {
             int lineNo = $SEMICOLON.getLine();
             String text = ";";
             wParserLog("Line " + lineNo + ": expression_statement : SEMICOLON\n");
             wParserLog(text + "\n");
             $Expr_stat_rri = new RuleReturnInfo(lineNo, text);
         }
-    | e=expression SEMICOLON
-        {
+	| e = expression SEMICOLON {
             int lineNo = $SEMICOLON.getLine();
             String text = $e.Expr_rri.text + ";";
 
             wParserLog("Line " + lineNo + ": expression_statement : expression SEMICOLON\n");
             wParserLog(text + "\n");
-            $Expr_stat_rri = new RuleReturnInfo(lineNo, text);            
-        }
-    ;
+            $Expr_stat_rri = new RuleReturnInfo(lineNo, text); 
+            isValidStatement = true;           
+        };
 
-variable returns [RuleReturnInfo var_rri]
-    : ID
-        {
+variable
+	returns[RuleReturnInfo var_rri]:
+	ID {
             // USUAL VARIABLE
             int lineNo = $ID.getLine();
             $var_rri = new RuleReturnInfo(lineNo, $ID.getText());
@@ -920,54 +1015,66 @@ variable returns [RuleReturnInfo var_rri]
 
             wParserLog($ID.getText() + "\n");
         }
-    | ID LTHIRD e=expression RTHIRD
-        {
+	| ID LTHIRD e = expression RTHIRD {
             // ARRAY VARIABLES
             int lineNo = $ID.getLine();
             String expr = $e.Expr_rri.text;
 
             String text = $ID.getText() + "[" + expr + "]";
-            $var_rri = new RuleReturnInfo(lineNo, text);
+            boolean isArray = isArrayVar($ID.getText());
             wParserLog("Line " + lineNo + ": variable : ID LTHIRD expression RTHIRD\n");
+
+
+            if(!isArray){
+                // Error at line 52: b not an array
+                String message = "Error at line " + lineNo + ": " + $ID.getText() + " not an array\n";
+                System.out.println(message);
+                logErr(message);
+                isValidStatement = false;
+            }
+            $var_rri = new RuleReturnInfo(lineNo, text);
 
             if(!isInteger(expr)) {
                 wErrorLog("Error at line " + lineNo + ": Expression inside third brackets not an integer\n");
                 wParserLog("Error at line " + lineNo + ": Expression inside third brackets not an integer\n");
                 Main.syntaxErrorCount++;     
+                isValidStatement = false;
             }
 
             wParserLog(text + "\n");
 
-        }
+        };
 
-    ;
-
-expression returns [RuleReturnInfo Expr_rri]
-    : l=logic_expression
-        {
+expression
+	returns[RuleReturnInfo Expr_rri]:
+	l = logic_expression {
             int lineNo = $l.LogicExpr_rri.lineNo;
             String text = $l.LogicExpr_rri.text;
             wParserLog("Line " + lineNo + ": expression : logic_expression\n");
             wParserLog(text + "\n");
             $Expr_rri = new RuleReturnInfo(lineNo, text);
         }
-
-    | var=variable ASSIGNOP l=logic_expression
-        {
+	| var = variable ASSIGNOP l = logic_expression {
             int lineNo = $l.LogicExpr_rri.lineNo;
             String var_name = $var.var_rri.text;
             SymbolInfo var_info = Main.st.currentScopeLookup(new SymbolInfo(var_name, "ID", null, null));
             boolean isNotDeclared = (var_info == null);
+            boolean isArrVar = (var_name.contains("[") && var_name.contains("]"));
 
             String logic_expr = $l.LogicExpr_rri.text;
             String expr_type = typeDetector(logic_expr);
-
-            System.out.println("for Logical Expr : '" + logic_expr + "' type is : " + expr_type);
+            
+            wParserLog("Line " + lineNo + ": expression : variable ASSIGNOP logic_expression\n");
+            if(expr_type.equals("void") && isValidStatement){
+                //Error at line 57: Void function used in expression
+                System.out.println("Error at line " + lineNo + ": Void function used in expression");
+                logErr("Error at line " + lineNo + ": Void function used in expression\n");
+                isValidStatement = false;
+            }
 
             String text = var_name + "=" + logic_expr;
-            wParserLog("Line " + lineNo + ": expression : variable ASSIGNOP logic_expression\n");
             
-            // CHECK FOR TYPE MISMATCH ERROR (for declared variables)
+            // CHECK FOR TYPE MISMATCH ERROR (for declared variables (Not array ones))
             if(!isNotDeclared){
                 ArrayList<String> validTypes = new ArrayList<>();
                 validTypes.add("int");
@@ -975,7 +1082,7 @@ expression returns [RuleReturnInfo Expr_rri]
 
                 boolean isValidExprType = validTypes.contains(expr_type);
                 boolean isValidVarType = validTypes.contains(var_info.getDataType());
-                if (isValidExprType && isValidVarType && !var_info.getDataType().equalsIgnoreCase(expr_type)) {
+                if (isValidExprType && isValidVarType && !var_info.getDataType().equalsIgnoreCase(expr_type) && isValidStatement) {
                     //Error at line 8: Type Mismatch
                     System.out.println("ERROR : Assigning " + var_name + "(" + var_info.getDataType() + ")" 
                                 + " with " + logic_expr + "(" + expr_type + ")");
@@ -986,55 +1093,59 @@ expression returns [RuleReturnInfo Expr_rri]
                 }
             }
 
+            // CHECK FOR TYPE MISMATCH ERROR (for array variables)
+            if(isArrVar && isValidStatement){
+                String varType = typeDetector(var_name);
+                if(!varType.equalsIgnoreCase(expr_type)){
+                    //Error at line 58: Type Mismatch
+                    System.out.println("Error at line " + lineNo + ": Type Mismatch");
+                    logErr("Error at line " + lineNo    + ": Type Mismatch\n");
+                }
+            }
+
             wParserLog(text + "\n");
             $Expr_rri = new RuleReturnInfo(lineNo, text);
             
-        }
-    ;
+        };
 
-logic_expression returns [RuleReturnInfo LogicExpr_rri]
-    : r=rel_expression
-        {
+logic_expression
+	returns[RuleReturnInfo LogicExpr_rri]:
+	r = rel_expression {
             int lineNo = $r.relExpr_rri.lineNo;
             String text = $r.relExpr_rri.text;
             wParserLog("Line " + lineNo + ": logic_expression : rel_expression\n");
             wParserLog(text + "\n");
             $LogicExpr_rri = new RuleReturnInfo(lineNo, text);
         }
-
-    | r1=rel_expression LOGICOP r2=rel_expression
-        {
+	| r1 = rel_expression LOGICOP r2 = rel_expression {
             int lineNo = $LOGICOP.getLine();
             String text = $r1.relExpr_rri.text + $LOGICOP.getText() + $r2.relExpr_rri.text;
             wParserLog("Line " + lineNo + ": logic_expression : rel_expression LOGICOP rel_expression\n");
             wParserLog(text + "\n");
             $LogicExpr_rri = new RuleReturnInfo(lineNo, text);
-        }
-    ;
+        };
 
-rel_expression returns [RuleReturnInfo relExpr_rri]
-    : s=simple_expression
-        {
+rel_expression
+	returns[RuleReturnInfo relExpr_rri]:
+	s = simple_expression {
             int lineNo = $s.sm_expr_rri.lineNo;
             String text = $s.sm_expr_rri.text;
             wParserLog("Line " + lineNo + ": rel_expression : simple_expression\n");
             wParserLog(text + "\n");
             $relExpr_rri = new RuleReturnInfo(lineNo, text);
         }
-    | s1=simple_expression RELOP s2=simple_expression
-        {
+	| s1 = simple_expression RELOP s2 = simple_expression {
             int lineNo = $RELOP.getLine();
             String text = $s1.sm_expr_rri.text + $RELOP.getText() + $s2.sm_expr_rri.text;
             wParserLog("Line " + lineNo + ": rel_expression : simple_expression RELOP simple_expression\n");
             wParserLog(text + "\n");
             $relExpr_rri = new RuleReturnInfo(lineNo, text);
 
-        }
-    ;
+        };
 
-simple_expression returns [RuleReturnInfo sm_expr_rri]
-    : t=term
-        {
+simple_expression
+	returns[RuleReturnInfo sm_expr_rri]:
+	t = term {
             int lineNo = $t.term_rri.lineNo;
             String text = $t.term_rri.text; 
             wParserLog("Line " + lineNo + ": simple_expression : term\n");
@@ -1042,20 +1153,18 @@ simple_expression returns [RuleReturnInfo sm_expr_rri]
             $sm_expr_rri = new RuleReturnInfo(lineNo, text);
 
         }
-    | sm_expr=simple_expression ADDOP t=term
-        {
+	| sm_expr = simple_expression ADDOP t = term {
             int lineNo = $ADDOP.getLine();
             String op = $ADDOP.getText();
             String text = $sm_expr.sm_expr_rri.text + op + $t.term_rri.text;
             wParserLog("Line " + lineNo + ": simple_expression : simple_expression ADDOP term\n");
             wParserLog(text + "\n");
             $sm_expr_rri = new RuleReturnInfo(lineNo, text);
-        }
-    ;
+        };
 
-term returns [RuleReturnInfo term_rri]
-    : u=unary_expression
-        {
+term
+	returns[RuleReturnInfo term_rri]:
+	u = unary_expression {
             int lineNo = $u.unary_rri.lineNo;
             String text = $u.unary_rri.text; 
             wParserLog("Line " + lineNo + ": term : unary_expression\n");
@@ -1063,31 +1172,46 @@ term returns [RuleReturnInfo term_rri]
             $term_rri = new RuleReturnInfo(lineNo, text);
 
         }
-    | t=term MULOP ue=unary_expression
-        {
+	| t = term MULOP ue = unary_expression {
             int lineNo = $MULOP.getLine();
             String text = $t.term_rri.text + $MULOP.getText() + $ue.unary_rri.text; 
             wParserLog("Line " + lineNo + ": term : term MULOP unary_expression\n");
+
+            String unary_expr_type = evaluateExpressionType($ue.unary_rri.text);
+            if(unary_expr_type.equals("void")){
+                //Error at line 54: Void function used in expression
+                System.out.println("Error at line " + lineNo + ": Void function used in expression");
+                logErr("Error at line " + lineNo + ": Void function used in expression\n");
+                isValidStatement = false;
+            }
 
             // Error at line 9: Non-Integer operand on modulus operator
             if($MULOP.getText().equals("%")){
                 String expr_type = typeDetector($ue.unary_rri.text);
                 if(!expr_type.equals("int")){
-                    wErrorLog("Error at line " + lineNo + ": Non-Integer operand on modulus operator\n");
-                    wParserLog("Error at line " + lineNo + ": Non-Integer operand on modulus operator\n");
-                    Main.syntaxErrorCount++;
+                    logErr("Error at line " + lineNo + ": Non-Integer operand on modulus operator\n");
+                }
+                else{
+                    //check if expression is 0
+                    try {
+                        int value = Integer.parseInt($ue.unary_rri.text);
+                        if(value == 0){
+                            //Error at line 59: Modulus by Zero
+                            System.out.println("Error at line " + lineNo + ": Modulus by Zero\n");
+                            logErr("Error at line " + lineNo + ": Modulus by Zero\n");
+                        }
+                    } catch (NumberFormatException e) {}
                 }
             }
 
             wParserLog(text + "\n");
             $term_rri = new RuleReturnInfo(lineNo, text);
 
-        }
-    ;
+        };
 
-unary_expression returns [RuleReturnInfo unary_rri]
-    : ADDOP u=unary_expression
-        {
+unary_expression
+	returns[RuleReturnInfo unary_rri]:
+	ADDOP u = unary_expression {
             int lineNo = $ADDOP.getLine();
             String text = $ADDOP.getText() + $u.unary_rri.text; 
             wParserLog("Line " + lineNo + ": unary_expression : ADDOP unary_expression\n");
@@ -1096,8 +1220,7 @@ unary_expression returns [RuleReturnInfo unary_rri]
             String type = $u.unary_rri.expr_type;
             $unary_rri = new RuleReturnInfo(lineNo, text, type);
         }
-    | NOT u=unary_expression
-        {
+	| NOT u = unary_expression {
             int lineNo = $NOT.getLine();
             String text = $NOT.getText() + $u.unary_rri.text; 
             wParserLog("Line " + lineNo + ": unary_expression : NOT unary_expression\n");
@@ -1106,21 +1229,18 @@ unary_expression returns [RuleReturnInfo unary_rri]
 
             $unary_rri = new RuleReturnInfo(lineNo, text, type);
         }
-
-    | f=factor
-        {
+	| f = factor {
             int lineNo = $f.fact_rri.lineNo;
             String text = $f.fact_rri.text; 
             wParserLog("Line " + lineNo + ": unary_expression : factor\n");
             wParserLog(text + "\n");
             String expr_type = $f.fact_rri.expr_type;
             $unary_rri = new RuleReturnInfo(lineNo, text, expr_type);
-        }
-    ;
+        };
 
-factor returns [RuleReturnInfo fact_rri]
-    : var=variable
-        {
+factor
+	returns[RuleReturnInfo fact_rri]:
+	var = variable {
             int lineNo = $var.var_rri.lineNo;
             String text = $var.var_rri.text;
 
@@ -1129,21 +1249,64 @@ factor returns [RuleReturnInfo fact_rri]
 
             $fact_rri = new RuleReturnInfo(lineNo, text);
         }
-    | ID LPAREN al=argument_list RPAREN
-        {
+	| ID LPAREN al = argument_list RPAREN {
             //FUNC CALL
             int lineNo = $ID.getLine();
             String text = $ID.getText() + "(" + $al.argList_rri.text + ")";
             String fnName = $ID.getText().trim();
             String type = getFuncType(fnName);
-
             wParserLog("Line " + lineNo + ": factor : ID LPAREN argument_list RPAREN\n");
+
+
+            SymbolInfo fn_info = Main.st.lookUp(new SymbolInfo(fnName, "ID", null, null));
+            if(fn_info == null){
+                //Error at line 62: Undefined function foo5
+                System.out.println("Error at line " + lineNo + ": Undefined function " + fnName);
+                logErr("Error at line " + lineNo + ": Undefined function " + fnName + "\n");
+            }
+            else{
+                //Check if called with valid type of arguments
+                ArrayList<String> fnParams = fn_info.getParameters();
+                System.out.println("Function " + fnName + " params : " + fnParams);
+                String[] args = $al.argList_rri.text.split(",");
+                System.out.println("Function " + fnName + " called with args : " + Arrays.toString(args));
+                if(args.length != fnParams.size()){
+                    //Error at line 49: Total number of arguments mismatch with declaration in function correct_foo
+                    System.out.println("Error at line " + lineNo + ": Total number of arguments mismatch with declaration in function " + fnName);
+                    logErr("Error at line " + lineNo + ": Total number of arguments mismatch with declaration in function " + fnName + "\n");
+                }
+
+                else{
+                    for(int i = 0; i < args.length; i++){
+                        String arg = args[i].trim();
+                        String argType = typeDetector(arg);
+                        String paramType = fnParams.get(i).trim();
+                        System.out.println("Arg " + (i+1) + " type : " + argType + "| Param " + (i+1) + " type : " + paramType);
+                        boolean isArray = false;
+
+                        if (arg.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+                            isArray = isArrayVar(arg);
+                        }
+
+                        if(isArray){
+                            continue; // Skip array args for type checking
+                        }
+
+                        if(!argType.equals(paramType)){
+                            int argNo = i + 1;
+                            System.out.println("Error at line " + lineNo + ": " + argNo + "th argument mismatch in function " + fnName);
+                            logErr("Error at line " + lineNo + ": " + argNo + "th argument mismatch in function " + fnName + "\n");
+                            break;
+                        }
+                    }
+                }
+            }
+
             wParserLog(text + "\n");
 
             $fact_rri = new RuleReturnInfo(lineNo, text, type);            
         }
-    | LPAREN e=expression RPAREN
-        {
+	| LPAREN e = expression RPAREN {
             int lineNo = $RPAREN.getLine();
             String text = "(" + $e.Expr_rri.text + ")";
 
@@ -1152,8 +1315,7 @@ factor returns [RuleReturnInfo fact_rri]
 
             $fact_rri = new RuleReturnInfo(lineNo, text);
         }
-    | c=CONST_INT
-        {
+	| c = CONST_INT {
             int lineNo = $c.getLine();
             String text = $c.getText();
 
@@ -1163,8 +1325,7 @@ factor returns [RuleReturnInfo fact_rri]
             $fact_rri = new RuleReturnInfo(lineNo, text);
             $fact_rri.expr_type = "int"; // Set type for CONST_INT
         }
-    | c=CONST_FLOAT
-        {
+	| c = CONST_FLOAT {
             int lineNo = $c.getLine();
             String text = $c.getText();
 
@@ -1173,9 +1334,7 @@ factor returns [RuleReturnInfo fact_rri]
 
             $fact_rri = new RuleReturnInfo(lineNo, text, "float"); // Set type for CONST_FLOAT
         }
-
-    | v=variable INCOP
-        {
+	| v = variable INCOP {
             int lineNo = $INCOP.getLine();
             String text = $v.var_rri.text + $INCOP.getText(); 
 
@@ -1185,8 +1344,7 @@ factor returns [RuleReturnInfo fact_rri]
             $fact_rri = new RuleReturnInfo(lineNo, text);
 
         }
-    | v=variable DECOP
-        {
+	| v = variable DECOP {
             int lineNo = $DECOP.getLine();
             String text = $v.var_rri.text + $DECOP.getText(); 
 
@@ -1195,12 +1353,11 @@ factor returns [RuleReturnInfo fact_rri]
 
             $fact_rri = new RuleReturnInfo(lineNo, text);
 
-        }
-    ;
+        };
 
-argument_list returns [RuleReturnInfo argList_rri]
-    : a=arguments
-        {
+argument_list
+	returns[RuleReturnInfo argList_rri]:
+	a = arguments {
             // arguments -> work with single/multiple arguments
             // argument_list -> work with all arguments together
 
@@ -1211,12 +1368,11 @@ argument_list returns [RuleReturnInfo argList_rri]
             wParserLog(text + "\n");
             $argList_rri = new RuleReturnInfo(lineNo, text);
         }
-    | /* empty */
-    ;
+	| /* empty */;
 
-arguments returns [RuleReturnInfo arg_rri]
-    : a=arguments COMMA le=logic_expression
-        {
+arguments
+	returns[RuleReturnInfo arg_rri]:
+	a = arguments COMMA le = logic_expression {
             int lineNo = $COMMA.getLine();
             String text = $a.arg_rri.text + "," + $le.LogicExpr_rri.text;
 
@@ -1224,13 +1380,11 @@ arguments returns [RuleReturnInfo arg_rri]
             wParserLog(text + "\n");
             $arg_rri = new RuleReturnInfo(lineNo, text);
         }
-    | l=logic_expression
-        {
+	| l = logic_expression {
             int lineNo = $l.LogicExpr_rri.lineNo;
             String text = $l.LogicExpr_rri.text;
 
             wParserLog("Line " + lineNo + ": arguments : logic_expression\n");
             wParserLog(text + "\n");
             $arg_rri = new RuleReturnInfo(lineNo, text);
-        }
-    ;
+        };
