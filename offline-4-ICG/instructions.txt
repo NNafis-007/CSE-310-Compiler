@@ -1,1 +1,0 @@
-Run the Linux executable and pass the path of input file as command line argument. Two output files , namely code.asm and optcode.asm will be generated in the same folder of the executable.

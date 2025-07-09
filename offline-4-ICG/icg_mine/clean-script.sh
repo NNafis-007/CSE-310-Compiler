@@ -7,7 +7,7 @@ shopt -s extglob
 for file in !(*.sh|*.g4|Main.java|*.txt|test.java); do
     # Only delete if it's a regular file
     if [[ -f "$file" ]]; then
-        rm -fi "$file"
+        rm -f "$file"
     fi
 done
 
