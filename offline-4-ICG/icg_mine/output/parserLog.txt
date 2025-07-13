@@ -1,66 +1,32 @@
 Line No : 1 type_specifier : INT
 
-Line No : 1 declaration_list : ID
+Line No : 2 factor : CONST_INT
 
------ i NO OFFSET, Dec in DS----
+unary_expression : factor
 
-Line No : 1 declaration_list : declaration_list COMMA ID
+term : unary_expression
 
------ j NO OFFSET, Dec in DS----
+simple_expression : term
 
-Line No : 1 var_declaration : type_specifier dec_list SEMICOLON
+rel_expression : simple_expression
 
-unit : var_declaration
+logic_expression : rel_expression
 
-program : unit
+expression : logic_expression
 
-Line No : 2 type_specifier : INT
-
-Line No : 2 declaration_list : ID LTHIRD CONST_INT RTHIRD
-
------ a NO OFFSET, (BUT DUP 5) Dec in DS----
-
-Line No : 2 var_declaration : type_specifier dec_list SEMICOLON
-
-unit : var_declaration
-
-program : program unit
-
-Line No : 3 type_specifier : INT
-
-Line No : 4 type_specifier : INT
-
-Line No : 4 declaration_list : ID
-
------ c, offest : -2----
-
-Line No : 4 declaration_list : declaration_list COMMA ID
-
------ d, offest : -4 ----
-
-Line No : 4 var_declaration : type_specifier dec_list SEMICOLON
-
-statement : var_declaration
+Line No : 2 statement : RETURN expression SEMICOLON
 
 statements : statement
 
+Line No : 1 compound_statement : LCURL statements RCURL
+
+Line No : 1 (foo) func_definition  : type_specifier ID LPAREN RPAREN compound_statement
+
+unit : func_definition
+
+program : unit
+
 Line No : 5 type_specifier : INT
-
-Line No : 5 declaration_list : ID LTHIRD CONST_INT RTHIRD
-
------ b, offest : -6----
-
-Line No : 5 declaration_list : declaration_list COMMA ID
-
------ z, offest : -12 ----
-
-Line No : 5 var_declaration : type_specifier dec_list SEMICOLON
-
-statement : var_declaration
-
-statements : statements statement
-
-Line No : 6 variable : ID
 
 Line No : 6 factor : CONST_INT
 
@@ -74,17 +40,15 @@ rel_expression : simple_expression
 
 logic_expression : rel_expression
 
-Line No : 6 expression : variable ASSIGNOP logic_expression
+expression : logic_expression
 
-Line No : 6 expression_statement : expression SEMICOLON
+Line No : 6 statement : RETURN expression SEMICOLON
 
-statement : expression_statement
+statements : statement
 
-statements : statements statement
+Line No : 5 compound_statement : LCURL statements RCURL
 
-Line No : 3 compound_statement : LCURL statements RCURL
-
-Line No : 3 func_definition : type_specifier ID LPAREN RPAREN compound_statement
+Line No : 5 (main) func_definition  : type_specifier ID LPAREN RPAREN compound_statement
 
 unit : func_definition
 

@@ -45,9 +45,18 @@ import java.io.IOException;
             Main.ICGFile.newLine();
             Main.ICGFile.flush();
         } catch (IOException e) {
-            System.err.println("Error file write error: " + e.getMessage());
+            System.err.println("Error assembly code write error: " + e.getMessage());
         }
+    }
 
+    void writeTempCode(String message){
+        try {
+            Main.tempFile.write(message);
+            Main.tempFile.newLine();
+            Main.tempFile.flush();
+        } catch (IOException e) {
+            System.err.println("Temp file write error: " + e.getMessage());
+        }
     }
 
     public int getOffset(){
@@ -114,16 +123,54 @@ func_declaration
       }
     ;
 
-func_definition
-    : type_specifier ID {isGlobal=false;} LPAREN parameter_list RPAREN compound_statement
+func_definition returns [String fn_name]
+    : type_specifier 
+    ID 
+      {
+        isGlobal=false;
+        $fn_name = $ID.getText();
+        String asmCode = $ID.getText() + " PROC\n" + "\tPUSH BP\n" + "\tMOV BP, SP\n";
+        writeTempCode(asmCode);
+      } 
+    LPAREN parameter_list RPAREN compound_statement
       {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement");
+        isGlobal = true; // Reset isGlobal for next function
+        String cleanFuncCode = "\tPOP BP\n" + "\tRET\n" + $fn_name + " ENDP\n";
+        writeTempCode(cleanFuncCode);
+
       }
-    | type_specifier ID {isGlobal=false;} LPAREN RPAREN compound_statement
+
+    | type_specifier 
+    ID 
+      {
+        isGlobal=false;
+        $fn_name = $ID.getText();
+        String asmCode = $ID.getText() + " PROC\n";
+        if($fn_name.equals("main")){
+            asmCode += "\tMOV AX, @DATA\n" + "\tMOV DS, AX\n"; // Initialize data segment for main
+        }
+        asmCode += "\tPUSH BP\n" + "\tMOV BP, SP\n";
+        writeTempCode(asmCode);
+      } 
+    LPAREN RPAREN compound_statement
       {
         int lineNo = $ID.getLine();
-        logParse("Line No : " + lineNo + " func_definition : type_specifier ID LPAREN RPAREN compound_statement");
+        logParse("Line No : " + lineNo + " (" + $fn_name + ") func_definition  : type_specifier ID LPAREN RPAREN compound_statement");
+        isGlobal = true; // Reset isGlobal for next function
+
+        if($fn_name.equals("main")){
+          // Exit program for main
+            String cleanMainCode = "\tPOP BP\n" + "\tMOV AX, 4Ch\n" 
+                      + "\tINT 21h\n" + "main ENDP"; 
+            writeTempCode(cleanMainCode);
+        }
+        else{
+          String cleanFuncCode = "\tPOP BP\n" + "\tRET\n" + $fn_name + " ENDP\n";
+          writeTempCode(cleanFuncCode);
+        }
+
       }
     ;
 

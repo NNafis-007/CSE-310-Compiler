@@ -1,23 +1,18 @@
 foo PROC
 	PUSH BP
 	MOV BP, SP
-	MOV AX, 0       ; Line 2
-	JMP TL1
-L1:
-L2:
+
 	POP BP
-	RET 
+	RET
 foo ENDP
+
 main PROC
 	MOV AX, @DATA
 	MOV DS, AX
 	PUSH BP
 	MOV BP, SP
-	MOV AX, 0       ; Line 6
-	JMP TL2
-L3:
-L4:
+
 	POP BP
-	MOV AX,4CH
-	INT 21H
+	MOV AX, 4Ch
+	INT 21h
 main ENDP

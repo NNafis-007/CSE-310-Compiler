@@ -7,6 +7,7 @@ public class Main {
     public static BufferedWriter errorFile;
     public static BufferedWriter lexLogFile;
     public static BufferedWriter ICGFile;
+    public static BufferedWriter tempFile;
 
     public static int syntaxErrorCount = 0;
 
@@ -27,6 +28,7 @@ public class Main {
         String errorFileName = outputDirectory + "errorLog.txt";
         String lexLogFileName = outputDirectory + "lexerLog.txt";
         String ICGFileName = "code_asm.txt";
+        String tempFileName = "temp.txt";
 
         new File(outputDirectory).mkdirs();
 
@@ -34,6 +36,7 @@ public class Main {
         errorFile = new BufferedWriter(new FileWriter(errorFileName));
         lexLogFile = new BufferedWriter(new FileWriter(lexLogFileName));
         ICGFile = new BufferedWriter(new FileWriter(ICGFileName));
+        tempFile = new BufferedWriter(new FileWriter(tempFileName));
 
         // write boilerplate code to the ICG file
         ICGFile.write(".MODEL SMALL\n");
@@ -58,6 +61,8 @@ public class Main {
         parserLogFile.close();
         errorFile.close();
         lexLogFile.close();
+        ICGFile.close();
+        tempFile.close();
 
         System.out.println("Parsing completed. Check the output files for details.");
     }
