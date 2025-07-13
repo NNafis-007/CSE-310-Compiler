@@ -1,12 +1,12 @@
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
-
 import java.io.*;
 
 public class Main {
     public static BufferedWriter parserLogFile;
     public static BufferedWriter errorFile;
     public static BufferedWriter lexLogFile;
+    public static BufferedWriter ICGFile;
 
     public static int syntaxErrorCount = 0;
 
@@ -26,12 +26,20 @@ public class Main {
         String parserLogFileName = outputDirectory + "parserLog.txt";
         String errorFileName = outputDirectory + "errorLog.txt";
         String lexLogFileName = outputDirectory + "lexerLog.txt";
+        String ICGFileName = "code_asm.txt";
 
         new File(outputDirectory).mkdirs();
 
         parserLogFile = new BufferedWriter(new FileWriter(parserLogFileName));
         errorFile = new BufferedWriter(new FileWriter(errorFileName));
         lexLogFile = new BufferedWriter(new FileWriter(lexLogFileName));
+        ICGFile = new BufferedWriter(new FileWriter(ICGFileName));
+
+        // write boilerplate code to the ICG file
+        ICGFile.write(".MODEL SMALL\n");
+        ICGFile.write(".STACK 1000H\n");
+        ICGFile.write(".DATA\n");
+        ICGFile.flush();
 
         // Create lexer and parser
         CharStream input = CharStreams.fromFileName(args[0]);

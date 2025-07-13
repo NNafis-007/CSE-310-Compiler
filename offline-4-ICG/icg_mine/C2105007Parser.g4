@@ -15,6 +15,7 @@ import java.io.IOException;
     public boolean isGlobal = true;
     public int stackOffset = 0;
 
+    // Write grammar matching Log   
     void logParse(String message) {
         try {
             Main.parserLogFile.write(message);
@@ -24,11 +25,6 @@ import java.io.IOException;
         } catch (IOException e) {
             System.err.println("Parser log error: " + e.getMessage());
         }
-    }
-
-    public int getOffset(){
-        stackOffset -= 2;
-        return stackOffset;
     }
 
     // helper to write into Main.errorFile
@@ -41,6 +37,31 @@ import java.io.IOException;
             System.err.println("Error file write error: " + e.getMessage());
         }
     }
+
+    // Write assembly
+    void writeCode(String message){
+        try {
+            Main.ICGFile.write(message);
+            Main.ICGFile.newLine();
+            Main.ICGFile.flush();
+        } catch (IOException e) {
+            System.err.println("Error file write error: " + e.getMessage());
+        }
+
+    }
+
+    public int getOffset(){
+        stackOffset -= 2;
+        return stackOffset;
+    }
+
+    public int getOffset(int noBytes){
+        int startOffset = stackOffset - 2;
+        stackOffset -= 2 * (noBytes);
+        return startOffset;
+    }
+
+    
 }
 
 start
@@ -189,19 +210,38 @@ declaration_list
       {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " declaration_list : declaration_list COMMA ID");
+        if(!isGlobal)
+            logParse("----- " + $ID.getText() + ", offest : " + getOffset() + " ----");
+        else{
+            String asmCode = "\t" + $ID.getText() + " DW 1 DUP (0000h)";
+            writeCode(asmCode);
+            logParse("----- " + $ID.getText() + " NO OFFSET, Dec in DS" + "----");
+        }
       }
     | declaration_list COMMA ID LTHIRD CONST_INT RTHIRD
       {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " declaration_list : declaration_list COMMA ID LTHIRD CONST_INT RTHIRD");
+
+        int noElems = Integer.parseInt($CONST_INT.getText());
+        if(!isGlobal)
+            logParse("----- " + $ID.getText() + ", offest : " + getOffset(noElems) + "----");
+        else{
+            String asmCode = "\t" + $ID.getText() + " DW " + noElems + " DUP (0000h)";
+            writeCode(asmCode);
+            logParse("----- " + $ID.getText() + " NO OFFSET, (BUT DUP " + noElems + ") Dec in DS" + "----");
+        }
       }
     | ID
       {
         int lineNo = $ID.getLine();
+        
         logParse("Line No : " + lineNo + " declaration_list : ID");
         if(!isGlobal)
             logParse("----- " + $ID.getText() + ", offest : " + getOffset() + "----");
         else{
+            String asmCode = "\t" + $ID.getText() + " DW 1 DUP (0000h)";
+            writeCode(asmCode);
             logParse("----- " + $ID.getText() + " NO OFFSET, Dec in DS" + "----");
         }
       }
@@ -209,6 +249,15 @@ declaration_list
       {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " declaration_list : ID LTHIRD CONST_INT RTHIRD");
+
+        int noElems = Integer.parseInt($CONST_INT.getText());
+        if(!isGlobal)
+            logParse("----- " + $ID.getText() + ", offest : " + getOffset(noElems) + "----");
+        else{
+            String asmCode = "\t" + $ID.getText() + " DW " + noElems + " DUP (0000h)";
+            writeCode(asmCode);
+            logParse("----- " + $ID.getText() + " NO OFFSET, (BUT DUP " + noElems + ") Dec in DS" + "----");
+        }
       }
     ;
 

@@ -1,7 +1,7 @@
-int a;
-
+int i, j;
+int a[5];
 int main(){
-    int c;
-    int d;
+    int c, d;
+    int b[3], z;
     c = 5;
 }

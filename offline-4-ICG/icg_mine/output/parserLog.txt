@@ -2,13 +2,29 @@ Line No : 1 type_specifier : INT
 
 Line No : 1 declaration_list : ID
 
------ a NO OFFSET, Dec in DS----
+----- i NO OFFSET, Dec in DS----
+
+Line No : 1 declaration_list : declaration_list COMMA ID
+
+----- j NO OFFSET, Dec in DS----
 
 Line No : 1 var_declaration : type_specifier dec_list SEMICOLON
 
 unit : var_declaration
 
 program : unit
+
+Line No : 2 type_specifier : INT
+
+Line No : 2 declaration_list : ID LTHIRD CONST_INT RTHIRD
+
+----- a NO OFFSET, (BUT DUP 5) Dec in DS----
+
+Line No : 2 var_declaration : type_specifier dec_list SEMICOLON
+
+unit : var_declaration
+
+program : program unit
 
 Line No : 3 type_specifier : INT
 
@@ -18,6 +34,10 @@ Line No : 4 declaration_list : ID
 
 ----- c, offest : -2----
 
+Line No : 4 declaration_list : declaration_list COMMA ID
+
+----- d, offest : -4 ----
+
 Line No : 4 var_declaration : type_specifier dec_list SEMICOLON
 
 statement : var_declaration
@@ -26,9 +46,13 @@ statements : statement
 
 Line No : 5 type_specifier : INT
 
-Line No : 5 declaration_list : ID
+Line No : 5 declaration_list : ID LTHIRD CONST_INT RTHIRD
 
------ d, offest : -4----
+----- b, offest : -6----
+
+Line No : 5 declaration_list : declaration_list COMMA ID
+
+----- z, offest : -12 ----
 
 Line No : 5 var_declaration : type_specifier dec_list SEMICOLON
 

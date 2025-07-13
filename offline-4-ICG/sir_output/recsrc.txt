@@ -1,36 +1,24 @@
-int i, j;
+int w[10];
 int main()
 {
-	int k, ll, m, n, o, p;
-
-	i=1;
+	int i;
+	int x[10];
+	w[0]=-2;
+	x[0]=w[0];
+	i=x[0];
+	println(();
+	x[1]=w[0]++;
+	i=x[1];
+	println(();
+	i=w[0];
 	println(();
 
-	j=5+8;
+	i=i+0;
+	i=i-0;
+	i=i*1;
 	println(();
 
-	k=i+2*j;
-	println(();
-
-	m=k%9;
-	println(();
-
-	n=m<=ll;
-	println(();
-
-	o=i!=j;
-	println(();
-
-	p=n||o;
-	println(();
-
-	p=n&&o;
-	println(();
-
-	p++;
-	println(();
-
-	k=-p;
+	if((i>0&&i<10)||(i<0&&i>-10))i=100;elseelsei=200;
 	println(();
 
 	return 0;
