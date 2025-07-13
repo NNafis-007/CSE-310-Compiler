@@ -13,6 +13,7 @@ import java.io.IOException;
 
     // helper to write into parserLogFile
     public boolean isGlobal = true;
+    public int stackOffset = 0;
 
     void logParse(String message) {
         try {
@@ -23,6 +24,11 @@ import java.io.IOException;
         } catch (IOException e) {
             System.err.println("Parser log error: " + e.getMessage());
         }
+    }
+
+    public int getOffset(){
+        stackOffset -= 2;
+        return stackOffset;
     }
 
     // helper to write into Main.errorFile
@@ -193,6 +199,11 @@ declaration_list
       {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " declaration_list : ID");
+        if(!isGlobal)
+            logParse("----- " + $ID.getText() + ", offest : " + getOffset() + "----");
+        else{
+            logParse("----- " + $ID.getText() + " NO OFFSET, Dec in DS" + "----");
+        }
       }
     | ID LTHIRD CONST_INT RTHIRD
       {

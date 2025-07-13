@@ -3,6 +3,7 @@ package SymbolTable;
 public class SymbolInfo {
     private String name;
     private String symbolType;
+    private int stackOffest;
     public SymbolInfo next;
 
     // Constructor with parameters
@@ -36,8 +37,16 @@ public class SymbolInfo {
         return name;
     }
 
+    public int getOffset(){
+        return stackOffest;
+    }
+
     public String getType() {
         return symbolType;
+    }
+
+    public void setOffset(int offset) {
+        this.stackOffest = offset;
     }
 
     public void setName(String name) {
