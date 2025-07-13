@@ -44,7 +44,7 @@ public class Main {
 
         // Begin parsing
         ParseTree tree = parser.start();
-        parserLogFile.write("Parse tree: " + tree.toStringTree(parser) + "\n");
+        // parserLogFile.write("Parse tree: " + tree.toStringTree(parser) + "\n");
 
         // Close files
         parserLogFile.close();
