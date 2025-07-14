@@ -1,6 +1,7 @@
-int p;
-
+int i, j;
 int main(){
-    int c, d;
-    int r;
+    int k,ll,m,n,o,p;
+    i = 1;
+    println(i);
+    k = 5
 }

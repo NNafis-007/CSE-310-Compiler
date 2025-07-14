@@ -1,0 +1,116 @@
+Line No : 1 type_specifier : INT
+
+Line No : 1 declaration_list : ID
+
+----- i NO OFFSET, Dec in DS----
+
+Line No : 1 declaration_list : declaration_list COMMA ID
+
+----- j NO OFFSET, Dec in DS----
+
+Line No : 1 var_declaration : type_specifier dec_list SEMICOLON
+
+unit : var_declaration
+
+program : unit
+
+Line No : 2 type_specifier : INT
+
+Line No : 3 type_specifier : INT
+
+Line No : 3 declaration_list : ID
+
+----- k, offest : 2 ----
+
+Line No : 3 declaration_list : declaration_list COMMA ID
+
+----- ll, offest : 4 ----
+
+Line No : 3 declaration_list : declaration_list COMMA ID
+
+----- m, offest : 6 ----
+
+Line No : 3 declaration_list : declaration_list COMMA ID
+
+----- n, offest : 8 ----
+
+Line No : 3 declaration_list : declaration_list COMMA ID
+
+----- o, offest : 10 ----
+
+Line No : 3 declaration_list : declaration_list COMMA ID
+
+----- p, offest : 12 ----
+
+Line No : 3 var_declaration : type_specifier dec_list SEMICOLON
+
+statement : var_declaration
+
+statements : statement
+
+Line No : 4 variable : ID
+
+Line No : 4 factor : CONST_INT 1
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+Line No : 4 expression : variable ASSIGNOP logic_expression
+
+Line No : 4 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+statements : statements statement
+
+Line No : 5 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
+
+statements : statements statement
+
+Line No : 6 variable : ID
+
+Line No : 6 factor : CONST_INT 5
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+Line No : 6 expression : variable ASSIGNOP logic_expression
+
+Line No : 7 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+statements : statements statement
+
+Line No : 2 compound_statement : LCURL statements RCURL
+
+Line No : 2 (main) func_definition  : type_specifier ID LPAREN RPAREN compound_statement
+
+unit : func_definition
+
+program : program unit
+
+Parsing completed successfully with 0 syntax errors.
+
+ScopeTable # 1
+0 --> < i : global, Offset: 0 >< p : local, Offset: 12 >
+1 --> < j : global, Offset: 0 >
+2 --> < k : local, Offset: 2 >< ll : local, Offset: 4 >
+4 --> < m : local, Offset: 6 >
+5 --> < n : local, Offset: 8 >
+6 --> < o : local, Offset: 10 >
+

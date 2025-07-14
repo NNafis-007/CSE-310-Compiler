@@ -61,14 +61,21 @@ import SymbolTable.SymbolInfo;
         }
     }
 
+    void printInAsm(int val){
+      // MOV AX, i       ; Line 7
+    	// CALL print_output
+	    // CALL new_line
+
+    }
+
     public int getOffset(){
-        stackOffset -= 2;
+        stackOffset += 2;
         return stackOffset;
     }
 
     public int getOffset(int noBytes){
-        int startOffset = stackOffset - 2;
-        stackOffset -= 2 * (noBytes);
+        int startOffset = stackOffset + 2;
+        stackOffset += 2 * (noBytes);
         return startOffset;
     }
 
@@ -92,6 +99,21 @@ import SymbolTable.SymbolInfo;
         }
     }
 
+    SymbolInfo STlookup(String name) {
+        try {
+            SymbolInfo s = new SymbolInfo(name, "local", "int", null);
+            SymbolInfo foundSymbol = Main.st.lookUp(s);
+            if (foundSymbol != null) {
+                return foundSymbol;
+            } else {
+                System.err.println("Symbol not found in Symbol Table: " + s.getName());
+                return null;
+            }
+        } catch (Exception e) {
+            System.err.println("Error looking up symbol: " + e.getMessage());
+            return null;
+        }
+    }
     
 }
 
@@ -245,9 +267,7 @@ declaration_list:
             int offset = getOffset();
             logParse("----- " + $ID.getText() + ", offest : " + offset + " ----");
             boolean isInserted = STinsert($ID.getText(), "local", "int", null, false, offset);
-            if(!isInserted){
-                logErr("Line# " + lineNo + " - Variable " + $ID.getText() + " CANT INSERT IN ST");
-            }
+            writeTempCode("\tSUB SP , " + 2);
         }
         else{
             String asmCode = "\t" + $ID.getText() + " DW 1 DUP (0000h)";
@@ -280,9 +300,7 @@ declaration_list:
             int offset = getOffset();
             logParse("----- " + $ID.getText() + ", offest : " + offset + " ----");
             boolean isInserted = STinsert($ID.getText(), "local", "int", null, false, offset);
-            if(!isInserted){
-                logErr("Line# " + lineNo + " - Variable " + $ID.getText() + " CANT INSERT IN ST");
-            }
+            writeTempCode("\tSUB SP , " + 2);
         }
         else{
             String asmCode = "\t" + $ID.getText() + " DW 1 DUP (0000h)";
@@ -362,62 +380,80 @@ expression_statement:
         logParse("Line No : " + lineNo + " expression_statement : expression SEMICOLON");
       };
 
-variable:
+variable returns [String varName]:
 	ID {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " variable : ID");
+        $varName = $ID.getText();
       }
 	| ID LTHIRD expression RTHIRD {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " variable : ID LTHIRD expression RTHIRD");
+        $varName = $ID.getText();
       };
 
 expression:
 	logic_expression {
         logParse("expression : logic_expression");
       }
-	| variable ASSIGNOP logic_expression {
+	| v=variable ASSIGNOP l=logic_expression {
         int lineNo = $ASSIGNOP.getLine();
         logParse("Line No : " + lineNo + " expression : variable ASSIGNOP logic_expression");
+
+        // MOV var, expr_val
+        SymbolInfo varInfo = STlookup($v.varName);
+        int expr_val = $l.le_val;
+        if(varInfo.getScope() == "global"){
+          System.out.println("MOV " + varInfo.getName() + ", " + expr_val);
+        }
+        else{
+          String cmd = "MOV [BP-" + varInfo.getOffset() + "], " + expr_val;
+          System.out.println(cmd);
+        }
+
       };
 
-logic_expression:
-	rel_expression {
+logic_expression returns [int le_val]:
+	r=rel_expression {
         logParse("logic_expression : rel_expression");
+        $le_val = $r.re_val;
       }
 	| rel_expression LOGICOP rel_expression {
         int lineNo = $LOGICOP.getLine();
         logParse("Line No : " + lineNo + " logic_expression : rel_expression LOGICOP rel_expression");
       };
 
-rel_expression:
-	simple_expression {
+rel_expression returns [int re_val]:
+	s=simple_expression {
         logParse("rel_expression : simple_expression");
+        $re_val = $s.se_val;
       }
 	| simple_expression RELOP simple_expression {
         int lineNo = $RELOP.getLine();
         logParse("Line No : " + lineNo + " rel_expression : simple_expression RELOP simple_expression");
       };
 
-simple_expression:
+simple_expression returns [int se_val]:
 	term {
         logParse("simple_expression : term");
+        $se_val = $term.t_val;
       }
 	| simple_expression ADDOP term {
         int lineNo = $ADDOP.getLine();
         logParse("Line No : " + lineNo + " simple_expression : simple_expression ADDOP term");
       };
 
-term:
-	unary_expression {
+term returns [int t_val]:
+	u=unary_expression {
         logParse("term : unary_expression");
+        $t_val = $u.ue_val;
       }
 	| term MULOP unary_expression {
         int lineNo = $MULOP.getLine();
         logParse("Line No : " + lineNo + " term : term MULOP unary_expression");
       };
 
-unary_expression:
+unary_expression returns [int ue_val]:
 	ADDOP unary_expression {
         int lineNo = $ADDOP.getLine();
         logParse("Line No : " + lineNo + " unary_expression : ADDOP unary_expression");
@@ -426,11 +462,12 @@ unary_expression:
         int lineNo = $NOT.getLine();
         logParse("Line No : " + lineNo + " unary_expression : NOT unary_expression");
       }
-	| factor {
+	| f=factor {
         logParse("unary_expression : factor");
+        $ue_val =$f.fact_val; 
       };
 
-factor:
+factor returns [int fact_val]:
 	variable {
         logParse("factor : variable");
       }
@@ -444,7 +481,8 @@ factor:
       }
 	| CONST_INT {
         int lineNo = $CONST_INT.getLine();
-        logParse("Line No : " + lineNo + " factor : CONST_INT");
+        $fact_val = Integer.parseInt($CONST_INT.getText());
+        logParse("Line No : " + lineNo + " factor : CONST_INT " + $fact_val);
       }
 	| CONST_FLOAT {
         int lineNo = $CONST_FLOAT.getLine();

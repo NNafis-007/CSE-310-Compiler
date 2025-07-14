@@ -1,9 +1,9 @@
 int i,j;
 int main(){
  
-	int k,ll,m,n,o,p;
+	int k,ll,m,n,o,p; // 6 ta SUB SP, 2
  
-	i = 1;
+	i = 1; // MOV i, 1
 	println(i);
 	
 	j = 5 + 8;

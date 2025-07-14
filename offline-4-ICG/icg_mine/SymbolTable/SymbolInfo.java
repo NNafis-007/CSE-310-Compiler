@@ -4,7 +4,7 @@ package SymbolTable;
 import java.util.ArrayList;
 public class SymbolInfo {
     private String name;
-    private String symbolType;
+    private String symbolScope;
     private String d_type; // Data type, if applicable
     private ArrayList<String> parameters; // Parameters for functions
     private boolean isFunction; // Flag to indicate if this symbol is a function
@@ -12,37 +12,10 @@ public class SymbolInfo {
     
     public SymbolInfo next;
 
-
-    // // Constructor without next parameter
-    // public SymbolInfo(String name, String type) {
-    //     this.name = name;
-    //     this.symbolType = type;
-    //     this.d_type = null; // Default data type is null
-    //     this.parameters = new ArrayList<>(); // Initialize parameters list
-    //     this.next = null; // Default next is null
-    //     this.isFunction = false; // Default isFunction is false
-    // }
-
-    // Constructor with parameters
-    // public SymbolInfo(String name, String type, SymbolInfo next) {
-    //     this.name = name;
-    //     this.symbolType = type;
-    //     this.next = next;
-    // }
-
-    // Constructor with name, type, and data type
-    // public SymbolInfo(String name, String type, String d_type) {
-    //     this.name = name;
-    //     this.symbolType = type;
-    //     this.d_type = d_type;
-    //     this.parameters = new ArrayList<>(); // Initialize parameters list
-    //     this.next = null;
-    // }
-
-    // Constructor with name, type, data type, and parameters
-    public SymbolInfo(String name, String type, String d_type, ArrayList<String> parameters) {
+    // Constructor with name, scope, data type, and parameters
+    public SymbolInfo(String name, String scope, String d_type, ArrayList<String> parameters) {
         this.name = name;
-        this.symbolType = type;
+        this.symbolScope = scope;
         this.d_type = d_type;
         this.parameters = parameters != null ? new ArrayList<>(parameters) : new ArrayList<>();
         this.isFunction = false; // Default isFunction is false
@@ -53,7 +26,7 @@ public class SymbolInfo {
     // Copy constructor
     public SymbolInfo(SymbolInfo other) {
         this.name = other.name;
-        this.symbolType = other.symbolType;
+        this.symbolScope = other.symbolScope;
         this.d_type = other.d_type; // Copy data type
         this.parameters = new ArrayList<>(other.parameters); // Deep copy of parameters
         this.isFunction = other.isFunction; // Copy function flag
@@ -64,7 +37,7 @@ public class SymbolInfo {
     // Default constructor
     public SymbolInfo() {
         this.name = "";
-        this.symbolType = "";
+        this.symbolScope = "";
         this.d_type = ""; // Default data type is ""
         this.parameters = new ArrayList<>(); // Initialize parameters list
         this.isFunction = false; // Default isFunction is false
@@ -82,22 +55,22 @@ public class SymbolInfo {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
-    public String getType() {
-        return symbolType;
+    public String getScope() {
+        return this.symbolScope;
     }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public void setType(String type) {
-        this.symbolType = type;
+    public void setScope(String scope) {
+        this.symbolScope = scope;
     }
     public String getDataType() {
-        return d_type;
+        return this.d_type;
     }
     public void setDataType(String d_type) {
         this.d_type = d_type;
@@ -108,11 +81,11 @@ public class SymbolInfo {
     }
 
     public boolean getIsFunction() {
-        return isFunction;
+        return this.isFunction;
     }
 
     public ArrayList<String> getParameters() {
-        return parameters;
+        return this.parameters;
     }
     public void setParameters(ArrayList<String> parameters) {
         if (parameters != null) {
@@ -142,6 +115,6 @@ public class SymbolInfo {
     }
 
     public String showSymbol() {
-        return "< " + this.name + " : " + this.symbolType + ", Offset: " + this.offset + " >";
+        return "< " + this.name + " : " + this.symbolScope + ", Offset: " + this.offset + " >";
     }
 }

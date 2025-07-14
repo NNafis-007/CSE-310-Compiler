@@ -4,6 +4,12 @@ main PROC
 	PUSH BP
 	MOV BP, SP
 
+	SUB SP , 2
+	SUB SP , 2
+	SUB SP , 2
+	SUB SP , 2
+	SUB SP , 2
+	SUB SP , 2
 	POP BP
 	MOV AX, 4Ch
 	INT 21h

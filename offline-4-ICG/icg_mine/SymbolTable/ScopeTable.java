@@ -52,15 +52,7 @@ public class ScopeTable {
         // int chainPosition = 0;
 
         if (hashTable[index] == null) {
-
             hashTable[index] = new SymbolInfo(s);
-            try {
-                String info = hashTable[index].showSymbol();
-                System.out.println("Inserted symbol: " + info);
-            } catch (Exception e) {
-                // TODO: handle exception
-            }
-
         } else {
             // chainPosition += 1;
             SymbolInfo temp = hashTable[index];
@@ -164,8 +156,6 @@ public class ScopeTable {
                     out.write(indent.toString());
                     out.write(i + " --> ");
                     while (temp != null) {
-                        // out.write("< " + temp.getName() + " : " + temp.getType() + 
-                        //           ", Offset: " + temp.offset + " > ");
                         out.write(temp.showSymbol());
                         temp = temp.next;
                     }
