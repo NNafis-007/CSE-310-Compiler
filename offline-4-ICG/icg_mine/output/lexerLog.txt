@@ -10,16 +10,6 @@ Line# 2: Token <RPAREN> Lexeme )
 Line# 2: Token <LCURL> Lexeme {
 Line# 3: Token <INT> Lexeme int
 Line# 3: Token <ID> Lexeme k
-Line# 3: Token <COMMA> Lexeme ,
-Line# 3: Token <ID> Lexeme ll
-Line# 3: Token <COMMA> Lexeme ,
-Line# 3: Token <ID> Lexeme m
-Line# 3: Token <COMMA> Lexeme ,
-Line# 3: Token <ID> Lexeme n
-Line# 3: Token <COMMA> Lexeme ,
-Line# 3: Token <ID> Lexeme o
-Line# 3: Token <COMMA> Lexeme ,
-Line# 3: Token <ID> Lexeme p
 Line# 3: Token <SEMICOLON> Lexeme ;
 Line# 4: Token <ID> Lexeme i
 Line# 4: Token <ASSIGNOP> Lexeme =

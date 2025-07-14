@@ -72,6 +72,17 @@ import SymbolTable.SymbolInfo;
       writeTempCode(asmCode);
     }
 
+    String getAsmVar(String varName){
+      SymbolInfo varInfo = STlookup(varName);
+        if(varInfo.getScope() == "global"){
+          return varInfo.getName();
+        }
+        else{
+          String cmd = "[BP-" + varInfo.getOffset() + "]";
+          return cmd;
+        }
+    }
+
     public int getOffset(){
         stackOffset += 2;
         return stackOffset;
@@ -405,15 +416,8 @@ expression:
         logParse("Line No : " + lineNo + " expression : variable ASSIGNOP logic_expression");
 
         // MOV var, expr_val
-        SymbolInfo varInfo = STlookup($v.varName);
-        int expr_val = 0; // PLACEHOLDER
-        if(varInfo.getScope() == "global"){
-          System.out.println("MOV " + varInfo.getName() + ", <val>");
-        }
-        else{
-          String cmd = "MOV [BP-" + varInfo.getOffset() + "], <val>";
-          System.out.println(cmd);
-        }
+        String cmd = "MOV " + getAsmVar($v.varName) + ", <val>";
+        System.out.println(cmd);
 
       };
 
@@ -446,7 +450,7 @@ simple_expression :
 
         logParse("Line No : " + $ADDOP.getLine() + " (IN ADDOP) simple_expression : simple_expression ADDOP term");
         if(!isAdditionStarted){
-          System.out.print("\tMOV DX, AX\n"); // gonna add so store AX in DX
+          writeTempCode("\tMOV DX, AX"); // gonna add so store AX in DX
         }
       }
 
@@ -455,11 +459,11 @@ simple_expression :
         logParse("Line No : " + lineNo + " simple_expression : simple_expression ADDOP term");
         if(isAdditionStarted){
           // Curr result is in stack, So pop to AX
-          System.out.print("\tMOV DX, AX\n");
-          System.out.print("\tPOP AX\n");
+          writeTempCode("\tMOV DX, AX");
+          writeTempCode("\tPOP AX");
         }
-        System.out.print("\tADD AX, DX\n"); 
-        System.out.print("\tPUSH AX\n");
+        writeTempCode("\tADD AX, DX"); 
+        writeTempCode("\tPUSH AX");
         isAdditionStarted = true; 
       };
 
@@ -502,8 +506,9 @@ factor:
         int val = Integer.parseInt($CONST_INT.getText());
         logParse("Line No : " + lineNo + " factor : CONST_INT " + val);
         // MOV AX, INT_VAL
-        String asmCode = "\tMOV AX, " + val + "\n";
-        System.out.print(asmCode);
+        String asmCode = "\tMOV AX, " + val;
+        System.out.println(asmCode);
+        writeTempCode(asmCode);
       }
 	| CONST_FLOAT {
         int lineNo = $CONST_FLOAT.getLine();
