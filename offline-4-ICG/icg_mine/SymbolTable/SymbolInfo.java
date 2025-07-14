@@ -58,6 +58,7 @@ public class SymbolInfo {
         this.parameters = new ArrayList<>(other.parameters); // Deep copy of parameters
         this.isFunction = other.isFunction; // Copy function flag
         this.next = null; // Deep copy does not copy the linked list structure
+        this.offset = other.offset; // Copy offset
     }
 
     // Default constructor
@@ -73,7 +74,7 @@ public class SymbolInfo {
     // Getters and setters
     public void setOffset(int offset) {
         this.offset = offset;
-        System.out.println("Set offset for symbol: " + this.showSymbol());
+        // System.out.println("Set offset for symbol: " + this.showSymbol());
     }
 
     public int getOffset() {

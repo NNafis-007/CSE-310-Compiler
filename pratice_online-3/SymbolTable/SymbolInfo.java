@@ -48,6 +48,7 @@ public class SymbolInfo {
         this.isFunction = false; // Default isFunction is false
         this.next = null; // Default next is null
         this.offset = 0; // Default offset is 0
+        System.out.println("balsal");
     }
 
     // Copy constructor
@@ -59,6 +60,8 @@ public class SymbolInfo {
         this.isFunction = other.isFunction; // Copy function flag
         this.next = null; // Deep copy does not copy the linked list structure
         this.offset = other.offset; // Copy offset
+        System.out.println("balsal2");
+
     }
 
     // Default constructor
@@ -69,6 +72,8 @@ public class SymbolInfo {
         this.parameters = new ArrayList<>(); // Initialize parameters list
         this.isFunction = false; // Default isFunction is false
         this.next = null;
+        System.out.println("balsal3");
+
     }
 
     // Getters and setters
