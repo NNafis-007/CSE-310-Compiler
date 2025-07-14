@@ -6,7 +6,7 @@ int main(){
 	i = 1; // MOV i, 1
 	println(i);
 	
-	j = 5 + 8;
+	j = 5 + 8 + 10 + 12;
 	println(j);
 	
 	k = i + 2*j;

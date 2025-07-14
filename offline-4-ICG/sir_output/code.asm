@@ -31,6 +31,16 @@ L3:
 	MOV AX, 5       ; Line 9
 	ADD AX, DX
 	PUSH AX
+	MOV AX, 10       ; Line 9
+	MOV DX, AX
+	POP AX       ; Line 9
+	ADD AX, DX
+	PUSH AX
+	MOV AX, 12       ; Line 9
+	MOV DX, AX
+	POP AX       ; Line 9
+	ADD AX, DX
+	PUSH AX
 	POP AX       ; Line 9
 	MOV j, AX
 	PUSH AX

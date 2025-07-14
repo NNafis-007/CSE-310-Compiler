@@ -15,6 +15,7 @@ import SymbolTable.SymbolInfo;
     // helper to write into parserLogFile
     public boolean isGlobal = true;
     public int stackOffset = 0;
+    public boolean isAdditionStarted = false;
 
     // Write grammar matching Log   
     void logParse(String message) {
@@ -61,11 +62,14 @@ import SymbolTable.SymbolInfo;
         }
     }
 
-    void printInAsm(int val){
+    void printInAsm(String id){
       // MOV AX, i       ; Line 7
     	// CALL print_output
 	    // CALL new_line
-
+      String asmCode = "\tMOV AX, " + id + "\n" +
+                       "\tCALL print_output\n" +
+                       "\tCALL new_line\n";
+      writeTempCode(asmCode);
     }
 
     public int getOffset(){
@@ -402,58 +406,73 @@ expression:
 
         // MOV var, expr_val
         SymbolInfo varInfo = STlookup($v.varName);
-        int expr_val = $l.le_val;
+        int expr_val = 0; // PLACEHOLDER
         if(varInfo.getScope() == "global"){
-          System.out.println("MOV " + varInfo.getName() + ", " + expr_val);
+          System.out.println("MOV " + varInfo.getName() + ", <val>");
         }
         else{
-          String cmd = "MOV [BP-" + varInfo.getOffset() + "], " + expr_val;
+          String cmd = "MOV [BP-" + varInfo.getOffset() + "], <val>";
           System.out.println(cmd);
         }
 
       };
 
-logic_expression returns [int le_val]:
+logic_expression:
 	r=rel_expression {
         logParse("logic_expression : rel_expression");
-        $le_val = $r.re_val;
       }
 	| rel_expression LOGICOP rel_expression {
         int lineNo = $LOGICOP.getLine();
         logParse("Line No : " + lineNo + " logic_expression : rel_expression LOGICOP rel_expression");
       };
 
-rel_expression returns [int re_val]:
+rel_expression:
 	s=simple_expression {
         logParse("rel_expression : simple_expression");
-        $re_val = $s.se_val;
+
       }
 	| simple_expression RELOP simple_expression {
         int lineNo = $RELOP.getLine();
         logParse("Line No : " + lineNo + " rel_expression : simple_expression RELOP simple_expression");
       };
 
-simple_expression returns [int se_val]:
+simple_expression :
 	term {
         logParse("simple_expression : term");
-        $se_val = $term.t_val;
       }
-	| simple_expression ADDOP term {
+	| simple_expression 
+    ADDOP
+      {
+
+        logParse("Line No : " + $ADDOP.getLine() + " (IN ADDOP) simple_expression : simple_expression ADDOP term");
+        if(!isAdditionStarted){
+          System.out.print("\tMOV DX, AX\n"); // gonna add so store AX in DX
+        }
+      }
+
+   term {
         int lineNo = $ADDOP.getLine();
         logParse("Line No : " + lineNo + " simple_expression : simple_expression ADDOP term");
+        if(isAdditionStarted){
+          // Curr result is in stack, So pop to AX
+          System.out.print("\tMOV DX, AX\n");
+          System.out.print("\tPOP AX\n");
+        }
+        System.out.print("\tADD AX, DX\n"); 
+        System.out.print("\tPUSH AX\n");
+        isAdditionStarted = true; 
       };
 
-term returns [int t_val]:
+term :
 	u=unary_expression {
         logParse("term : unary_expression");
-        $t_val = $u.ue_val;
       }
 	| term MULOP unary_expression {
         int lineNo = $MULOP.getLine();
         logParse("Line No : " + lineNo + " term : term MULOP unary_expression");
       };
 
-unary_expression returns [int ue_val]:
+unary_expression :
 	ADDOP unary_expression {
         int lineNo = $ADDOP.getLine();
         logParse("Line No : " + lineNo + " unary_expression : ADDOP unary_expression");
@@ -464,10 +483,9 @@ unary_expression returns [int ue_val]:
       }
 	| f=factor {
         logParse("unary_expression : factor");
-        $ue_val =$f.fact_val; 
       };
 
-factor returns [int fact_val]:
+factor:
 	variable {
         logParse("factor : variable");
       }
@@ -481,8 +499,11 @@ factor returns [int fact_val]:
       }
 	| CONST_INT {
         int lineNo = $CONST_INT.getLine();
-        $fact_val = Integer.parseInt($CONST_INT.getText());
-        logParse("Line No : " + lineNo + " factor : CONST_INT " + $fact_val);
+        int val = Integer.parseInt($CONST_INT.getText());
+        logParse("Line No : " + lineNo + " factor : CONST_INT " + val);
+        // MOV AX, INT_VAL
+        String asmCode = "\tMOV AX, " + val + "\n";
+        System.out.print(asmCode);
       }
 	| CONST_FLOAT {
         int lineNo = $CONST_FLOAT.getLine();

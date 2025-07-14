@@ -35,6 +35,10 @@
 <CONST_INT, 5>
 <ADDOP, +>
 <CONST_INT, 8>
+<ADDOP, +>
+<CONST_INT, 10>
+<ADDOP, +>
+<CONST_INT, 12>
 <SEMICOLON, ;>
 <PRINTLN, println>
 <LPAREN, (>

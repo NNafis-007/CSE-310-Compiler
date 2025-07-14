@@ -50,13 +50,43 @@ statements : statement
 
 Line No : 4 variable : ID
 
-Line No : 4 factor : CONST_INT 1
+Line No : 4 factor : CONST_INT 8
 
 unary_expression : factor
 
 term : unary_expression
 
 simple_expression : term
+
+Line No : 4 (IN ADDOP) simple_expression : simple_expression ADDOP term
+
+Line No : 4 factor : CONST_INT 5
+
+unary_expression : factor
+
+term : unary_expression
+
+Line No : 4 simple_expression : simple_expression ADDOP term
+
+Line No : 4 (IN ADDOP) simple_expression : simple_expression ADDOP term
+
+Line No : 4 factor : CONST_INT 10
+
+unary_expression : factor
+
+term : unary_expression
+
+Line No : 4 simple_expression : simple_expression ADDOP term
+
+Line No : 4 (IN ADDOP) simple_expression : simple_expression ADDOP term
+
+Line No : 4 factor : CONST_INT 12
+
+unary_expression : factor
+
+term : unary_expression
+
+Line No : 4 simple_expression : simple_expression ADDOP term
 
 rel_expression : simple_expression
 
@@ -71,28 +101,6 @@ statement : expression_statement
 statements : statements statement
 
 Line No : 5 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
-
-statements : statements statement
-
-Line No : 6 variable : ID
-
-Line No : 6 factor : CONST_INT 5
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-rel_expression : simple_expression
-
-logic_expression : rel_expression
-
-Line No : 6 expression : variable ASSIGNOP logic_expression
-
-Line No : 7 expression_statement : expression SEMICOLON
-
-statement : expression_statement
 
 statements : statements statement
 

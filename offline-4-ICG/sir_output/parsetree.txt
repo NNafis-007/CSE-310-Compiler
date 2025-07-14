@@ -93,16 +93,28 @@ start : program 	<Line: 1-37>
                            logic_expression : rel_expression 	<Line: 9-9>
                             rel_expression : simple_expression 	<Line: 9-9>
                              simple_expression : simple_expression ADDOP term 	<Line: 9-9>
-                              simple_expression : term 	<Line: 9-9>
+                              simple_expression : simple_expression ADDOP term 	<Line: 9-9>
+                               simple_expression : simple_expression ADDOP term 	<Line: 9-9>
+                                simple_expression : term 	<Line: 9-9>
+                                 term : unary_expression 	<Line: 9-9>
+                                  unary_expression : factor 	<Line: 9-9>
+                                   factor : CONST_INT 	<Line: 9-9>
+                                    CONST_INT : 5	<Line: 9>
+                                ADDOP : +	<Line: 9>
+                                term : unary_expression 	<Line: 9-9>
+                                 unary_expression : factor 	<Line: 9-9>
+                                  factor : CONST_INT 	<Line: 9-9>
+                                   CONST_INT : 8	<Line: 9>
+                               ADDOP : +	<Line: 9>
                                term : unary_expression 	<Line: 9-9>
                                 unary_expression : factor 	<Line: 9-9>
                                  factor : CONST_INT 	<Line: 9-9>
-                                  CONST_INT : 5	<Line: 9>
+                                  CONST_INT : 10	<Line: 9>
                               ADDOP : +	<Line: 9>
                               term : unary_expression 	<Line: 9-9>
                                unary_expression : factor 	<Line: 9-9>
                                 factor : CONST_INT 	<Line: 9-9>
-                                 CONST_INT : 8	<Line: 9>
+                                 CONST_INT : 12	<Line: 9>
                           SEMICOLON : ;	<Line: 9>
                        statement : PRINTLN LPAREN ID RPAREN SEMICOLON 	<Line: 10-10>
                         PRINTLN : println	<Line: 10>

@@ -38,6 +38,7 @@ declaration_list : declaration_list COMMA ID
 var_declaration : type_specifier declaration_list SEMICOLON  
 statement : var_declaration 
 statements : statement  
+Line# 4: Token <SINGLE LINE COMMENT> Lexeme // 6 ta SUB SP, 2 found
 Line# 6: Token <ID> Lexeme i found
 Line# 6: Token <ASSIGNOP> Lexeme = found
 variable : ID 	 
@@ -53,6 +54,7 @@ expression 	: variable ASSIGNOP logic_expression
 expression_statement : expression SEMICOLON 		 
 statement : expression_statement  
 statements : statements statement  
+Line# 6: Token <SINGLE LINE COMMENT> Lexeme // MOV i, 1 found
 Line# 7: Token <PRINTLN> Lexeme println found
 Line# 7: Token <LPAREN> Lexeme ( found
 Line# 7: Token <ID> Lexeme i found
@@ -70,6 +72,18 @@ term :	unary_expression
 Line# 9: Token <ADDOP> Lexeme + found
 simple_expression : term 
 Line# 9: Token <CONST_INT> Lexeme 8 found
+factor	: CONST_INT   
+unary_expression : factor 
+term :	unary_expression 
+Line# 9: Token <ADDOP> Lexeme + found
+simple_expression : simple_expression ADDOP term  
+Line# 9: Token <CONST_INT> Lexeme 10 found
+factor	: CONST_INT   
+unary_expression : factor 
+term :	unary_expression 
+Line# 9: Token <ADDOP> Lexeme + found
+simple_expression : simple_expression ADDOP term  
+Line# 9: Token <CONST_INT> Lexeme 12 found
 factor	: CONST_INT   
 unary_expression : factor 
 term :	unary_expression 
