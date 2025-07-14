@@ -1,11 +1,3 @@
-foo PROC
-	PUSH BP
-	MOV BP, SP
-
-	POP BP
-	RET
-foo ENDP
-
 main PROC
 	MOV AX, @DATA
 	MOV DS, AX

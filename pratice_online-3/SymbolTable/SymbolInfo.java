@@ -8,6 +8,7 @@ public class SymbolInfo {
     private String d_type; // Data type, if applicable
     private ArrayList<String> parameters; // Parameters for functions
     private boolean isFunction; // Flag to indicate if this symbol is a function
+    public int offset;
     
     public SymbolInfo next;
 
@@ -46,6 +47,7 @@ public class SymbolInfo {
         this.parameters = parameters != null ? new ArrayList<>(parameters) : new ArrayList<>();
         this.isFunction = false; // Default isFunction is false
         this.next = null; // Default next is null
+        this.offset = 0; // Default offset is 0
     }
 
     // Copy constructor
@@ -56,6 +58,7 @@ public class SymbolInfo {
         this.parameters = new ArrayList<>(other.parameters); // Deep copy of parameters
         this.isFunction = other.isFunction; // Copy function flag
         this.next = null; // Deep copy does not copy the linked list structure
+        this.offset = other.offset; // Copy offset
     }
 
     // Default constructor
@@ -69,6 +72,14 @@ public class SymbolInfo {
     }
 
     // Getters and setters
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    public int getOffset() {
+        return this.offset;
+    }
+
     public String getName() {
         return name;
     }
@@ -130,6 +141,6 @@ public class SymbolInfo {
     }
 
     public String showSymbol() {
-        return "< " + this.name + " : " + this.symbolType + " >";
+        return "< " + this.name + " : " + this.symbolType + ", Offset: " + this.offset + " >";
     }
 }

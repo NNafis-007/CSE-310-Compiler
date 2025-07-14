@@ -2,11 +2,11 @@ package SymbolTable;
 
 public class HashFunction {
     public static int sdbmHash(String str) {
-        int hash = 0;
-        int len = str.length();
-        for (int i = 0; i < len; i++) {
-            hash = (str.charAt(i) + (hash << 6) + (hash << 16) - hash);
+        long hash = 0;
+        for (char c : str.toCharArray()) {
+            hash = (c + (hash << 6) + (hash << 16) - hash);
+            hash &= 0xFFFFFFFFL; // simulate 32-bit unsigned overflow
         }
-        return Math.abs(hash); // Ensure positive value
+        return (int)(hash % 7);
     }
 }

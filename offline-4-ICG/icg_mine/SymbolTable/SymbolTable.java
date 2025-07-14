@@ -1,7 +1,7 @@
 package SymbolTable;
 
 import java.io.*;
-// import java.util.*;
+import java.util.*;
 
 /**
  * SymbolTable class managing multiple scopes
@@ -9,33 +9,39 @@ import java.io.*;
 public class SymbolTable {
     private ScopeTable currentScope;
     private int numBuckets;
-    private int numberOfScopes;
     private String currentScopeId;
-    private PrintWriter out;
+    private BufferedWriter out;
+    
+    // Map to track the next child number for each scope
+    private Map<String, Integer> scopeChildCounters;
 
-    private String getScopeId() {
-        StringBuilder sId = new StringBuilder("1");
-        int nScopes = this.numberOfScopes;
-        while (nScopes > 1) {
-            sId.append(".1");
-            nScopes -= 1;
+    private String generateNextScopeId(String parentScopeId) {
+        if (parentScopeId == null) {
+            // This is the global scope
+            return "1";
         }
-        return sId.toString();
+        
+        // Get the next child number for this parent scope
+        int nextChildNumber = scopeChildCounters.getOrDefault(parentScopeId, 0) + 1;
+        scopeChildCounters.put(parentScopeId, nextChildNumber);
+        
+        // Generate the new scope ID
+        return parentScopeId + "." + nextChildNumber;
     }
 
     // Create the root scope
-    public SymbolTable(int numBuckets, PrintWriter outputStream) {
+    public SymbolTable(int numBuckets, BufferedWriter outputStream) {
         this.numBuckets = numBuckets;
-        this.numberOfScopes = 1;
         this.out = outputStream;
-        this.currentScope = new ScopeTable(this.numBuckets, "1", this.out);
-        this.currentScopeId = "1";
+        this.scopeChildCounters = new HashMap<>();
+        this.currentScopeId = generateNextScopeId(null); //generate "1" for global scope
+        this.currentScope = new ScopeTable(this.numBuckets, this.currentScopeId, this.out);
         this.currentScope.setParentScope(null);
     }
 
     // Constructor with System.out as default output
     public SymbolTable(int numBuckets) {
-        this(numBuckets, new PrintWriter(System.out, true));
+        this(numBuckets, new BufferedWriter(new OutputStreamWriter(System.out)));
     }
 
     public String getCurrentScopeId() {
@@ -43,10 +49,9 @@ public class SymbolTable {
     }
 
     public void enterScope() {
-        this.numberOfScopes += 1;
-        String sId = this.getScopeId();
-        this.currentScopeId = sId;
-        ScopeTable newScopeTable = new ScopeTable(this.numBuckets, sId, this.out);
+        String newScopeId = this.generateNextScopeId(this.currentScopeId);
+        this.currentScopeId = newScopeId;
+        ScopeTable newScopeTable = new ScopeTable(this.numBuckets, newScopeId, this.out);
         newScopeTable.setParentScope(this.currentScope);
         this.currentScope = newScopeTable;
     }
@@ -55,11 +60,14 @@ public class SymbolTable {
         if (this.currentScope.getParentScope() != null) {
             ScopeTable parentScope = this.currentScope.getParentScope();
             this.currentScope = parentScope;
-            this.numberOfScopes -= 1;
-            String sId = this.getScopeId();
-            this.currentScopeId = sId;
+            this.currentScopeId = parentScope.getScopeId();
         } else {
-            out.println("ERROR EXITING SCOPE : No scope to exit");
+            try {
+                out.write("ERROR EXITING SCOPE : No scope to exit\n");
+                out.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -71,11 +79,11 @@ public class SymbolTable {
         return this.currentScope.deleteSymbol(s);
     }
 
-    public SymbolInfo lookUp(SymbolInfo s, int[] index, int[] chainPos) {
+    public SymbolInfo lookUp(SymbolInfo s) {
         SymbolInfo found = null;
         ScopeTable currScope = this.currentScope;
         while (currScope != null) {
-            found = currScope.lookUp(s, index, chainPos, false);
+            found = currScope.lookUp(s, false);
             if (found != null) {
                 return found;
             }
@@ -84,10 +92,10 @@ public class SymbolTable {
         return null;
     }
 
-    public SymbolInfo currentScopeLookup(SymbolInfo s, int[] index, int[] chainPos) {
+    public SymbolInfo currentScopeLookup(SymbolInfo s) {
         ScopeTable currScope = this.currentScope;
         SymbolInfo found = null;
-        found = currScope.lookUp(s, index, chainPos, false);
+        found = currScope.lookUp(s, false);
         if (found != null) {
             return found;
         }
@@ -104,13 +112,23 @@ public class SymbolTable {
         while (currScope != null) {
             currScope.print(indentLevel);
             currScope = currScope.getParentScope();
+            System.out.println();
         }
-        this.out.println();
+        try {
+            this.out.write("\n");
+            this.out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void close() {
         if (out != null) {
-            out.close();
+            try {
+                out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

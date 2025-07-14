@@ -1,7 +1,6 @@
-int foo(){
-    return 0;
-}
+int p;
 
 int main(){
-    return 0;
+    int c, d;
+    int r;
 }

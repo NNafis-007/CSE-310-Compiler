@@ -1,16 +1,16 @@
 package SymbolTable;
 
-import java.io.PrintWriter;
+import java.io.*;
 
 public class ScopeTable {
     private SymbolInfo[] hashTable;
     private ScopeTable parentScope;
     private int numBuckets;
     private String scopeId;
-    private PrintWriter out;
+    private BufferedWriter out;
 
     // Constructor
-    public ScopeTable(int numBuckets, String scopeId, PrintWriter outputStream) {
+    public ScopeTable(int numBuckets, String scopeId, BufferedWriter outputStream) {
         this.numBuckets = numBuckets;
         this.scopeId = scopeId;
         this.parentScope = null;
@@ -24,7 +24,7 @@ public class ScopeTable {
 
     // Constructor with System.out as default output
     public ScopeTable(int numBuckets, String scopeId) {
-        this(numBuckets, scopeId, new PrintWriter(System.out, true));
+        this(numBuckets, scopeId, new BufferedWriter(new OutputStreamWriter(System.out)));
     }
 
     // Getters and setters
@@ -34,6 +34,10 @@ public class ScopeTable {
 
     public void setParentScope(ScopeTable s) {
         this.parentScope = s;
+    }
+    
+    public String getScopeId() {
+        return this.scopeId;
     }
 
     // Insert symbol into the scope table
@@ -48,7 +52,15 @@ public class ScopeTable {
         // int chainPosition = 0;
 
         if (hashTable[index] == null) {
+
             hashTable[index] = new SymbolInfo(s);
+            try {
+                String info = hashTable[index].showSymbol();
+                System.out.println("Inserted symbol: " + info);
+            } catch (Exception e) {
+                // TODO: handle exception
+            }
+
         } else {
             // chainPosition += 1;
             SymbolInfo temp = hashTable[index];
@@ -144,18 +156,25 @@ public class ScopeTable {
             indent.append('\t');
         }
         
-        out.println(indent + "ScopeTable # " + scopeId);
-        for (int i = 0; i < numBuckets; i++) {
-            SymbolInfo temp = hashTable[i];
-            if (temp != null) {
-                out.print(indent);
-                out.print(i + " --> ");
-                while (temp != null) {
-                    out.print("< " + temp.getName() + " : " + temp.getType() + " >");
-                    temp = temp.next;
+        try {
+            out.write(indent + "ScopeTable # " + scopeId + "\n");
+            for (int i = 0; i < numBuckets; i++) {
+                SymbolInfo temp = hashTable[i];
+                if (temp != null) {
+                    out.write(indent.toString());
+                    out.write(i + " --> ");
+                    while (temp != null) {
+                        // out.write("< " + temp.getName() + " : " + temp.getType() + 
+                        //           ", Offset: " + temp.offset + " > ");
+                        out.write(temp.showSymbol());
+                        temp = temp.next;
+                    }
+                    out.write("\n");
                 }
-                out.println();
             }
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

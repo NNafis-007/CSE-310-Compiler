@@ -1,12 +1,13 @@
 parser grammar C2105007Parser;
 
 options {
-    tokenVocab = C2105007Lexer;
+	tokenVocab = C2105007Lexer;
 }
 
 @header {
 import java.io.BufferedWriter;
 import java.io.IOException;
+import SymbolTable.SymbolInfo;
 }
 
 @members {
@@ -49,6 +50,7 @@ import java.io.IOException;
         }
     }
 
+    // Write temporary code (only code segment)
     void writeTempCode(String message){
         try {
             Main.tempFile.write(message);
@@ -70,70 +72,76 @@ import java.io.IOException;
         return startOffset;
     }
 
+    boolean STinsert(String name, String token_type, 
+        String data_type, ArrayList<String> params, 
+        boolean isFunc, int offset) {
+        try{
+
+            SymbolInfo s1 = new SymbolInfo(name, token_type, data_type, params);
+            if(isFunc) {
+                s1.setIsFunction(true);
+            }
+            s1.setOffset(offset);
+            boolean isInserted = Main.st.insertSymbol(s1);
+
+            return isInserted;
+            
+        } catch(Exception e) {
+            System.err.println("Symbol Table insert error : " + e.getMessage());
+            return false;
+        }
+    }
+
     
 }
 
-start
-    : program
-      {
+start:
+	program {
         logParse(
             "Parsing completed successfully with "
             + Main.syntaxErrorCount
             + " syntax errors."
         );
-      }
-    ;
+        Main.st.printAllScopeTable();
+      };
 
-program
-    : program unit
-      {
+program:
+	program unit {
         logParse("program : program unit");
       }
-    | unit
-      {
+	| unit {
         logParse("program : unit");
-      }
-    ;
+      };
 
-unit
-    : var_declaration
-      {
+unit:
+	var_declaration {
         logParse("unit : var_declaration");
       }
-    | func_declaration
-      {
+	| func_declaration {
         logParse("unit : func_declaration");
       }
-    | func_definition
-      {
+	| func_definition {
         logParse("unit : func_definition");
-      }
-    ;
+      };
 
-func_declaration
-    : type_specifier ID LPAREN parameter_list RPAREN SEMICOLON
-      {
+func_declaration:
+	type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
         int lineNo = $SEMICOLON.getLine();
         logParse("Line No : " + lineNo + " func_declaration : type_specifier ID LPAREN parameter_list RPAREN SEMICOLON");
       }
-    | type_specifier ID LPAREN RPAREN SEMICOLON
-      {
+	| type_specifier ID LPAREN RPAREN SEMICOLON {
         int lineNo = $SEMICOLON.getLine();
         logParse("Line No : " + lineNo + " func_declaration : type_specifier ID LPAREN RPAREN SEMICOLON");
-      }
-    ;
+      };
 
-func_definition returns [String fn_name]
-    : type_specifier 
-    ID 
-      {
+func_definition
+	returns[String fn_name]:
+	type_specifier ID {
         isGlobal=false;
         $fn_name = $ID.getText();
         String asmCode = $ID.getText() + " PROC\n" + "\tPUSH BP\n" + "\tMOV BP, SP\n";
         writeTempCode(asmCode);
-      } 
-    LPAREN parameter_list RPAREN compound_statement
-      {
+      } LPAREN parameter_list RPAREN compound_statement {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement");
         isGlobal = true; // Reset isGlobal for next function
@@ -141,10 +149,7 @@ func_definition returns [String fn_name]
         writeTempCode(cleanFuncCode);
 
       }
-
-    | type_specifier 
-    ID 
-      {
+	| type_specifier ID {
         isGlobal=false;
         $fn_name = $ID.getText();
         String asmCode = $ID.getText() + " PROC\n";
@@ -153,9 +158,7 @@ func_definition returns [String fn_name]
         }
         asmCode += "\tPUSH BP\n" + "\tMOV BP, SP\n";
         writeTempCode(asmCode);
-      } 
-    LPAREN RPAREN compound_statement
-      {
+      } LPAREN RPAREN compound_statement {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " (" + $fn_name + ") func_definition  : type_specifier ID LPAREN RPAREN compound_statement");
         isGlobal = true; // Reset isGlobal for next function
@@ -171,52 +174,41 @@ func_definition returns [String fn_name]
           writeTempCode(cleanFuncCode);
         }
 
-      }
-    ;
+      };
 
-parameter_list
-    : parameter_list COMMA type_specifier ID
-      {
+parameter_list:
+	parameter_list COMMA type_specifier ID {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " parameter_list : parameter_list COMMA type_specifier ID");
       }
-    | parameter_list COMMA type_specifier
-      {
+	| parameter_list COMMA type_specifier {
         int lineNo = $COMMA.getLine();
         logParse("Line No : " + lineNo + " parameter_list : parameter_list COMMA type_specifier");
       }
-    | type_specifier ID
-      {
+	| type_specifier ID {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " parameter_list : type_specifier ID");
       }
-    | type_specifier
-      {
+	| type_specifier {
         logParse("parameter_list : type_specifier");
-      }
-    ;
+      };
 
-compound_statement
-    : LCURL statements RCURL
-      {
+compound_statement:
+	LCURL statements RCURL {
         int lineNo = $LCURL.getLine();
         logParse("Line No : " + lineNo + " compound_statement : LCURL statements RCURL");
       }
-    | LCURL RCURL
-      {
+	| LCURL RCURL {
         int lineNo = $LCURL.getLine();
         logParse("Line No : " + lineNo + " compound_statement : LCURL RCURL");
-      }
-    ;
+      };
 
-var_declaration
-    : t=type_specifier dl=declaration_list sm=SEMICOLON
-      {
+var_declaration:
+	t = type_specifier dl = declaration_list sm = SEMICOLON {
         int lineNo = $sm.getLine();
         logParse("Line No : " + lineNo + " var_declaration : type_specifier dec_list SEMICOLON");
       }
-    | t=type_specifier de=declaration_list_err sm=SEMICOLON
-      {
+	| t = type_specifier de = declaration_list_err sm = SEMICOLON {
         // logErr(
         //     "Line# "
         //     + $sm.getLine()
@@ -225,48 +217,49 @@ var_declaration
         //     + " - Syntax error at declaration list of variable declaration"
         // );
         Main.syntaxErrorCount++;
-      }
-    ;
+      };
 
 declaration_list_err
-    returns [String error_name]
-    : { $error_name = "Error in declaration list"; }
-    ;
+	returns[String error_name]: { $error_name = "Error in declaration list"; };
 
 type_specifier
-    returns [String name_line]
-    : INT
-      {
+	returns[String name_line]:
+	INT {
         $name_line = "Line No : " + $INT.getLine() + " type_specifier : INT";
         logParse($name_line);
       }
-    | FLOAT
-      {
+	| FLOAT {
         $name_line = "Line No : " + $FLOAT.getLine() + " type_specifier : FLOAT";
         logParse($name_line);
       }
-    | VOID
-      {
+	| VOID {
         $name_line = "Line No : " + $VOID.getLine() + " type_specifier : VOID";
         logParse($name_line);
-      }
-    ;
+      };
 
-declaration_list
-    : declaration_list COMMA ID
-      {
+declaration_list:
+	declaration_list COMMA ID {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " declaration_list : declaration_list COMMA ID");
-        if(!isGlobal)
-            logParse("----- " + $ID.getText() + ", offest : " + getOffset() + " ----");
+        if(!isGlobal){
+            int offset = getOffset();
+            logParse("----- " + $ID.getText() + ", offest : " + offset + " ----");
+            boolean isInserted = STinsert($ID.getText(), "local", "int", null, false, offset);
+            if(!isInserted){
+                logErr("Line# " + lineNo + " - Variable " + $ID.getText() + " CANT INSERT IN ST");
+            }
+        }
         else{
             String asmCode = "\t" + $ID.getText() + " DW 1 DUP (0000h)";
             writeCode(asmCode);
+            boolean isInserted = STinsert($ID.getText(), "global", "int", null, false, 0);
+            if(!isInserted){
+                logErr("Line# " + lineNo + " - Variable " + $ID.getText() + " CANT INSERT IN ST");
+            }
             logParse("----- " + $ID.getText() + " NO OFFSET, Dec in DS" + "----");
         }
       }
-    | declaration_list COMMA ID LTHIRD CONST_INT RTHIRD
-      {
+	| declaration_list COMMA ID LTHIRD CONST_INT RTHIRD {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " declaration_list : declaration_list COMMA ID LTHIRD CONST_INT RTHIRD");
 
@@ -279,21 +272,30 @@ declaration_list
             logParse("----- " + $ID.getText() + " NO OFFSET, (BUT DUP " + noElems + ") Dec in DS" + "----");
         }
       }
-    | ID
-      {
+	| ID {
         int lineNo = $ID.getLine();
-        
         logParse("Line No : " + lineNo + " declaration_list : ID");
-        if(!isGlobal)
-            logParse("----- " + $ID.getText() + ", offest : " + getOffset() + "----");
+
+        if(!isGlobal){
+            int offset = getOffset();
+            logParse("----- " + $ID.getText() + ", offest : " + offset + " ----");
+            boolean isInserted = STinsert($ID.getText(), "local", "int", null, false, offset);
+            if(!isInserted){
+                logErr("Line# " + lineNo + " - Variable " + $ID.getText() + " CANT INSERT IN ST");
+            }
+        }
         else{
             String asmCode = "\t" + $ID.getText() + " DW 1 DUP (0000h)";
             writeCode(asmCode);
+            boolean isInserted = STinsert($ID.getText(), "global", "int", null, false, 0);
+            if(!isInserted){
+                logErr("Line# " + lineNo + " - Variable " + $ID.getText() + " CANT INSERT IN ST");
+            }
             logParse("----- " + $ID.getText() + " NO OFFSET, Dec in DS" + "----");
         }
+
       }
-    | ID LTHIRD CONST_INT RTHIRD
-      {
+	| ID LTHIRD CONST_INT RTHIRD {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " declaration_list : ID LTHIRD CONST_INT RTHIRD");
 
@@ -305,224 +307,171 @@ declaration_list
             writeCode(asmCode);
             logParse("----- " + $ID.getText() + " NO OFFSET, (BUT DUP " + noElems + ") Dec in DS" + "----");
         }
-      }
-    ;
+      };
 
-statements
-    : statement
-      {
+statements:
+	statement {
         logParse("statements : statement");
       }
-    | statements statement
-      {
+	| statements statement {
         logParse("statements : statements statement");
-      }
-    ;
+      };
 
-statement
-    : var_declaration
-      {
+statement:
+	var_declaration {
         logParse("statement : var_declaration");
       }
-    | expression_statement
-      {
+	| expression_statement {
         logParse("statement : expression_statement");
       }
-    | compound_statement
-      {
+	| compound_statement {
         logParse("statement : compound_statement");
       }
-    | FOR LPAREN expression_statement expression_statement expression RPAREN statement
-      {
+	| FOR LPAREN expression_statement expression_statement expression RPAREN statement {
         int lineNo = $FOR.getLine();
         logParse("Line No : " + lineNo + " statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement");
       }
-    | IF LPAREN expression RPAREN statement
-      {
+	| IF LPAREN expression RPAREN statement {
         int lineNo = $IF.getLine();
         logParse("Line No : " + lineNo + " statement : IF LPAREN expression RPAREN statement");
       }
-    | IF LPAREN expression RPAREN statement ELSE statement
-      {
+	| IF LPAREN expression RPAREN statement ELSE statement {
         int lineNo = $IF.getLine();
         logParse("Line No : " + lineNo + " statement : IF LPAREN expression RPAREN statement ELSE statement");
       }
-    | WHILE LPAREN expression RPAREN statement
-      {
+	| WHILE LPAREN expression RPAREN statement {
         int lineNo = $WHILE.getLine();
         logParse("Line No : " + lineNo + " statement : WHILE LPAREN expression RPAREN statement");
       }
-    | PRINTLN LPAREN ID RPAREN SEMICOLON
-      {
+	| PRINTLN LPAREN ID RPAREN SEMICOLON {
         int lineNo = $PRINTLN.getLine();
         logParse("Line No : " + lineNo + " statement : PRINTLN LPAREN ID RPAREN SEMICOLON");
       }
-    | RETURN expression SEMICOLON
-      {
+	| RETURN expression SEMICOLON {
         int lineNo = $RETURN.getLine();
         logParse("Line No : " + lineNo + " statement : RETURN expression SEMICOLON");
-      }
-    ;
+      };
 
-expression_statement
-    : SEMICOLON
-      {
+expression_statement:
+	SEMICOLON {
         int lineNo = $SEMICOLON.getLine();
         logParse("Line No : " + lineNo + " expression_statement : SEMICOLON");
       }
-    | expression SEMICOLON
-      {
+	| expression SEMICOLON {
         int lineNo = $SEMICOLON.getLine();
         logParse("Line No : " + lineNo + " expression_statement : expression SEMICOLON");
-      }
-    ;
+      };
 
-variable
-    : ID
-      {
+variable:
+	ID {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " variable : ID");
       }
-    | ID LTHIRD expression RTHIRD
-      {
+	| ID LTHIRD expression RTHIRD {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " variable : ID LTHIRD expression RTHIRD");
-      }
-    ;
+      };
 
-expression
-    : logic_expression
-      {
+expression:
+	logic_expression {
         logParse("expression : logic_expression");
       }
-    | variable ASSIGNOP logic_expression
-      {
+	| variable ASSIGNOP logic_expression {
         int lineNo = $ASSIGNOP.getLine();
         logParse("Line No : " + lineNo + " expression : variable ASSIGNOP logic_expression");
-      }
-    ;
+      };
 
-logic_expression
-    : rel_expression
-      {
+logic_expression:
+	rel_expression {
         logParse("logic_expression : rel_expression");
       }
-    | rel_expression LOGICOP rel_expression
-      {
+	| rel_expression LOGICOP rel_expression {
         int lineNo = $LOGICOP.getLine();
         logParse("Line No : " + lineNo + " logic_expression : rel_expression LOGICOP rel_expression");
-      }
-    ;
+      };
 
-rel_expression
-    : simple_expression
-      {
+rel_expression:
+	simple_expression {
         logParse("rel_expression : simple_expression");
       }
-    | simple_expression RELOP simple_expression
-      {
+	| simple_expression RELOP simple_expression {
         int lineNo = $RELOP.getLine();
         logParse("Line No : " + lineNo + " rel_expression : simple_expression RELOP simple_expression");
-      }
-    ;
+      };
 
-simple_expression
-    : term
-      {
+simple_expression:
+	term {
         logParse("simple_expression : term");
       }
-    | simple_expression ADDOP term
-      {
+	| simple_expression ADDOP term {
         int lineNo = $ADDOP.getLine();
         logParse("Line No : " + lineNo + " simple_expression : simple_expression ADDOP term");
-      }
-    ;
+      };
 
-term
-    : unary_expression
-      {
+term:
+	unary_expression {
         logParse("term : unary_expression");
       }
-    | term MULOP unary_expression
-      {
+	| term MULOP unary_expression {
         int lineNo = $MULOP.getLine();
         logParse("Line No : " + lineNo + " term : term MULOP unary_expression");
-      }
-    ;
+      };
 
-unary_expression
-    : ADDOP unary_expression
-      {
+unary_expression:
+	ADDOP unary_expression {
         int lineNo = $ADDOP.getLine();
         logParse("Line No : " + lineNo + " unary_expression : ADDOP unary_expression");
       }
-    | NOT unary_expression
-      {
+	| NOT unary_expression {
         int lineNo = $NOT.getLine();
         logParse("Line No : " + lineNo + " unary_expression : NOT unary_expression");
       }
-    | factor
-      {
+	| factor {
         logParse("unary_expression : factor");
-      }
-    ;
+      };
 
-factor
-    : variable
-      {
+factor:
+	variable {
         logParse("factor : variable");
       }
-    | ID LPAREN argument_list RPAREN
-      {
+	| ID LPAREN argument_list RPAREN {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " factor : ID LPAREN argument_list RPAREN");
       }
-    | LPAREN expression RPAREN
-      {
+	| LPAREN expression RPAREN {
         int lineNo = $LPAREN.getLine();
         logParse("Line No : " + lineNo + " factor : LPAREN expression RPAREN");
       }
-    | CONST_INT
-      {
+	| CONST_INT {
         int lineNo = $CONST_INT.getLine();
         logParse("Line No : " + lineNo + " factor : CONST_INT");
       }
-    | CONST_FLOAT
-      {
+	| CONST_FLOAT {
         int lineNo = $CONST_FLOAT.getLine();
         logParse("Line No : " + lineNo + " factor : CONST_FLOAT");
       }
-    | variable INCOP
-      {
+	| variable INCOP {
         int lineNo = $INCOP.getLine();
         logParse("Line No : " + lineNo + " factor : variable INCOP");
       }
-    | variable DECOP
-      {
+	| variable DECOP {
         int lineNo = $DECOP.getLine();
         logParse("Line No : " + lineNo + " factor : variable DECOP");
-      }
-    ;
+      };
 
-argument_list
-    : arguments
-      {
+argument_list:
+	arguments {
         logParse("argument_list : arguments");
       }
-    | /* empty */
-      {
+	| /* empty */ {
         logParse("argument_list : empty");
-      }
-    ;
+      };
 
-arguments
-    : arguments COMMA logic_expression
-      {
+arguments:
+	arguments COMMA logic_expression {
         int lineNo = $COMMA.getLine();
         logParse("Line No : " + lineNo + " arguments : arguments COMMA logic_expression");
       }
-    | logic_expression
-      {
+	| logic_expression {
         logParse("arguments : logic_expression");
-      }
-    ;
+      };

@@ -1,5 +1,7 @@
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
+import SymbolTable.SymbolTable;
+
 import java.io.*;
 
 public class Main {
@@ -8,6 +10,9 @@ public class Main {
     public static BufferedWriter lexLogFile;
     public static BufferedWriter ICGFile;
     public static BufferedWriter tempFile;
+
+    public static SymbolTable st;
+
 
     public static int syntaxErrorCount = 0;
 
@@ -37,6 +42,9 @@ public class Main {
         lexLogFile = new BufferedWriter(new FileWriter(lexLogFileName));
         ICGFile = new BufferedWriter(new FileWriter(ICGFileName));
         tempFile = new BufferedWriter(new FileWriter(tempFileName));
+
+        st = new SymbolTable(7, parserLogFile);
+        
 
         // write boilerplate code to the ICG file
         ICGFile.write(".MODEL SMALL\n");
