@@ -1,9 +1,9 @@
-package SymbolTable;
+package SymbolTable2;
 
 import java.io.*;
 
 public class ScopeTable {
-    private SymbolInfo[] hashTable;
+    private SymbolInfo2[] hashTable;
     private ScopeTable parentScope;
     private int numBuckets;
     private String scopeId;
@@ -16,7 +16,7 @@ public class ScopeTable {
         this.parentScope = null;
         this.out = outputStream;
 
-        hashTable = new SymbolInfo[numBuckets];
+        hashTable = new SymbolInfo2[numBuckets];
         for (int i = 0; i < numBuckets; i++) {
             hashTable[i] = null;
         }
@@ -41,8 +41,8 @@ public class ScopeTable {
     }
 
     // Insert symbol into the scope table
-    public boolean insertSymbol(SymbolInfo s) {
-        SymbolInfo found = this.lookUp(s, false);
+    public boolean insertSymbol(SymbolInfo2 s) {
+        SymbolInfo2 found = this.lookUp(s, false);
         if (found != null) {
             return false;
         }
@@ -52,26 +52,26 @@ public class ScopeTable {
         // int chainPosition = 0;
 
         if (hashTable[index] == null) {
-            hashTable[index] = new SymbolInfo(s);
+            hashTable[index] = new SymbolInfo2(s);
         } else {
             // chainPosition += 1;
-            SymbolInfo temp = hashTable[index];
+            SymbolInfo2 temp = hashTable[index];
             while (temp.next != null) {
                 temp = temp.next;
                 // chainPosition += 1;
             }
-            temp.next = new SymbolInfo(s);
+            temp.next = new SymbolInfo2(s);
         }
         return true;
     }
 
     // Look up symbol in the scope table
-    public SymbolInfo lookUp(SymbolInfo s, boolean showOutput) {
+    public SymbolInfo2 lookUp(SymbolInfo2 s, boolean showOutput) {
         String name = s.getName();
         int hash = HashFunction.sdbmHash(s.getName());
         int index = hash % numBuckets;
         // int chainPosition = 0;
-        SymbolInfo temp = hashTable[index];
+        SymbolInfo2 temp = hashTable[index];
         
         while (temp != null) {
             // chainPosition++;
@@ -84,12 +84,12 @@ public class ScopeTable {
     }
 
     // Look up symbol and return position information
-    public SymbolInfo lookUp(SymbolInfo s, int[] foundIndex, int[] chainPos, boolean showOutput) {
+    public SymbolInfo2 lookUp(SymbolInfo2 s, int[] foundIndex, int[] chainPos, boolean showOutput) {
         String name = s.getName();
         int hash = HashFunction.sdbmHash(s.getName());
         int index = hash % numBuckets;
         // int chainPosition = 0;
-        SymbolInfo temp = hashTable[index];
+        SymbolInfo2 temp = hashTable[index];
         
         while (temp != null) {
             // chainPosition++;
@@ -106,7 +106,7 @@ public class ScopeTable {
     }
 
     // Delete symbol from the scope table
-    public boolean deleteSymbol(SymbolInfo s) {
+    public boolean deleteSymbol(SymbolInfo2 s) {
         int hash = HashFunction.sdbmHash(s.getName());
         int index = hash % numBuckets;
         
@@ -114,7 +114,7 @@ public class ScopeTable {
             return false; // symbol not found
         }
 
-        SymbolInfo head = hashTable[index];
+        SymbolInfo2 head = hashTable[index];
         // int chainPosition = 0;
         
         // if found at head, delete
@@ -125,7 +125,7 @@ public class ScopeTable {
         // else traverse the chain
         else {
             while (head.next != null) {
-                SymbolInfo prev = head;
+                SymbolInfo2 prev = head;
                 head = head.next;
                 // chainPosition++;
                 if (head.getName().equals(s.getName())) {
@@ -151,7 +151,7 @@ public class ScopeTable {
         try {
             out.write(indent + "ScopeTable # " + scopeId + "\n");
             for (int i = 0; i < numBuckets; i++) {
-                SymbolInfo temp = hashTable[i];
+                SymbolInfo2 temp = hashTable[i];
                 if (temp != null) {
                     out.write(indent.toString());
                     out.write(i + " --> ");

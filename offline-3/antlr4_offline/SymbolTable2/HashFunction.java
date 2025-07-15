@@ -1,4 +1,4 @@
-package SymbolTable;
+package SymbolTable2;
 
 public class HashFunction {
     public static int sdbmHash(String str) {

@@ -1,19 +1,21 @@
 int i,j;
 int main(){
  
-	int k,ll,m,n,o,p; // 6 ta SUB SP, 2
+	int k,ll,m,n,o,p;
+	i = k;
+	
  
-	i = 1; // MOV i, 1
-	println(i);
+	// i = 1;
+	// println(i);
 	
-	j = 8 + 5;
-	println(j);
+	// j = 8 + 5;
+	// println(j);
 	
-	// k = i + 2*j;
+	// k = 2*i + 3*j;
 	// println(k);
 
-	// m = k%9;
-	// println(m);
+	m = k%9;
+	println(m);
  
 	// n = m <= ll;
 	// println(n);

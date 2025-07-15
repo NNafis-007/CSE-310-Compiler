@@ -1,7 +1,7 @@
 // import java.io.*;
 import java.util.*;
 
-// import SymbolTable.SymbolInfo;
+// import SymbolTable.SymbolInfo2;
 import SymbolTable.HashFunction;
 
 public class test {

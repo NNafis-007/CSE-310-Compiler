@@ -16,6 +16,7 @@ import SymbolTable.SymbolInfo;
     public boolean isGlobal = true;
     public int stackOffset = 0;
     public boolean isAdditionStarted = false;
+    public boolean isMulStarted = false;
 
     // Write grammar matching Log   
     void logParse(String message) {
@@ -400,7 +401,7 @@ expression_statement:
 variable returns [String varName]:
 	ID {
         int lineNo = $ID.getLine();
-        logParse("Line No : " + lineNo + " variable : ID");
+        logParse("Line No : " + lineNo + " variable : ID " + $ID.getText());
         $varName = $ID.getText();
       }
 	| ID LTHIRD expression RTHIRD {
@@ -422,9 +423,13 @@ expression:
           writeTempCode("\tPOP AX");
           isAdditionStarted = false; // Reset addition state
         }
+        else if(isMulStarted){
+          writeTempCode("\tPOP AX");
+          isMulStarted = false; // Reset multiplication state
+        }
 
         // MOV var, expr_val
-        String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX";
+        String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX\n";
         System.out.println(cmd);
         writeTempCode(cmd);
 
@@ -473,16 +478,37 @@ simple_expression :
         }
         writeTempCode("\tADD AX, DX"); 
         writeTempCode("\tPUSH AX");
-        isAdditionStarted = true; 
+        isAdditionStarted = true;
       };
 
 term :
 	u=unary_expression {
         logParse("term : unary_expression");
       }
-	| term MULOP unary_expression {
+	| term 
+    MULOP {
+        if(!isMulStarted){
+          writeTempCode("\tMOV CX, AX");
+        }
+    } unary_expression {
         int lineNo = $MULOP.getLine();
         logParse("Line No : " + lineNo + " term : term MULOP unary_expression");
+        if(isMulStarted){
+          // Curr result is in stack, So pop to AX
+          writeTempCode("\tMOV CX, AX"); // Store curr result in CX
+          writeTempCode("\tPOP AX");
+        }
+
+        String asmCode;
+        if($MULOP.getText().equals("*")){
+          asmCode = "\tCWD\n" + "\tMUL CX\n" + "\tPUSH AX";
+        }
+        else{
+          // XCHG CX and AX for division
+          asmCode = "\tXCHG CX, AX\n" + "\tCWD\n" + "\tDIV CX\n" + "\tPUSH DX";
+        }
+        writeTempCode(asmCode);
+        isMulStarted = true; // Set multiplication started state 
       };
 
 unary_expression :
@@ -501,6 +527,8 @@ unary_expression :
 factor:
 	variable {
         logParse("factor : variable");
+        String asmVar = getAsmVar($variable.varName);
+        writeTempCode("\tMOV AX, " + asmVar);
       }
 	| ID LPAREN argument_list RPAREN {
         int lineNo = $ID.getLine();

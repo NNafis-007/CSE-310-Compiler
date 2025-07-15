@@ -1,19 +1,20 @@
-package SymbolTable;
+package SymbolTable2;
 
 //imports for java Arraylist
 import java.util.ArrayList;
-public class SymbolInfo {
+public class SymbolInfo2 {
     private String name;
+
     private String symbolType;
     private String d_type; // Data type, if applicable
     private ArrayList<String> parameters; // Parameters for functions
     private boolean isFunction; // Flag to indicate if this symbol is a function
     
-    public SymbolInfo next;
+    public SymbolInfo2 next;
 
 
     // // Constructor without next parameter
-    // public SymbolInfo(String name, String type) {
+    // public SymbolInfo2(String name, String type) {
     //     this.name = name;
     //     this.symbolType = type;
     //     this.d_type = null; // Default data type is null
@@ -23,14 +24,14 @@ public class SymbolInfo {
     // }
 
     // Constructor with parameters
-    // public SymbolInfo(String name, String type, SymbolInfo next) {
+    // public SymbolInfo2(String name, String type, SymbolInfo2 next) {
     //     this.name = name;
     //     this.symbolType = type;
     //     this.next = next;
     // }
 
     // Constructor with name, type, and data type
-    // public SymbolInfo(String name, String type, String d_type) {
+    // public SymbolInfo2(String name, String type, String d_type) {
     //     this.name = name;
     //     this.symbolType = type;
     //     this.d_type = d_type;
@@ -39,7 +40,7 @@ public class SymbolInfo {
     // }
 
     // Constructor with name, type, data type, and parameters
-    public SymbolInfo(String name, String type, String d_type, ArrayList<String> parameters) {
+    public SymbolInfo2(String name, String type, String d_type, ArrayList<String> parameters) {
         this.name = name;
         this.symbolType = type;
         this.d_type = d_type;
@@ -49,7 +50,7 @@ public class SymbolInfo {
     }
 
     // Copy constructor
-    public SymbolInfo(SymbolInfo other) {
+    public SymbolInfo2(SymbolInfo2 other) {
         this.name = other.name;
         this.symbolType = other.symbolType;
         this.d_type = other.d_type; // Copy data type
@@ -59,7 +60,7 @@ public class SymbolInfo {
     }
 
     // Default constructor
-    public SymbolInfo() {
+    public SymbolInfo2() {
         this.name = "";
         this.symbolType = "";
         this.d_type = ""; // Default data type is ""

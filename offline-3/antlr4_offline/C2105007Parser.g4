@@ -7,7 +7,7 @@ options {
 @header {
 import java.io.BufferedWriter;
 import java.io.IOException;
-import SymbolTable.SymbolInfo;
+import SymbolTable2.SymbolInfo2;
 import java.util.Arrays;
 }
 
@@ -54,7 +54,7 @@ import java.util.Arrays;
     String getFuncType(String fnName){
         try{
 
-            SymbolInfo fn_info = Main.st.lookUp(new SymbolInfo(fnName, "ID", null, null));
+            SymbolInfo2 fn_info = Main.st.lookUp(new SymbolInfo2(fnName, "ID", null, null));
             if(fn_info == null){
                 System.out.println("Function " + fnName + " not found in symbol table");
                 return "";
@@ -133,9 +133,9 @@ import java.util.Arrays;
         if (expr.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
             // This should be replaced with actual symbol table lookup
             // For now, return unknown for variables
-            SymbolInfo varInfo = Main.st.currentScopeLookup(new SymbolInfo(expr, "ID", null, null));
+            SymbolInfo2 varInfo = Main.st.currentScopeLookup(new SymbolInfo2(expr, "ID", null, null));
             if(varInfo == null){
-                varInfo = Main.st.lookUp(new SymbolInfo(expr, "ID", null, null));
+                varInfo = Main.st.lookUp(new SymbolInfo2(expr, "ID", null, null));
             }
             if (varInfo != null) {
                 String varType = varInfo.getDataType();
@@ -149,9 +149,9 @@ import java.util.Arrays;
         //check for array variable
         if (expr.matches("[a-zA-Z_][a-zA-Z0-9_]*\\[[0-9]+\\]")) {
             String varName = expr.split("\\[")[0];
-            SymbolInfo varInfo = Main.st.currentScopeLookup(new SymbolInfo(varName, "ID", null, null));
+            SymbolInfo2 varInfo = Main.st.currentScopeLookup(new SymbolInfo2(varName, "ID", null, null));
             if(varInfo == null){
-                varInfo = Main.st.lookUp(new SymbolInfo(varName, "ID", null, null));
+                varInfo = Main.st.lookUp(new SymbolInfo2(varName, "ID", null, null));
             }
             if (varInfo != null) {
                 String varType = varInfo.getDataType();
@@ -231,9 +231,9 @@ import java.util.Arrays;
     }
 
     public boolean isArrayVar(String varName) {
-        SymbolInfo varInfo = Main.st.currentScopeLookup(new SymbolInfo(varName, "ID", null, null));
+        SymbolInfo2 varInfo = Main.st.currentScopeLookup(new SymbolInfo2(varName, "ID", null, null));
         if(varInfo == null){
-            varInfo = Main.st.lookUp(new SymbolInfo(varName, "ID", null, null));
+            varInfo = Main.st.lookUp(new SymbolInfo2(varName, "ID", null, null));
         }
         if (varInfo != null) {
             String varType = varInfo.getDataType();
@@ -276,7 +276,7 @@ import java.util.Arrays;
     boolean STinsert(String name, String token_type, String data_type, ArrayList<String> params, boolean isFunc) {
         try{
 
-            SymbolInfo s1 = new SymbolInfo(name, token_type, data_type, params);
+            SymbolInfo2 s1 = new SymbolInfo2(name, token_type, data_type, params);
             if(isFunc) {
                 s1.setIsFunction(true);
             }
@@ -316,8 +316,8 @@ import java.util.Arrays;
     boolean STlookupCurrScope(String name){
         try{
             //currentScopeLookup
-            SymbolInfo s = new SymbolInfo(name, "ID", null, null);
-            SymbolInfo found = Main.st.currentScopeLookup(s);
+            SymbolInfo2 s = new SymbolInfo2(name, "ID", null, null);
+            SymbolInfo2 found = Main.st.currentScopeLookup(s);
             //
             if(found == null){
                 return false;
@@ -332,8 +332,8 @@ import java.util.Arrays;
     boolean isFunction(String name){
         try{
             //currentScopeLookup
-            SymbolInfo s = new SymbolInfo(name, "ID", null, null);
-            SymbolInfo found = Main.st.currentScopeLookup(s);
+            SymbolInfo2 s = new SymbolInfo2(name, "ID", null, null);
+            SymbolInfo2 found = Main.st.currentScopeLookup(s);
             //
             if(found == null){
                 return false;
@@ -537,7 +537,7 @@ func_definition
                         logErr("Error at line " + lineNo_now + ": Return type mismatch of " + $ID.getText() + "\n");
                     }
 
-                    SymbolInfo fn_info = Main.st.lookUp(new SymbolInfo($ID.getText(), "ID", null, null));
+                    SymbolInfo2 fn_info = Main.st.lookUp(new SymbolInfo2($ID.getText(), "ID", null, null));
                     ArrayList<String> prev_params = fn_info.getParameters();
                     System.out.println("  prev params : " + prev_params + "| now params : " + paramList);
 
@@ -667,7 +667,7 @@ func_definition
                         logErr("Error at line " + lineNo_now + ": Return type mismatch of " + $ID.getText() + "\n");
                     }
 
-                    SymbolInfo fn_info = Main.st.lookUp(new SymbolInfo($ID.getText(), "ID", null, null));
+                    SymbolInfo2 fn_info = Main.st.lookUp(new SymbolInfo2($ID.getText(), "ID", null, null));
                     ArrayList<String> prev_params = fn_info.getParameters();
                     System.out.println("  prev params : " + prev_params + "| now params : " + paramList);
 
@@ -1092,7 +1092,7 @@ statement
             wParserLog("Line " + lineNo + ": statement : PRINTLN LPAREN ID RPAREN SEMICOLON\n");
 
             //Check for Undeclared variable
-            SymbolInfo var_info = Main.st.lookUp(new SymbolInfo($ID.getText(), "ID", null, null));
+            SymbolInfo2 var_info = Main.st.lookUp(new SymbolInfo2($ID.getText(), "ID", null, null));
             boolean isNotDeclared = (var_info == null);
             if(isNotDeclared){
                 //Error at line 67: Undeclared variable h
@@ -1153,7 +1153,7 @@ variable
             wParserLog("Line " + lineNo + ": variable : ID\n");
 
             String id = $ID.getText();
-            SymbolInfo var_info = Main.st.lookUp(new SymbolInfo(id, "ID", null, null));
+            SymbolInfo2 var_info = Main.st.lookUp(new SymbolInfo2(id, "ID", null, null));
             boolean isNotDeclared = (var_info == null);
             if(isNotDeclared){
                 //Error at line 12: Undeclared variable b
@@ -1225,7 +1225,7 @@ expression
             else{
                 int lineNo = $l.LogicExpr_rri.lineNo;
                 String var_name = $var.var_rri.text;
-                SymbolInfo var_info = Main.st.currentScopeLookup(new SymbolInfo(var_name, "ID", null, null));
+                SymbolInfo2 var_info = Main.st.currentScopeLookup(new SymbolInfo2(var_name, "ID", null, null));
                 boolean isNotDeclared = (var_info == null);
                 boolean isArrVar = (var_name.contains("[") && var_name.contains("]"));
 
@@ -1446,7 +1446,7 @@ factor
             wParserLog("Line " + lineNo + ": factor : ID LPAREN argument_list RPAREN\n");
 
 
-            SymbolInfo fn_info = Main.st.lookUp(new SymbolInfo(fnName, "ID", null, null));
+            SymbolInfo2 fn_info = Main.st.lookUp(new SymbolInfo2(fnName, "ID", null, null));
             if(fn_info == null){
                 //Error at line 62: Undefined function foo5
                 System.out.println("Error at line " + lineNo + ": Undefined function " + fnName);

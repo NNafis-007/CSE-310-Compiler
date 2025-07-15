@@ -1,4 +1,4 @@
-package SymbolTable;
+package SymbolTable2;
 
 import java.io.*;
 import java.util.*;
@@ -71,16 +71,16 @@ public class SymbolTable {
         }
     }
 
-    public boolean insertSymbol(SymbolInfo s) {
+    public boolean insertSymbol(SymbolInfo2 s) {
         return this.currentScope.insertSymbol(s);
     }
 
-    public boolean removeSymbol(SymbolInfo s) {
+    public boolean removeSymbol(SymbolInfo2 s) {
         return this.currentScope.deleteSymbol(s);
     }
 
-    public SymbolInfo lookUp(SymbolInfo s) {
-        SymbolInfo found = null;
+    public SymbolInfo2 lookUp(SymbolInfo2 s) {
+        SymbolInfo2 found = null;
         ScopeTable currScope = this.currentScope;
         while (currScope != null) {
             found = currScope.lookUp(s, false);
@@ -92,9 +92,9 @@ public class SymbolTable {
         return null;
     }
 
-    public SymbolInfo currentScopeLookup(SymbolInfo s) {
+    public SymbolInfo2 currentScopeLookup(SymbolInfo2 s) {
         ScopeTable currScope = this.currentScope;
-        SymbolInfo found = null;
+        SymbolInfo2 found = null;
         found = currScope.lookUp(s, false);
         if (found != null) {
             return found;

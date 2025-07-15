@@ -1,8 +1,8 @@
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
-import SymbolTable.SymbolInfo;
-import SymbolTable.SymbolTable;
+import SymbolTable2.SymbolInfo2;
+import SymbolTable2.SymbolTable;
 
 import java.io.*;
 
