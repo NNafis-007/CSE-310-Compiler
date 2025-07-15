@@ -418,17 +418,7 @@ expression:
         int lineNo = $ASSIGNOP.getLine();
         logParse("Line No : " + lineNo + " expression : variable ASSIGNOP logic_expression");
 
-        // POP AX as sum result is in Stack
-        if(isAdditionStarted){
-          writeTempCode("\tPOP AX");
-          isAdditionStarted = false; // Reset addition state
-        }
-        else if(isMulStarted){
-          writeTempCode("\tPOP AX");
-          isMulStarted = false; // Reset multiplication state
-        }
-
-        // MOV var, expr_val
+        writeTempCode("\tPOP AX"); // Pop the result of logic_expression to AX
         String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX\n";
         System.out.println(cmd);
         writeTempCode(cmd);
@@ -459,26 +449,23 @@ simple_expression :
         logParse("simple_expression : term");
       }
 	| simple_expression 
+    {
+      // ADD operation so store AX
+    }
     ADDOP
       {
-
-        logParse("Line No : " + $ADDOP.getLine() + " (IN ADDOP) simple_expression : simple_expression ADDOP term");
-        if(!isAdditionStarted){
-          writeTempCode("\tMOV DX, AX"); // gonna add so store AX in DX
-        }
+        logParse("Line No : " + $ADDOP.getLine() 
+        + " (IN ADDOP) simple_expression : simple_expression ADDOP term");
       }
 
    term {
         int lineNo = $ADDOP.getLine();
         logParse("Line No : " + lineNo + " simple_expression : simple_expression ADDOP term");
-        if(isAdditionStarted){
-          // Curr result is in stack, So pop to AX
-          writeTempCode("\tMOV DX, AX");
-          writeTempCode("\tPOP AX");
-        }
-        writeTempCode("\tADD AX, DX"); 
-        writeTempCode("\tPUSH AX");
-        isAdditionStarted = true;
+        // POP into DX and AX then ADD
+        writeTempCode("\tPOP AX"); // Pop the previous result to DX
+        writeTempCode("\tPOP DX"); // Pop the current term to AX
+        writeTempCode("\tADD AX, DX"); // Add DX to AX
+        writeTempCode("\tPUSH AX"); // Push the result back to stack
       };
 
 term :
@@ -487,17 +474,12 @@ term :
       }
 	| term 
     MULOP {
-        if(!isMulStarted){
-          writeTempCode("\tMOV CX, AX");
-        }
+
     } unary_expression {
         int lineNo = $MULOP.getLine();
         logParse("Line No : " + lineNo + " term : term MULOP unary_expression");
-        if(isMulStarted){
-          // Curr result is in stack, So pop to AX
-          writeTempCode("\tMOV CX, AX"); // Store curr result in CX
-          writeTempCode("\tPOP AX");
-        }
+        writeTempCode("\tPOP AX"); // Pop the current unary_expression to AX
+        writeTempCode("\tPOP CX"); // Pop the previous result to CX
 
         String asmCode;
         if($MULOP.getText().equals("*")){
@@ -529,6 +511,8 @@ factor:
         logParse("factor : variable");
         String asmVar = getAsmVar($variable.varName);
         writeTempCode("\tMOV AX, " + asmVar);
+        writeTempCode("\tPUSH AX"); 
+        
       }
 	| ID LPAREN argument_list RPAREN {
         int lineNo = $ID.getLine();
@@ -542,10 +526,9 @@ factor:
         int lineNo = $CONST_INT.getLine();
         int val = Integer.parseInt($CONST_INT.getText());
         logParse("Line No : " + lineNo + " factor : CONST_INT " + val);
-        // MOV AX, INT_VAL
         String asmCode = "\tMOV AX, " + val;
-        // System.out.println(asmCode);
         writeTempCode(asmCode);
+        writeTempCode("\tPUSH AX"); 
       }
 	| CONST_FLOAT {
         int lineNo = $CONST_FLOAT.getLine();

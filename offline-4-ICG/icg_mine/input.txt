@@ -3,18 +3,12 @@ int main(){
     
 	int k,ll,m,n,o,p;
     i = 2;
-    j = 3;
-    k = 2*i + 3*j;
-    println(k);
+    j = 3 + i;
 
-    
+	k = 2*i + 3*j;
+	println(k);
 
-
-
-
-
-
-	m = k%9;
-	println(m);
+    m = k%9;
+    println(m);
 
 }
