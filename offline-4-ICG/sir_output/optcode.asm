@@ -37,7 +37,10 @@ L4:
 	CALL print_output
 	CALL new_line
 L5:
+	MOV AX, 0       ; Line 36
+	JMP L7
 L6:
+L7:
 	ADD SP, 12
 	POP BP
 	MOV AX,4CH

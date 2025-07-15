@@ -39,4 +39,7 @@
 <ID, k>
 <RPAREN, )>
 <SEMICOLON, ;>
+<RETURN, return>
+<CONST_INT, 0>
+<SEMICOLON, ;>
 <RCURL, }>

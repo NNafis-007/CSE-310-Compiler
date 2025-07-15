@@ -421,6 +421,7 @@ expression_statement:
 	| expression SEMICOLON {
         int lineNo = $SEMICOLON.getLine();
         logParse("Line No : " + lineNo + " expression_statement : expression SEMICOLON");
+        writeTempCode("\tPOP AX\n"); // Pop the result of expression to AX
       };
 
 variable returns [String varName]:
@@ -444,10 +445,11 @@ expression:
         logParse("Line No : " + lineNo + " expression : variable ASSIGNOP logic_expression");
 
         writeTempCode("\tPOP AX"); // Pop the result of logic_expression to AX
-        String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX\n";
+        String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX";
+
         System.out.println(cmd);
         writeTempCode(cmd);
-
+        writeTempCode("\tPUSH AX"); // Push the value back to stack
       };
 
 logic_expression:
@@ -583,10 +585,19 @@ unary_expression :
 	ADDOP unary_expression {
         int lineNo = $ADDOP.getLine();
         logParse("Line No : " + lineNo + " unary_expression : ADDOP unary_expression");
+        if($ADDOP.getText().equals("-")){
+            writeTempCode("\tPOP AX"); // Pop the unary_expression to AX
+            writeTempCode("\tNEG AX"); // Negate the value in AX
+            writeTempCode("\tPUSH AX"); // Push the negated value back to stack
+        }
+        // No need to do anything for (+value)      
       }
 	| NOT unary_expression {
         int lineNo = $NOT.getLine();
         logParse("Line No : " + lineNo + " unary_expression : NOT unary_expression");
+        writeTempCode("\tPOP AX"); // Pop the unary_expression to AX
+        writeTempCode("\tNOT AX"); // Negate the value in AX
+        writeTempCode("\tPUSH AX"); // Push the negated value back to stack
       }
 	| f=factor {
         logParse("unary_expression : factor");
@@ -623,10 +634,20 @@ factor:
 	| variable INCOP {
         int lineNo = $INCOP.getLine();
         logParse("Line No : " + lineNo + " factor : variable INCOP");
+        String asmVar = getAsmVar($variable.varName);
+        writeTempCode("\tMOV AX, " + asmVar);
+        writeTempCode("\tPUSH AX"); // store val before inc
+        writeTempCode("\tINC AX"); // Increment the value
+        writeTempCode("\tMOV " + asmVar + ", AX"); // Store incremented value back into mem
       }
 	| variable DECOP {
         int lineNo = $DECOP.getLine();
         logParse("Line No : " + lineNo + " factor : variable DECOP");
+        String asmVar = getAsmVar($variable.varName);
+        writeTempCode("\tMOV AX, " + asmVar);
+        writeTempCode("\tPUSH AX"); 
+        writeTempCode("\tDEC AX"); // Increment the value
+        writeTempCode("\tMOV " + asmVar + ", AX"); // Store incremented value back into mem
       };
 
 argument_list:

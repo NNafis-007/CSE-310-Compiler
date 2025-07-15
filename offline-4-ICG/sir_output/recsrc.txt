@@ -32,5 +32,7 @@ int main()
 
 	k=-p;
 	println(();
+
+	return 0;
 }
 

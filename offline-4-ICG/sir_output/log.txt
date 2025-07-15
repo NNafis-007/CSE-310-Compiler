@@ -100,7 +100,18 @@ Line# 34: Token <RPAREN> Lexeme ) found
 Line# 34: Token <SEMICOLON> Lexeme ; found
 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
 statements : statements statement  
-Line# 36: Token <SINGLE LINE COMMENT> Lexeme // return 0; found
+Line# 36: Token <RETURN> Lexeme return found
+Line# 36: Token <CONST_INT> Lexeme 0 found
+factor	: CONST_INT   
+unary_expression : factor 
+term :	unary_expression 
+Line# 36: Token <SEMICOLON> Lexeme ; found
+simple_expression : term 
+rel_expression	: simple_expression 
+logic_expression : rel_expression 	 
+expression 	: logic_expression	 
+statement : RETURN expression SEMICOLON
+statements : statements statement  
 Line# 37: Token <RCURL> Lexeme } found
 compound_statement : LCURL statements RCURL  
 	ScopeTable# 2

@@ -14,6 +14,8 @@ main PROC
 	PUSH AX
 	POP AX
 	MOV i, AX
+	PUSH AX
+	POP AX
 
 	MOV AX, i		; Line 7
 	CALL print_output
@@ -29,6 +31,8 @@ main PROC
 	PUSH AX
 	POP AX
 	MOV j, AX
+	PUSH AX
+	POP AX
 
 	MOV AX, j		; Line 10
 	CALL print_output
@@ -51,6 +55,8 @@ main PROC
 	PUSH AX
 	POP AX
 	MOV [BP-2], AX
+	PUSH AX
+	POP AX
 
 	MOV AX, [BP-2]		; Line 13
 	CALL print_output
@@ -68,6 +74,8 @@ main PROC
 	PUSH DX
 	POP AX
 	MOV [BP-6], AX
+	PUSH AX
+	POP AX
 
 	MOV AX, [BP-6]		; Line 16
 	CALL print_output
@@ -92,6 +100,8 @@ L2:
 L3:
 	POP AX
 	MOV [BP-8], AX
+	PUSH AX
+	POP AX
 
 	MOV AX, [BP-8]		; Line 19
 	CALL print_output
@@ -116,6 +126,8 @@ L5:
 L6:
 	POP AX
 	MOV [BP-10], AX
+	PUSH AX
+	POP AX
 
 	MOV AX, [BP-10]		; Line 22
 	CALL print_output
@@ -141,6 +153,8 @@ L7:
 L8:
 	POP AX
 	MOV [BP-12], AX
+	PUSH AX
+	POP AX
 
 	MOV AX, [BP-12]		; Line 25
 	CALL print_output
@@ -166,11 +180,39 @@ L9:
 L10:
 	POP AX
 	MOV [BP-12], AX
+	PUSH AX
+	POP AX
 
 	MOV AX, [BP-12]		; Line 28
 	CALL print_output
 	CALL new_line
 
+	MOV AX, [BP-12]
+	PUSH AX
+	INC AX
+	MOV [BP-12], AX
+	POP AX
+
+	MOV AX, [BP-12]		; Line 31
+	CALL print_output
+	CALL new_line
+
+	MOV AX, [BP-12]
+	PUSH AX
+	POP AX
+	NEG AX
+	PUSH AX
+	POP AX
+	MOV [BP-2], AX
+	PUSH AX
+	POP AX
+
+	MOV AX, [BP-2]		; Line 34
+	CALL print_output
+	CALL new_line
+
+	MOV AX, 0
+	PUSH AX
 
 	POP BP
 	MOV AX, 4Ch
