@@ -1,6 +1,7 @@
 int main(){
-    for(i=0;i<6;i++){
-		println(i);
+    while(k>0){
+		ll = ll + 3;
+		k--;
 	}
 }
 

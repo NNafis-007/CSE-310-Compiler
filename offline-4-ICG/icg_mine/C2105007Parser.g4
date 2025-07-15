@@ -465,9 +465,27 @@ statement:
         logParse("Line No : " + lineNo + " statement : IF LPAREN expression RPAREN statement ELSE statement");
         writeTempCode(endLabel + ":"); // Jump to end after true
       }
-	| WHILE LPAREN expression RPAREN statement {
+	| WHILE 
+    LPAREN
+      {
+        String condnLabel = getLabel();
+        String endLabel = getLabel();
+        writeTempCode(condnLabel + ":"); // Start of loop condn check
+      } 
+    expression
+      {
+        // expr evaluted, check if 0
+        writeTempCode("\tPOP AX"); // Pop the result of expression to AX
+        writeTempCode("\tCMP AX, 0"); // Compare AX with 0
+        writeTempCode("\tJE " + endLabel); // Jump to end if false
+        // do while loop body now
+      } 
+    RPAREN 
+  statement {
+        // body written, check condn again
         int lineNo = $WHILE.getLine();
-        logParse("Line No : " + lineNo + " statement : WHILE LPAREN expression RPAREN statement");
+        writeTempCode("\tJMP " + condnLabel); // Jump to condition check
+        writeTempCode(endLabel + ":"); // End of while loop        
       }
 	| PRINTLN LPAREN ID RPAREN SEMICOLON {
         int lineNo = $PRINTLN.getLine();
