@@ -2,8 +2,6 @@
 .STACK 1000H
 .Data
 	number DB "00000$"
-	i DW 1 DUP (0000H)
-	j DW 1 DUP (0000H)
 .CODE
 main PROC
 	MOV AX, @DATA
@@ -13,37 +11,39 @@ main PROC
 	SUB SP, 2
 	SUB SP, 2
 	SUB SP, 2
-	SUB SP, 2
-	SUB SP, 2
-	SUB SP, 2
 L1:
-	MOV AX, [BP-12]       ; Line 30
-	PUSH AX
-	INC AX
-	MOV [BP-12], AX
-	POP AX
-L2:
-	MOV AX, [BP-12]       ; Line 31
-	CALL print_output
-	CALL new_line
-L3:
-	MOV AX, [BP-12]       ; Line 33
-	NEG AX
-	PUSH AX
-	POP AX       ; Line 33
+	MOV AX, 3       ; Line 5
 	MOV [BP-2], AX
 	PUSH AX
 	POP AX
+L2:
+	MOV AX, 8       ; Line 6
+	MOV [BP-4], AX
+	PUSH AX
+	POP AX
+L3:
+	MOV AX, 6       ; Line 7
+	MOV [BP-6], AX
+	PUSH AX
+	POP AX
 L4:
-	MOV AX, [BP-2]       ; Line 34
+	MOV AX, 3       ; Line 10
+	MOV DX, AX
+	MOV AX, [BP-2]       ; Line 10
+	CMP AX, DX
+	JE L5
+	JMP L7
+L5:
+	MOV AX, [BP-4]       ; Line 11
 	CALL print_output
 	CALL new_line
-L5:
-	MOV AX, 0       ; Line 36
-	JMP L7
 L6:
 L7:
-	ADD SP, 12
+	MOV AX, 0       ; Line 14
+	JMP L9
+L8:
+L9:
+	ADD SP, 6
 	POP BP
 	MOV AX,4CH
 	INT 21H

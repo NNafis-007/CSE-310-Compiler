@@ -1,37 +1,17 @@
-int i, j;
 int main()
 {
-	int k, ll, m, n, o, p;
+	int i, j, k;
+
+	i=3;
+	j=8;
+	k=6;
 
 
+	if(i==3)
+{
+		println(();
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	p++;
-	println(();
-
-	k=-p;
-	println(();
 
 	return 0;
 }

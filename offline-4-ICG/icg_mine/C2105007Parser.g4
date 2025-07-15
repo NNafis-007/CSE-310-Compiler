@@ -16,6 +16,7 @@ import SymbolTable.SymbolInfo;
     public boolean isGlobal = true;
     public int stackOffset = 0;
     public int labelCount = 0;
+    
 
     public String getLabel(){
         labelCount++;
@@ -390,13 +391,49 @@ statement:
         int lineNo = $FOR.getLine();
         logParse("Line No : " + lineNo + " statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement");
       }
-	| IF LPAREN expression RPAREN statement {
+	| IF LPAREN expression 
+    RPAREN
+    {
         int lineNo = $IF.getLine();
         logParse("Line No : " + lineNo + " statement : IF LPAREN expression RPAREN statement");
+        writeTempCode("\tPOP AX"); // Pop the result of expression to AX
+        String endLabel = getLabel();
+        writeTempCode("\tCMP AX, 0"); // Compare AX with 0
+        writeTempCode("\tJE " + endLabel); // Jump to end if false
+        // if true, Statement will generate the asm code  
+    }
+   statement {
+        logParse("Line No : " + lineNo + " statement : IF LPAREN expression RPAREN statement");
+
+        // Done generateing True portion
+        // END / False portion
+        writeTempCode(endLabel + ":"); // Jump to end after true
       }
-	| IF LPAREN expression RPAREN statement ELSE statement {
-        int lineNo = $IF.getLine();
+	| IF LPAREN expression 
+    RPAREN
+      {
+        writeTempCode("\tPOP AX");
+        String falseLabel = getLabel();
+        String endLabel = getLabel();
+        
+        writeTempCode("\tCMP AX, 0"); // Compare AX with 0
+        writeTempCode("\tJE " + falseLabel); // Jump to false if condition is
+      } 
+    statement 
+      {
+        // Done writing True portion, Jump to end
+        writeTempCode("\tJMP " + endLabel); // Jump to end after true
+      }
+    ELSE
+      {
+        int lineNo = $ELSE.getLine();
+        writeTempCode(falseLabel + ":"); // else code starts here
+
+      } 
+    statement {
+        // Else portion code done, Start end/usual code portion
         logParse("Line No : " + lineNo + " statement : IF LPAREN expression RPAREN statement ELSE statement");
+        writeTempCode(endLabel + ":"); // Jump to end after true
       }
 	| WHILE LPAREN expression RPAREN statement {
         int lineNo = $WHILE.getLine();
@@ -421,7 +458,7 @@ expression_statement:
 	| expression SEMICOLON {
         int lineNo = $SEMICOLON.getLine();
         logParse("Line No : " + lineNo + " expression_statement : expression SEMICOLON");
-        writeTempCode("\tPOP AX\n"); // Pop the result of expression to AX
+        writeTempCode("\tPOP AX \t\t; Line " + lineNo + "\n"); // Pop the result of expression to AX
       };
 
 variable returns [String varName]:
@@ -623,7 +660,7 @@ factor:
         int lineNo = $CONST_INT.getLine();
         int val = Integer.parseInt($CONST_INT.getText());
         logParse("Line No : " + lineNo + " factor : CONST_INT " + val);
-        String asmCode = "\tMOV AX, " + val;
+        String asmCode = "\tMOV AX, " + val + "\t\t; Line " + lineNo;
         writeTempCode(asmCode);
         writeTempCode("\tPUSH AX"); 
       }
