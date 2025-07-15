@@ -2,15 +2,11 @@ int main()
 {
 	int i, j, k;
 
-	i=3;
-	j=8;
-	k=6;
-
-
-	if(i==3)
+	for(i=0;i<6;i++)
 {
 		println(();
 }
+
 
 
 	return 0;

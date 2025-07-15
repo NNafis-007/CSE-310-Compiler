@@ -387,9 +387,39 @@ statement:
 	| compound_statement {
         logParse("statement : compound_statement");
       }
-	| FOR LPAREN expression_statement expression_statement expression RPAREN statement {
-        int lineNo = $FOR.getLine();
+	| FOR {int lineNo = $FOR.getLine();} LPAREN 
+    expression_statement
+      {
+        String condnLabel = getLabel();
+        String endLabel = getLabel();
+        String stmtLabel = getLabel();
+        String updateLabel = getLabel();
+        writeTempCode(condnLabel + ":"); // Start of for loop condn check
+      } 
+    es=expression_statement
+      {
+        // condn evaluated, check and continue loop
+        // the result of condn expr aldy popped by expr_stmt
+        writeTempCode("\tCMP AX, 0");
+        writeTempCode("\tJE " + endLabel); // Jump to end if false
+        writeTempCode("\tJMP " + stmtLabel); // Jump to statement if true
+        writeTempCode(updateLabel + ":"); // Start of update portion
+
+      } 
+    expression {
+      // update portion written already, go to condn check
+        writeTempCode("\tJMP " + condnLabel); // Jump to condition check
+      } 
+    RPAREN
+      {
+        // start stmt/body of for loop
+        writeTempCode(stmtLabel + ":");
+      }
+     statement {
         logParse("Line No : " + lineNo + " statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement");
+        // Statement written, go to updateLabel
+        writeTempCode("\tJMP " + updateLabel); // Jump to update code
+        writeTempCode(endLabel + ":"); // End of for loop
       }
 	| IF LPAREN expression 
     RPAREN

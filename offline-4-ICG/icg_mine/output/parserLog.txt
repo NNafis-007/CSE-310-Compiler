@@ -22,7 +22,7 @@ statements : statement
 
 Line No : 5 variable : ID i
 
-Line No : 5 factor : CONST_INT 3
+Line No : 5 factor : CONST_INT 0
 
 unary_expression : factor
 
@@ -38,55 +38,7 @@ Line No : 5 expression : variable ASSIGNOP logic_expression
 
 Line No : 5 expression_statement : expression SEMICOLON
 
-statement : expression_statement
-
-statements : statements statement
-
-Line No : 6 variable : ID j
-
-Line No : 6 factor : CONST_INT 8
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-rel_expression : simple_expression
-
-logic_expression : rel_expression
-
-Line No : 6 expression : variable ASSIGNOP logic_expression
-
-Line No : 6 expression_statement : expression SEMICOLON
-
-statement : expression_statement
-
-statements : statements statement
-
-Line No : 7 variable : ID k
-
-Line No : 7 factor : CONST_INT 6
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-rel_expression : simple_expression
-
-logic_expression : rel_expression
-
-Line No : 7 expression : variable ASSIGNOP logic_expression
-
-Line No : 7 expression_statement : expression SEMICOLON
-
-statement : expression_statement
-
-statements : statements statement
-
-Line No : 10 variable : ID i
+Line No : 5 variable : ID i
 
 factor : variable
 
@@ -96,7 +48,7 @@ term : unary_expression
 
 simple_expression : term
 
-Line No : 10 factor : CONST_INT 3
+Line No : 5 factor : CONST_INT 6
 
 unary_expression : factor
 
@@ -104,205 +56,17 @@ term : unary_expression
 
 simple_expression : term
 
-Line No : 10 rel_expression : simple_expression RELOP simple_expression
+Line No : 5 rel_expression : simple_expression RELOP simple_expression
 
 logic_expression : rel_expression
 
 expression : logic_expression
 
-Line No : 10 statement : IF LPAREN expression RPAREN statement
+Line No : 5 expression_statement : expression SEMICOLON
 
-Line No : 11 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
+Line No : 5 variable : ID i
 
-statements : statement
-
-Line No : 10 compound_statement : LCURL statements RCURL
-
-statement : compound_statement
-
-Line No : 10 statement : IF LPAREN expression RPAREN statement
-
-statements : statements statement
-
-Line No : 14 variable : ID j
-
-factor : variable
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-Line No : 14 factor : CONST_INT 8
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-Line No : 14 rel_expression : simple_expression RELOP simple_expression
-
-logic_expression : rel_expression
-
-expression : logic_expression
-
-Line No : 15 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
-
-statements : statement
-
-Line No : 14 compound_statement : LCURL statements RCURL
-
-statement : compound_statement
-
-Line No : 18 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
-
-statements : statement
-
-Line No : 17 compound_statement : LCURL statements RCURL
-
-statement : compound_statement
-
-Line No : 17 statement : IF LPAREN expression RPAREN statement ELSE statement
-
-statements : statements statement
-
-Line No : 21 variable : ID k
-
-factor : variable
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-Line No : 21 factor : CONST_INT 6
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-Line No : 21 rel_expression : simple_expression RELOP simple_expression
-
-logic_expression : rel_expression
-
-expression : logic_expression
-
-Line No : 22 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
-
-statements : statement
-
-Line No : 21 compound_statement : LCURL statements RCURL
-
-statement : compound_statement
-
-Line No : 24 variable : ID j
-
-factor : variable
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-Line No : 24 factor : CONST_INT 8
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-Line No : 24 rel_expression : simple_expression RELOP simple_expression
-
-logic_expression : rel_expression
-
-expression : logic_expression
-
-Line No : 25 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
-
-statements : statement
-
-Line No : 24 compound_statement : LCURL statements RCURL
-
-statement : compound_statement
-
-Line No : 27 variable : ID i
-
-factor : variable
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-Line No : 27 factor : CONST_INT 5
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-Line No : 27 rel_expression : simple_expression RELOP simple_expression
-
-logic_expression : rel_expression
-
-expression : logic_expression
-
-Line No : 28 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
-
-statements : statement
-
-Line No : 27 compound_statement : LCURL statements RCURL
-
-statement : compound_statement
-
-Line No : 31 variable : ID k
-
-Line No : 31 factor : CONST_INT 0
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-rel_expression : simple_expression
-
-logic_expression : rel_expression
-
-Line No : 31 expression : variable ASSIGNOP logic_expression
-
-Line No : 31 expression_statement : expression SEMICOLON
-
-statement : expression_statement
-
-statements : statement
-
-Line No : 32 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
-
-statements : statements statement
-
-Line No : 30 compound_statement : LCURL statements RCURL
-
-statement : compound_statement
-
-Line No : 30 statement : IF LPAREN expression RPAREN statement ELSE statement
-
-Line No : 27 statement : IF LPAREN expression RPAREN statement ELSE statement
-
-Line No : 24 statement : IF LPAREN expression RPAREN statement ELSE statement
-
-statements : statements statement
-
-Line No : 36 factor : CONST_INT 0
+Line No : 5 factor : variable INCOP
 
 unary_expression : factor
 
@@ -316,7 +80,33 @@ logic_expression : rel_expression
 
 expression : logic_expression
 
-Line No : 36 statement : RETURN expression SEMICOLON
+Line No : 6 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
+
+statements : statement
+
+Line No : 5 compound_statement : LCURL statements RCURL
+
+statement : compound_statement
+
+Line No : 5 statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement
+
+statements : statements statement
+
+Line No : 10 factor : CONST_INT 0
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+expression : logic_expression
+
+Line No : 10 statement : RETURN expression SEMICOLON
 
 statements : statements statement
 
