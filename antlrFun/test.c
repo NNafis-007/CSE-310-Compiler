@@ -1,7 +1,10 @@
 int main(){
     // i = 2;
-    j = 3 + i*m + i;
 
+    p++;
+	// println(p);
+ 
+	// k = -p;
 	// k = 2*i + 3*j;
 	// println(k);
 

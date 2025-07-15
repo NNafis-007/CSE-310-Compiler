@@ -10,58 +10,29 @@ main PROC
 	SUB SP, 2
 	SUB SP, 2
 L1:
-	MOV AX, 2       ; Line 5
-	MOV i, AX
+	MOV AX, [BP-12]       ; Line 30
 	PUSH AX
+	INC AX
+	MOV [BP-12], AX
 	POP AX
 L2:
-	MOV AX, 3       ; Line 6
-	MOV j, AX
-	PUSH AX
-	POP AX
+	MOV AX, [BP-12]       ; Line 31
+	CALL print_output
+	CALL new_line
 L3:
-	MOV AX, i       ; Line 7
-	MOV CX, AX
-	MOV AX, 2       ; Line 7
-	CWD
-	MUL CX
+	MOV AX, [BP-12]       ; Line 33
+	NEG AX
 	PUSH AX
-	MOV AX, j       ; Line 7
-	MOV CX, AX
-	MOV AX, 3       ; Line 7
-	CWD
-	MUL CX
-	PUSH AX
-	POP AX       ; Line 7
-	MOV DX, AX
-	POP AX       ; Line 7
-	ADD AX, DX
-	PUSH AX
-	POP AX       ; Line 7
+	POP AX       ; Line 33
 	MOV [BP-2], AX
 	PUSH AX
 	POP AX
 L4:
-	MOV AX, [BP-2]       ; Line 8
+	MOV AX, [BP-2]       ; Line 34
 	CALL print_output
 	CALL new_line
 L5:
-	MOV AX, 9       ; Line 17
-	MOV CX, AX
-	MOV AX, [BP-2]       ; Line 17
-	CWD
-	DIV CX
-	PUSH DX
-	POP AX       ; Line 17
-	MOV [BP-6], AX
-	PUSH AX
-	POP AX
 L6:
-	MOV AX, [BP-6]       ; Line 18
-	CALL print_output
-	CALL new_line
-L7:
-L8:
 	ADD SP, 12
 	POP BP
 	MOV AX,4CH

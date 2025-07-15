@@ -15,8 +15,33 @@ import SymbolTable.SymbolInfo;
     // helper to write into parserLogFile
     public boolean isGlobal = true;
     public int stackOffset = 0;
-    public boolean isAdditionStarted = false;
-    public boolean isMulStarted = false;
+    public int labelCount = 0;
+
+    public String getLabel(){
+        labelCount++;
+        String label = "L" + labelCount;
+        return label;
+    }
+
+    public String getAsmRelop(String relop) {
+      //'<=' | '==' | '>=' | '>' | '<' | '!='
+        switch (relop) {
+            case "<":
+                return "JL";
+            case "<=":
+                return "JLE";
+            case ">":
+                return "JG";
+            case ">=":
+                return "JGE";
+            case "==":
+                return "JE";
+            case "!=":
+                return "JNE";
+            default:
+                return "";
+        }
+    }
 
     // Write grammar matching Log   
     void logParse(String message) {
@@ -432,6 +457,49 @@ logic_expression:
 	| rel_expression LOGICOP rel_expression {
         int lineNo = $LOGICOP.getLine();
         logParse("Line No : " + lineNo + " logic_expression : rel_expression LOGICOP rel_expression");
+        writeTempCode("\tPOP AX"); // Pop the second simple_expression to AX
+        writeTempCode("\tPOP DX"); // Pop the first simple_expression to DX
+
+        if($LOGICOP.getText().equals("||")) {
+          writeTempCode("\tCMP DX, 0"); // Check if first expression is false
+          String set1Label = getLabel();
+          String endLabel = getLabel();
+
+          writeTempCode("\tJNE " + set1Label); // set 1 if 1st op is true
+          writeTempCode("\tCMP AX, 0"); 
+          writeTempCode("\tJNE " + set1Label); // set 1 if 2nd expression is true
+          writeTempCode("\tMOV AX, 0"); // If either is false, set result to 0
+          writeTempCode("\tPUSH AX"); // Push result back to stack
+          writeTempCode("\tJMP " + endLabel); // Jump to end
+
+          // Set 1 block
+          String set1Code = set1Label + ":\n" + "\tMOV AX, 1\n"
+                        + "\tPUSH AX\n" + "\tJMP " + endLabel;
+          writeTempCode(set1Code); // True block
+
+          // End block
+          writeTempCode(endLabel + ":");
+        } else {
+          writeTempCode("\tCMP DX, 0"); // Check if first expression is zero
+          String set0Label = getLabel();
+          String endLabel = getLabel();
+
+          writeTempCode("\tJE " + set0Label); // set 1 if 1st op is zero
+          writeTempCode("\tCMP AX, 0"); 
+          writeTempCode("\tJE " + set0Label); // set 1 if 2nd expression is zero
+          writeTempCode("\tMOV AX, 1"); // If neither is zero, set result to 1
+          writeTempCode("\tPUSH AX"); // Push result back to stack
+          writeTempCode("\tJMP " + endLabel); // Jump to end
+
+          // Set 0 block
+          String set0Code = set0Label + ":\n" + "\tMOV AX, 0\n"
+                        + "\tPUSH AX\n" + "\tJMP " + endLabel;
+          writeTempCode(set0Code); // True block
+
+          // End block
+          writeTempCode(endLabel + ":");
+        } 
+
       };
 
 rel_expression:
@@ -442,6 +510,25 @@ rel_expression:
 	| simple_expression RELOP simple_expression {
         int lineNo = $RELOP.getLine();
         logParse("Line No : " + lineNo + " rel_expression : simple_expression RELOP simple_expression");
+        writeTempCode("\tPOP AX"); // Pop the second simple_expression to AX
+        writeTempCode("\tPOP DX"); // Pop the first simple_expression to DX
+        writeTempCode("\tCMP DX, AX"); // Compare DX with AX
+        
+        String asmRelop = getAsmRelop($RELOP.getText());
+        String trueLabel = getLabel();
+        String falseLabel = getLabel();
+        String endLabel = getLabel();
+        
+        writeTempCode("\t" + asmRelop + " " + trueLabel); // Jump if condition is true
+        writeTempCode("\tJMP " + falseLabel); // Jump to false label
+
+        String trueCode = trueLabel + ":\n" + "\tMOV AX, 1\n"
+                        + "\tPUSH AX\n" + "\tJMP " + endLabel;
+        writeTempCode(trueCode); // True block
+
+        String falseCode = falseLabel + ":\n" + "\tMOV AX, 0\n"
+                        + "\tPUSH AX\n" + endLabel + ":";
+        writeTempCode(falseCode); // False block             
       };
 
 simple_expression :
@@ -490,7 +577,6 @@ term :
           asmCode = "\tXCHG CX, AX\n" + "\tCWD\n" + "\tDIV CX\n" + "\tPUSH DX";
         }
         writeTempCode(asmCode);
-        isMulStarted = true; // Set multiplication started state 
       };
 
 unary_expression :

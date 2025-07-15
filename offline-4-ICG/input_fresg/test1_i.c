@@ -2,11 +2,11 @@ int i,j;
 int main(){
  
 	int k,ll,m,n,o,p;
-	
+ 
 	i = 1;
 	println(i);
 	
-	j = 8 + 5;
+	j = 5 + 8;
 	println(j);
 	
 	k = i + 2*j;
@@ -27,12 +27,12 @@ int main(){
 	p = n && o;
 	println(p);
 	
-	// p++;
-	// println(p);
+	p++;
+	println(p);
  
-	// k = -p;
-	// println(k);
+	k = -p;
+	println(k);
  
-	// return 0;
+	return 0;
 }
 

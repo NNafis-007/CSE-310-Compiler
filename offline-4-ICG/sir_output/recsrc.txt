@@ -2,19 +2,35 @@ int i, j;
 int main()
 {
 	int k, ll, m, n, o, p;
-	i=2;
-	j=3;
-	k=2*i+3*j;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	p++;
 	println(();
 
-
-
-
-
-
-
-
-	m=k%9;
+	k=-p;
 	println(();
 }
 

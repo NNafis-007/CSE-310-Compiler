@@ -48,49 +48,15 @@ statement : var_declaration
 
 statements : statement
 
-Line No : 5 variable : ID i
-
-Line No : 5 factor : CONST_INT 2
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-rel_expression : simple_expression
-
-logic_expression : rel_expression
-
-Line No : 5 expression : variable ASSIGNOP logic_expression
-
-Line No : 5 expression_statement : expression SEMICOLON
-
-statement : expression_statement
-
-statements : statements statement
-
-Line No : 6 variable : ID j
-
-Line No : 6 factor : CONST_INT 3
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-Line No : 6 (IN ADDOP) simple_expression : simple_expression ADDOP term
-
 Line No : 6 variable : ID i
 
-factor : variable
+Line No : 6 factor : CONST_INT 1
 
 unary_expression : factor
 
 term : unary_expression
 
-Line No : 6 simple_expression : simple_expression ADDOP term
+simple_expression : term
 
 rel_expression : simple_expression
 
@@ -104,61 +70,49 @@ statement : expression_statement
 
 statements : statements statement
 
-Line No : 8 variable : ID k
+Line No : 7 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
 
-Line No : 8 factor : CONST_INT 2
+statements : statements statement
+
+Line No : 9 variable : ID j
+
+Line No : 9 factor : CONST_INT 8
 
 unary_expression : factor
 
 term : unary_expression
-
-Line No : 8 variable : ID i
-
-factor : variable
-
-unary_expression : factor
-
-Line No : 8 term : term MULOP unary_expression
 
 simple_expression : term
 
-Line No : 8 (IN ADDOP) simple_expression : simple_expression ADDOP term
+Line No : 9 (IN ADDOP) simple_expression : simple_expression ADDOP term
 
-Line No : 8 factor : CONST_INT 3
+Line No : 9 factor : CONST_INT 5
 
 unary_expression : factor
 
 term : unary_expression
 
-Line No : 8 variable : ID j
-
-factor : variable
-
-unary_expression : factor
-
-Line No : 8 term : term MULOP unary_expression
-
-Line No : 8 simple_expression : simple_expression ADDOP term
+Line No : 9 simple_expression : simple_expression ADDOP term
 
 rel_expression : simple_expression
 
 logic_expression : rel_expression
 
-Line No : 8 expression : variable ASSIGNOP logic_expression
+Line No : 9 expression : variable ASSIGNOP logic_expression
 
-Line No : 8 expression_statement : expression SEMICOLON
+Line No : 9 expression_statement : expression SEMICOLON
 
 statement : expression_statement
 
 statements : statements statement
 
-Line No : 9 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
+Line No : 10 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
 
 statements : statements statement
 
-Line No : 11 variable : ID m
+Line No : 12 variable : ID k
 
-Line No : 11 variable : ID k
+Line No : 12 variable : ID i
 
 factor : variable
 
@@ -166,11 +120,57 @@ unary_expression : factor
 
 term : unary_expression
 
-Line No : 11 factor : CONST_INT 9
+simple_expression : term
+
+Line No : 12 (IN ADDOP) simple_expression : simple_expression ADDOP term
+
+Line No : 12 factor : CONST_INT 2
 
 unary_expression : factor
 
-Line No : 11 term : term MULOP unary_expression
+term : unary_expression
+
+Line No : 12 variable : ID j
+
+factor : variable
+
+unary_expression : factor
+
+Line No : 12 term : term MULOP unary_expression
+
+Line No : 12 simple_expression : simple_expression ADDOP term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+Line No : 12 expression : variable ASSIGNOP logic_expression
+
+Line No : 12 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+statements : statements statement
+
+Line No : 13 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
+
+statements : statements statement
+
+Line No : 15 variable : ID m
+
+Line No : 15 variable : ID k
+
+factor : variable
+
+unary_expression : factor
+
+term : unary_expression
+
+Line No : 15 factor : CONST_INT 9
+
+unary_expression : factor
+
+Line No : 15 term : term MULOP unary_expression
 
 simple_expression : term
 
@@ -178,15 +178,171 @@ rel_expression : simple_expression
 
 logic_expression : rel_expression
 
-Line No : 11 expression : variable ASSIGNOP logic_expression
+Line No : 15 expression : variable ASSIGNOP logic_expression
 
-Line No : 11 expression_statement : expression SEMICOLON
+Line No : 15 expression_statement : expression SEMICOLON
 
 statement : expression_statement
 
 statements : statements statement
 
-Line No : 12 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
+Line No : 16 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
+
+statements : statements statement
+
+Line No : 18 variable : ID n
+
+Line No : 18 variable : ID m
+
+factor : variable
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+Line No : 18 variable : ID ll
+
+factor : variable
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+Line No : 18 rel_expression : simple_expression RELOP simple_expression
+
+logic_expression : rel_expression
+
+Line No : 18 expression : variable ASSIGNOP logic_expression
+
+Line No : 18 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+statements : statements statement
+
+Line No : 19 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
+
+statements : statements statement
+
+Line No : 21 variable : ID o
+
+Line No : 21 variable : ID i
+
+factor : variable
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+Line No : 21 variable : ID j
+
+factor : variable
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+Line No : 21 rel_expression : simple_expression RELOP simple_expression
+
+logic_expression : rel_expression
+
+Line No : 21 expression : variable ASSIGNOP logic_expression
+
+Line No : 21 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+statements : statements statement
+
+Line No : 22 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
+
+statements : statements statement
+
+Line No : 24 variable : ID p
+
+Line No : 24 variable : ID n
+
+factor : variable
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+Line No : 24 variable : ID o
+
+factor : variable
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+Line No : 24 logic_expression : rel_expression LOGICOP rel_expression
+
+Line No : 24 expression : variable ASSIGNOP logic_expression
+
+Line No : 24 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+statements : statements statement
+
+Line No : 25 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
+
+statements : statements statement
+
+Line No : 27 variable : ID p
+
+Line No : 27 variable : ID n
+
+factor : variable
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+Line No : 27 variable : ID o
+
+factor : variable
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+Line No : 27 logic_expression : rel_expression LOGICOP rel_expression
+
+Line No : 27 expression : variable ASSIGNOP logic_expression
+
+Line No : 27 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+statements : statements statement
+
+Line No : 28 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
 
 statements : statements statement
 
