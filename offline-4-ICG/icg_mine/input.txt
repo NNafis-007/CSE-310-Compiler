@@ -1,6 +1,8 @@
 int i, j;
 int main(){
-    int k;
-    i = 8 + 5 + 10 + 12; 
-    println(i);
+    i = 1;
+	println(i);
+
+	j = 8 + 5;
+	println(j);
 }

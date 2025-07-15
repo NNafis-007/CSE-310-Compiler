@@ -6,33 +6,7 @@ int main()
 	i=1;
 	println(();
 
-	j=5+8+10+12;
+	j=8+5;
 	println(();
-
-	k=i+2*j;
-	println(();
-
-	m=k%9;
-	println(();
-
-	n=m<=ll;
-	println(();
-
-	o=i!=j;
-	println(();
-
-	p=n||o;
-	println(();
-
-	p=n&&o;
-	println(();
-
-	p++;
-	println(();
-
-	k=-p;
-	println(();
-
-	return 0;
 }
 

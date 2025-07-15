@@ -62,11 +62,11 @@ import SymbolTable.SymbolInfo;
         }
     }
 
-    void printInAsm(String id){
+    void printInAsm(String id, int lineNo) {
       // MOV AX, i       ; Line 7
     	// CALL print_output
 	    // CALL new_line
-      String asmCode = "\tMOV AX, " + id + "\n" +
+      String asmCode = "\tMOV AX, " + id + "\t\t; Line " + lineNo + "\n" +
                        "\tCALL print_output\n" +
                        "\tCALL new_line\n";
       writeTempCode(asmCode);
@@ -202,12 +202,12 @@ func_definition
 
         if($fn_name.equals("main")){
           // Exit program for main
-            String cleanMainCode = "\tPOP BP\n" + "\tMOV AX, 4Ch\n" 
+            String cleanMainCode = "\n\tPOP BP\n" + "\tMOV AX, 4Ch\n" 
                       + "\tINT 21h\n" + "main ENDP"; 
             writeTempCode(cleanMainCode);
         }
         else{
-          String cleanFuncCode = "\tPOP BP\n" + "\tRET\n" + $fn_name + " ENDP\n";
+          String cleanFuncCode = "\n\tPOP BP\n" + "\tRET\n" + $fn_name + " ENDP\n";
           writeTempCode(cleanFuncCode);
         }
 
@@ -379,6 +379,8 @@ statement:
 	| PRINTLN LPAREN ID RPAREN SEMICOLON {
         int lineNo = $PRINTLN.getLine();
         logParse("Line No : " + lineNo + " statement : PRINTLN LPAREN ID RPAREN SEMICOLON");
+        String asmId = getAsmVar($ID.getText());
+        printInAsm(asmId, $ID.getLine());
       }
 	| RETURN expression SEMICOLON {
         int lineNo = $RETURN.getLine();
@@ -415,9 +417,16 @@ expression:
         int lineNo = $ASSIGNOP.getLine();
         logParse("Line No : " + lineNo + " expression : variable ASSIGNOP logic_expression");
 
+        // POP AX as sum result is in Stack
+        if(isAdditionStarted){
+          writeTempCode("\tPOP AX");
+          isAdditionStarted = false; // Reset addition state
+        }
+
         // MOV var, expr_val
-        String cmd = "MOV " + getAsmVar($v.varName) + ", <val>";
+        String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX";
         System.out.println(cmd);
+        writeTempCode(cmd);
 
       };
 
@@ -507,7 +516,7 @@ factor:
         logParse("Line No : " + lineNo + " factor : CONST_INT " + val);
         // MOV AX, INT_VAL
         String asmCode = "\tMOV AX, " + val;
-        System.out.println(asmCode);
+        // System.out.println(asmCode);
         writeTempCode(asmCode);
       }
 	| CONST_FLOAT {

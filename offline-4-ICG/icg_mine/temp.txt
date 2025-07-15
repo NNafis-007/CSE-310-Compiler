@@ -4,22 +4,24 @@ main PROC
 	PUSH BP
 	MOV BP, SP
 
-	SUB SP , 2
+	MOV AX, 1
+	MOV i, AX
+	MOV AX, i		; Line 4
+	CALL print_output
+	CALL new_line
+
 	MOV AX, 8
 	MOV DX, AX
 	MOV AX, 5
 	ADD AX, DX
 	PUSH AX
-	MOV AX, 10
-	MOV DX, AX
 	POP AX
-	ADD AX, DX
-	PUSH AX
-	MOV AX, 12
-	MOV DX, AX
-	POP AX
-	ADD AX, DX
-	PUSH AX
+	MOV j, AX
+	MOV AX, j		; Line 7
+	CALL print_output
+	CALL new_line
+
+
 	POP BP
 	MOV AX, 4Ch
 	INT 21h
