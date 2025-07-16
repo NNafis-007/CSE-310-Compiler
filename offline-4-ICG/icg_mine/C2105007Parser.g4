@@ -432,12 +432,16 @@ declaration_list:
         logParse("Line No : " + lineNo + " declaration_list : declaration_list COMMA ID LTHIRD CONST_INT RTHIRD");
 
         int noElems = Integer.parseInt($CONST_INT.getText());
-        if(!isGlobal)
-            logParse("----- " + $ID.getText() + ", offest : " + getOffset(noElems) + "----");
+        if(!isGlobal){
+          int arrOffset = getOffset(noElems);
+          logParse("----- " + $ID.getText() + ", offest : " + arrOffset + "----");
+          boolean isInserted = STinsert($ID.getText(), "local", "int[]", null, false, arrOffset);
+          writeTempCode("\tSUB SP , " + (2 * noElems));
+        }
         else{
-            String asmCode = "\t" + $ID.getText() + " DW " + noElems + " DUP (0000h)";
-            writeCode(asmCode);
-            logParse("----- " + $ID.getText() + " NO OFFSET, (BUT DUP " + noElems + ") Dec in DS" + "----");
+          String asmCode = "\t" + $ID.getText() + " DW " + noElems + " DUP (0000h)";
+          writeCode(asmCode);
+          logParse("----- " + $ID.getText() + " NO OFFSET, (BUT DUP " + noElems + ") Dec in DS" + "----");
         }
       }
 	| ID {
@@ -466,8 +470,12 @@ declaration_list:
         logParse("Line No : " + lineNo + " declaration_list : ID LTHIRD CONST_INT RTHIRD");
 
         int noElems = Integer.parseInt($CONST_INT.getText());
-        if(!isGlobal)
-            logParse("----- " + $ID.getText() + ", offest : " + getOffset(noElems) + "----");
+        if(!isGlobal){
+          int arrOffset = getOffset(noElems);
+          logParse("----- " + $ID.getText() + ", offest : " + arrOffset + "----");
+          boolean isInserted = STinsert($ID.getText(), "local", "int[]", null, false, arrOffset);
+          writeTempCode("\tSUB SP , " + (2 * noElems));
+        }
         else{
             String asmCode = "\t" + $ID.getText() + " DW " + noElems + " DUP (0000h)";
             writeCode(asmCode);

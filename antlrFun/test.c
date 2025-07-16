@@ -1,7 +1,4 @@
-int a,b,c;
-
-int f(int a){
-	a = a+3;
-	return a;
-	a = 10;
+int main(){
+	int x[10];
+	x[2] = x[5];
 }

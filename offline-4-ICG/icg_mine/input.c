@@ -1,46 +1,28 @@
-int f(int a){
-	int k;
-	k = 5;
-	while(k>0){
-		a++;
-		k--;
-	}
-    return 3*a - 7;
-    a=9;
-}
-
-int g(int a, int b){
-	
-    int x,i;
-    x=f(a)+a+b;
-    
-    for(i=0;i<7;i++){
-    	if(i%3 == 0){
-    		x = x+5;
-    	}
-    	else{
-    		x = x-1;
-    	}
-    }
-    
-    return x;
-}
-
+int w[10];
 int main(){
-    int a,b,i;
-    a=1;
-    b=2;
-    a=g(a,b);
-    println(a);
-    for(i=0;i<4;i++){
-        a=3;
-        while(a>0){
-            b++;
-            a--;
-        }
-    }
-    println(a);
-    println(b);
-    println( i);
-    return 0;
+ 
+	int x[10], a, b[4];	
+	// w[0]=-2;
+	// x[0]=w[0];
+	// i=x[0];	
+	// println(i);
+	// x[1]=w[0]++;
+	// i=x[1];	
+	// println(i);
+	// i=w[0];
+	// println(i);	
+	
+	// i=i+0;
+	// i=i-0;
+	// i=i*1;
+	// println(i);	
+	
+	// if((i>0 && i<10) || (i<0 && i>-10))
+	// 	i=100;
+	// else 
+	// 	i=200;
+	// println(i);	
+	
+	return 0;
 }
+
