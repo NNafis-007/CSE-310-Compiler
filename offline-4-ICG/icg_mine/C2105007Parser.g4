@@ -8,6 +8,7 @@ options {
 import java.io.BufferedWriter;
 import java.io.IOException;
 import SymbolTable.SymbolInfo;
+import java.util.ArrayList;
 }
 
 @members {
@@ -16,6 +17,7 @@ import SymbolTable.SymbolInfo;
     public boolean isGlobal = true;
     public int stackOffset = 0;
     public int labelCount = 0;
+    
     
 
     public String getLabel(){
@@ -105,7 +107,10 @@ import SymbolTable.SymbolInfo;
           return varInfo.getName();
         }
         else{
-          String cmd = "[BP-" + varInfo.getOffset() + "]";
+          int offset = varInfo.getOffset();
+          String op = (offset < 0) ? "+" : "-";
+
+          String cmd = "[BP" + op + Math.abs(offset) + "]";
           return cmd;
         }
     }
@@ -156,6 +161,40 @@ import SymbolTable.SymbolInfo;
             return null;
         }
     }
+
+    void enterScope(){
+        try{
+            Main.st.enterScope();
+        } catch(Exception e) {
+            System.err.println("Symbol Table ENTER scope error : " + e.getMessage());
+        }
+    }
+
+    void exitScope(){
+        try{
+            Main.st.exitScope();
+        } catch(Exception e) {
+         System.err.println("Symbol Table EXIT scope error : " + e.getMessage());
+        }
+    }   
+
+    // boolean STlookupCurrScope(String name){
+    //     try{
+    //         //currentScopeLookup
+    //         SymbolInfo2 s = new SymbolInfo2(name, "ID", null, null);
+    //         SymbolInfo2 found = Main.st.currentScopeLookup(s);
+    //         //
+    //         if(found == null){
+    //             return false;
+    //         }
+    //         return true;
+    //     } catch(Exception e) {
+    //         System.err.println("Symbol Table lookup error : " + e.getMessage());
+    //         return false;
+    //     }
+    // }
+
+
     
 }
 
@@ -203,19 +242,40 @@ func_definition
 	type_specifier ID {
         isGlobal=false;
         $fn_name = $ID.getText();
+        System.out.println("Disabling global scope, ENTERING function " + $fn_name);
+        enterScope(); // Enter function scope
+
         String asmCode = $ID.getText() + " PROC\n" + "\tPUSH BP\n" + "\tMOV BP, SP\n";
         writeTempCode(asmCode);
-      } LPAREN parameter_list RPAREN compound_statement {
+        int prevStackOffset = stackOffset; // Save current stack offset
+        stackOffset = 2;
+      } LPAREN parameter_list 
+        RPAREN
+          {
+            String funcName = $ID.getText();            
+          } 
+        compound_statement {
         int lineNo = $ID.getLine();
-        logParse("Line No : " + lineNo + " func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement");
-        isGlobal = true; // Reset isGlobal for next function
-        String cleanFuncCode = "\tPOP BP\n" + "\tRET\n" + $fn_name + " ENDP\n";
-        writeTempCode(cleanFuncCode);
+        logParse("Line No : " + lineNo + " (" + $fn_name + ") func_definition  : type_specifier ID LPAREN parameter_list RPAREN compound_statement");
 
+        isGlobal = true; // Reset isGlobal for next function
+        System.out.println("Enabling global scope, EXITING function " + $fn_name);
+        Main.st.printAllScopeTable(); // Print scope table for function
+        exitScope(); // Exit function scope
+        
+        int retBytes = stackOffset / 2; // Calculate return bytes
+        String retBytesStr = (retBytes > 0)? String.valueOf(retBytes) : "";
+        stackOffset = prevStackOffset; // Restore previous stack offset
+        String cleanFuncCode = "\tPOP BP\n" + "\tRET " + retBytesStr + "\n"    
+              + $fn_name + " ENDP\n";
+        writeTempCode(cleanFuncCode);
       }
 	| type_specifier ID {
         isGlobal=false;
         $fn_name = $ID.getText();
+        System.out.println("Disabling global scope, ENTERING function " + $fn_name);
+        enterScope(); // Enter function scope
+
         String asmCode = $ID.getText() + " PROC\n";
         if($fn_name.equals("main")){
             asmCode += "\tMOV AX, @DATA\n" + "\tMOV DS, AX\n"; // Initialize data segment for main
@@ -226,6 +286,9 @@ func_definition
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " (" + $fn_name + ") func_definition  : type_specifier ID LPAREN RPAREN compound_statement");
         isGlobal = true; // Reset isGlobal for next function
+        System.out.println("Enabling global scope, EXITING function " + $fn_name);
+        Main.st.printAllScopeTable(); // Print scope table for function
+        exitScope(); // Exit function scope
 
         if($fn_name.equals("main")){
           // Exit program for main
@@ -240,25 +303,37 @@ func_definition
 
       };
 
-parameter_list:
-	parameter_list COMMA type_specifier ID {
+parameter_list returns [int num_params]:
+	pl=parameter_list COMMA type_specifier ID {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " parameter_list : parameter_list COMMA type_specifier ID");
+        $num_params = $pl.num_params + 1; // Count this parameter
+        int offset = -1 * getOffset();
+        boolean isInserted = STinsert($ID.getText(), "local", "int", null, false, offset);
       }
 	| parameter_list COMMA type_specifier {
         int lineNo = $COMMA.getLine();
         logParse("Line No : " + lineNo + " parameter_list : parameter_list COMMA type_specifier");
       }
-	| type_specifier ID {
+
+	| type_specifier ID 
+      {
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " parameter_list : type_specifier ID");
+        $num_params = 1; // Count this parameter
+        // insert into ST
+        int offset = -1 * getOffset();
+        boolean isInserted = STinsert($ID.getText(), "local", "int", null, false, offset);
       }
+
 	| type_specifier {
         logParse("parameter_list : type_specifier");
       };
 
 compound_statement:
 	LCURL statements RCURL {
+        // func only defined globally
+
         int lineNo = $LCURL.getLine();
         logParse("Line No : " + lineNo + " compound_statement : LCURL statements RCURL");
       }
@@ -496,6 +571,9 @@ statement:
 	| RETURN expression SEMICOLON {
         int lineNo = $RETURN.getLine();
         logParse("Line No : " + lineNo + " statement : RETURN expression SEMICOLON");
+        // Result currently at top of the stack, Pop to AX
+        writeTempCode("\tPOP AX \t\t; Line " + lineNo);
+
       };
 
 expression_statement:
@@ -647,9 +725,8 @@ term :
         logParse("term : unary_expression");
       }
 	| term 
-    MULOP {
-
-    } unary_expression {
+    MULOP 
+    unary_expression {
         int lineNo = $MULOP.getLine();
         logParse("Line No : " + lineNo + " term : term MULOP unary_expression");
         writeTempCode("\tPOP AX"); // Pop the current unary_expression to AX
@@ -697,8 +774,12 @@ factor:
         
       }
 	| ID LPAREN argument_list RPAREN {
+        // Function CALL
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " factor : ID LPAREN argument_list RPAREN");
+        String funcName = $ID.getText();
+        writeTempCode("\tCALL " + funcName + "\t\t; Line " + lineNo);
+        writeTempCode("\tPUSH AX"); // Push the return value of the function
       }
 	| LPAREN expression RPAREN {
         int lineNo = $LPAREN.getLine();
@@ -747,7 +828,10 @@ arguments:
 	arguments COMMA logic_expression {
         int lineNo = $COMMA.getLine();
         logParse("Line No : " + lineNo + " arguments : arguments COMMA logic_expression");
+        // ----- Stack top has the argument value, NO PUSH needed ----
+
       }
 	| logic_expression {
         logParse("arguments : logic_expression");
+        // ----- Stack top has the argument value, NO PUSH needed ----
       };

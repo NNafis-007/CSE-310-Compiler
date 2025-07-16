@@ -1,0 +1,325 @@
+Line No : 1 type_specifier : INT
+
+Line No : 1 declaration_list : ID
+
+----- a NO OFFSET, Dec in DS----
+
+Line No : 1 declaration_list : declaration_list COMMA ID
+
+----- b NO OFFSET, Dec in DS----
+
+Line No : 1 declaration_list : declaration_list COMMA ID
+
+----- c NO OFFSET, Dec in DS----
+
+Line No : 1 var_declaration : type_specifier dec_list SEMICOLON
+
+unit : var_declaration
+
+program : unit
+
+Line No : 3 type_specifier : VOID
+
+Line No : 4 variable : ID a
+
+Line No : 4 factor : CONST_INT 7
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+Line No : 4 expression : variable ASSIGNOP logic_expression
+
+Line No : 4 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+statements : statement
+
+Line No : 3 compound_statement : LCURL statements RCURL
+
+Line No : 3 (func_a) func_definition  : type_specifier ID LPAREN RPAREN compound_statement
+
+ScopeTable # 1.1
+ScopeTable # 1
+0 --> < b : global, Offset: 0 >
+1 --> < c : global, Offset: 0 >
+6 --> < a : global, Offset: 0 >
+
+unit : func_definition
+
+program : program unit
+
+Line No : 8 type_specifier : INT
+
+Line No : 8 type_specifier : INT
+
+Line No : 8 parameter_list : type_specifier ID
+
+Line No : 8 type_specifier : INT
+
+Line No : 8 parameter_list : parameter_list COMMA type_specifier ID
+
+Line No : 9 variable : ID c
+
+Line No : 9 factor : CONST_INT 4
+
+unary_expression : factor
+
+term : unary_expression
+
+Line No : 9 variable : ID a
+
+factor : variable
+
+unary_expression : factor
+
+Line No : 9 term : term MULOP unary_expression
+
+simple_expression : term
+
+Line No : 9 (IN ADDOP) simple_expression : simple_expression ADDOP term
+
+Line No : 9 factor : CONST_INT 2
+
+unary_expression : factor
+
+term : unary_expression
+
+Line No : 9 variable : ID b
+
+factor : variable
+
+unary_expression : factor
+
+Line No : 9 term : term MULOP unary_expression
+
+Line No : 9 simple_expression : simple_expression ADDOP term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+Line No : 9 expression : variable ASSIGNOP logic_expression
+
+Line No : 9 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+statements : statement
+
+Line No : 10 variable : ID c
+
+factor : variable
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+expression : logic_expression
+
+Line No : 10 statement : RETURN expression SEMICOLON
+
+statements : statements statement
+
+Line No : 8 compound_statement : LCURL statements RCURL
+
+Line No : 8 (bar) func_definition  : type_specifier ID LPAREN parameter_list RPAREN compound_statement
+
+ScopeTable # 1.2
+0 --> < b : local, Offset: -6 >
+6 --> < a : local, Offset: -4 >
+ScopeTable # 1
+0 --> < b : global, Offset: 0 >
+1 --> < c : global, Offset: 0 >
+6 --> < a : global, Offset: 0 >
+
+unit : func_definition
+
+program : program unit
+
+Line No : 13 type_specifier : INT
+
+Line No : 15 type_specifier : INT
+
+Line No : 15 declaration_list : ID
+
+----- i, offest : 2 ----
+
+Line No : 15 declaration_list : declaration_list COMMA ID
+
+----- j, offest : 4 ----
+
+Line No : 15 declaration_list : declaration_list COMMA ID
+
+----- k, offest : 6 ----
+
+Line No : 15 declaration_list : declaration_list COMMA ID
+
+----- l, offest : 8 ----
+
+Line No : 15 var_declaration : type_specifier dec_list SEMICOLON
+
+statement : var_declaration
+
+statements : statement
+
+Line No : 17 variable : ID i
+
+Line No : 17 factor : CONST_INT 5
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+Line No : 17 expression : variable ASSIGNOP logic_expression
+
+Line No : 17 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+statements : statements statement
+
+Line No : 18 variable : ID j
+
+Line No : 18 factor : CONST_INT 6
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+Line No : 18 expression : variable ASSIGNOP logic_expression
+
+Line No : 18 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+statements : statements statement
+
+Line No : 26 variable : ID l
+
+Line No : 26 variable : ID i
+
+factor : variable
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+arguments : logic_expression
+
+Line No : 26 variable : ID j
+
+factor : variable
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+Line No : 26 arguments : arguments COMMA logic_expression
+
+argument_list : arguments
+
+Line No : 26 factor : ID LPAREN argument_list RPAREN
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+Line No : 26 expression : variable ASSIGNOP logic_expression
+
+Line No : 26 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+statements : statements statement
+
+Line No : 27 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
+
+statements : statements statement
+
+Line No : 33 factor : CONST_INT 0
+
+unary_expression : factor
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+expression : logic_expression
+
+Line No : 33 statement : RETURN expression SEMICOLON
+
+statements : statements statement
+
+Line No : 13 compound_statement : LCURL statements RCURL
+
+Line No : 13 (main) func_definition  : type_specifier ID LPAREN RPAREN compound_statement
+
+ScopeTable # 1.3
+0 --> < i : local, Offset: 2 >
+1 --> < j : local, Offset: 4 >
+2 --> < k : local, Offset: 6 >
+3 --> < l : local, Offset: 8 >
+ScopeTable # 1
+0 --> < b : global, Offset: 0 >
+1 --> < c : global, Offset: 0 >
+6 --> < a : global, Offset: 0 >
+
+unit : func_definition
+
+program : program unit
+
+Parsing completed successfully with 0 syntax errors.
+
+ScopeTable # 1
+0 --> < b : global, Offset: 0 >
+1 --> < c : global, Offset: 0 >
+6 --> < a : global, Offset: 0 >
+

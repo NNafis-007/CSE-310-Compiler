@@ -1,11 +1,31 @@
+int a, b, c;
+void func_a()
+{
+	a=7;
+}
+
+int bar(int a, int b)
+{
+	c=4*a+2*b;
+	return c;
+}
 int main()
 {
-	int i, j, k;
+	int i, j, k, l;
 
-	for(i=0;i<6;i++)
-{
-		println(();
-}
+	i=5;
+	j=6;
+
+	func_a();
+	println(();
+
+
+
+
+
+
+
+
 
 
 

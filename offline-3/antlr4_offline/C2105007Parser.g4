@@ -309,9 +309,9 @@ import java.util.Arrays;
         try{
             Main.st.exitScope();
         } catch(Exception e) {
-            System.err.println("Symbol Table EXIT scope error : " + e.getMessage());
+         System.err.println("Symbol Table EXIT scope error : " + e.getMessage());
         }
-    }
+    }   
 
     boolean STlookupCurrScope(String name){
         try{

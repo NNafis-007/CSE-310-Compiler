@@ -2,7 +2,50 @@
 .STACK 1000H
 .Data
 	number DB "00000$"
+	a DW 1 DUP (0000H)
+	b DW 1 DUP (0000H)
+	c DW 1 DUP (0000H)
 .CODE
+func_a PROC
+	PUSH BP
+	MOV BP, SP
+	MOV AX, 7       ; Line 4
+	MOV a, AX
+L1:
+L2:
+	POP BP
+	RET 
+func_a ENDP
+bar PROC
+	PUSH BP
+	MOV BP, SP
+	MOV AX, [BP+6]       ; Line 9
+	MOV CX, AX
+	MOV AX, 4       ; Line 9
+	CWD
+	MUL CX
+	PUSH AX
+	MOV AX, [BP+4]       ; Line 9
+	MOV CX, AX
+	MOV AX, 2       ; Line 9
+	CWD
+	MUL CX
+	PUSH AX
+	POP AX       ; Line 9
+	MOV DX, AX
+	POP AX       ; Line 9
+	ADD AX, DX
+	PUSH AX
+	POP AX       ; Line 9
+	MOV c, AX
+L3:
+	MOV AX, c       ; Line 10
+	JMP L5
+L4:
+L5:
+	POP BP
+	RET 4
+bar ENDP
 main PROC
 	MOV AX, @DATA
 	MOV DS, AX
@@ -11,35 +54,25 @@ main PROC
 	SUB SP, 2
 	SUB SP, 2
 	SUB SP, 2
-L1:
-	MOV AX, 0       ; Line 5
+	SUB SP, 2
+L6:
+	MOV AX, 5       ; Line 17
 	MOV [BP-2], AX
-L2:
-	MOV AX, 6       ; Line 5
-	MOV DX, AX
-	MOV AX, [BP-2]       ; Line 5
-	CMP AX, DX
-	JL L4
-	JMP L6
-L3:
-	MOV AX, [BP-2]       ; Line 5
-	PUSH AX
-	INC AX
-	MOV [BP-2], AX
-	POP AX
-	JMP L2
-L4:
-	MOV AX, [BP-2]       ; Line 6
+L7:
+	MOV AX, 6       ; Line 18
+	MOV [BP-4], AX
+L8:
+	CALL func_a       ; Line 20
+L9:
+	MOV AX, a       ; Line 21
 	CALL print_output
 	CALL new_line
-L5:
-	JMP L3
-L6:
-	MOV AX, 0       ; Line 10
-	JMP L8
-L7:
-L8:
-	ADD SP, 6
+L10:
+	MOV AX, 0       ; Line 33
+	JMP L12
+L11:
+L12:
+	ADD SP, 8
 	POP BP
 	MOV AX,4CH
 	INT 21H
