@@ -12,7 +12,8 @@ int f(int a){
 int g(int a, int b){
 	
     int x,i;
-    x=f(a)+a+b;
+    x=f(a)+a+b; // f(1) + 1 + 2
+	println(x);
     
     for(i=0;i<7;i++){
     	if(i%3 == 0){
@@ -32,15 +33,15 @@ int main(){
     b=2;
     a=g(a,b);
     println(a);
-    for(i=0;i<4;i++){
-        a=3;
-        while(a>0){
-            b++;
-            a--;
-        }
-    }
-    println(a);
-    println(b);
-    println( i);
+    // for(i=0;i<4;i++){
+    //     a=3;
+    //     while(a>0){
+    //         b++;
+    //         a--;
+    //     }
+    // }
+    // println(a);
+    // println(b);
+    // println( i);
     return 0;
 }
