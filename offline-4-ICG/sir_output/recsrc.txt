@@ -15,6 +15,7 @@ int g(int a, int b)
 {
 	int x, i;
 	x=f(a)+a+b;
+	println(();
 
 	for(i=0;i<7;i++)
 {
@@ -39,20 +40,16 @@ int main()
 	b=2;
 	a=g(a, b);
 	println(();
-	for(i=0;i<4;i++)
-{
-		a=3;
-		while(a>0)
-{
-			b++;
-			a--;
-}
 
-}
 
-	println(();
-	println(();
-	println(();
+
+
+
+
+
+
+
+
 	return 0;
 }
 

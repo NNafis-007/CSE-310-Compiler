@@ -514,6 +514,7 @@ statement:
       } 
     expression {
       // update portion written already, go to condn check
+        writeTempCode("\tPOP AX"); // Pop the result of expression to AX
         writeTempCode("\tJMP " + condnLabel); // Jump to condition check
       } 
     RPAREN
