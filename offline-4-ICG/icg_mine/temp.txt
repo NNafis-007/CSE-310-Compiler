@@ -9,7 +9,8 @@ func_a PROC
 	PUSH AX
 	POP AX 		; Line 4
 
-
+:
+	ADD SP, 0
 	POP BP
 	RET
 func_a ENDP
@@ -34,6 +35,9 @@ foo PROC
 	MOV AX, [BP+4]
 	PUSH AX
 	POP AX 		; Line 9
+	JMP L1
+L1:
+	ADD SP, 0
 	POP BP
 	RET 2
 foo ENDP
@@ -72,6 +76,9 @@ bar PROC
 	MOV AX, c
 	PUSH AX
 	POP AX 		; Line 15
+	JMP L2
+L2:
+	ADD SP, 0
 	POP BP
 	RET 4
 bar ENDP
@@ -183,7 +190,9 @@ main PROC
 	MOV AX, 0		; Line 38
 	PUSH AX
 	POP AX 		; Line 38
-
+	JMP L3
+L3:
+	ADD SP, 8
 	POP BP
 	MOV AX, 4Ch
 	INT 21h

@@ -17,9 +17,13 @@ import java.util.ArrayList;
     public boolean isGlobal = true;
     public int stackOffset = 0;
     public int labelCount = 0;
+    String currRETlabel = "";
+    public int paramOffset = -2;
+
     // Arraylist of params
     public ArrayList<String> params = new ArrayList<>();
     public ArrayList<Integer> pOffsets = new ArrayList<>();
+    
     
     
 
@@ -245,13 +249,13 @@ func_definition
 	type_specifier ID {
         isGlobal=false;
         $fn_name = $ID.getText();
-        System.out.println("Disabling global scope, ENTERING function " + $fn_name);
         enterScope(); // Enter function scope
+        paramOffset = -2;
 
         String asmCode = $ID.getText() + " PROC\n" + "\tPUSH BP\n" + "\tMOV BP, SP\n";
         writeTempCode(asmCode);
         int prevStackOffset = stackOffset; // Save current stack offset
-        stackOffset = 2;
+        stackOffset = 0;
         params.clear(); // Clear previous params
         pOffsets.clear(); // Clear previous parameter offsets
 
@@ -274,23 +278,27 @@ func_definition
         logParse("Line No : " + lineNo + " (" + $fn_name + ") func_definition  : type_specifier ID LPAREN parameter_list RPAREN compound_statement");
 
         isGlobal = true; // Reset isGlobal for next function
-        System.out.println("Enabling global scope, EXITING function " + $fn_name);
         Main.st.printAllScopeTable(); // Print scope table for function
         exitScope(); // Exit function scope
         
-        int retBytes = stackOffset - 2; // Calculate return bytes
+        int retBytes = Math.abs(paramOffset) - 2; // Calculate return bytes
         String retBytesStr = (retBytes > 0)? String.valueOf(retBytes) : "";
-        System.out.println("Return bytes for " + $fn_name + ": " + retBytesStr);
-        stackOffset = prevStackOffset; // Restore previous stack offset
+        System.out.println("Return bytes for " + $fn_name + ": " + retBytes);
+        
+        writeTempCode(currRETlabel + ":"); // Jump to return label
+        writeTempCode("\tADD SP, " + stackOffset); // Adjust stack pointer
         String cleanFuncCode = "\tPOP BP\n" + "\tRET " + retBytesStr + "\n"    
               + $fn_name + " ENDP\n";
         writeTempCode(cleanFuncCode);
+        stackOffset = prevStackOffset; // Restore previous stack offset
       }
 	| type_specifier ID {
         isGlobal=false;
         $fn_name = $ID.getText();
-        System.out.println("Disabling global scope, ENTERING function " + $fn_name);
         enterScope(); // Enter function scope
+
+        int prevStackOffset = stackOffset; // Save current stack offset
+        stackOffset = 0;
 
         String asmCode = $ID.getText() + " PROC\n";
         if($fn_name.equals("main")){
@@ -302,21 +310,25 @@ func_definition
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " (" + $fn_name + ") func_definition  : type_specifier ID LPAREN RPAREN compound_statement");
         isGlobal = true; // Reset isGlobal for next function
-        System.out.println("Enabling global scope, EXITING function " + $fn_name);
         Main.st.printAllScopeTable(); // Print scope table for function
         exitScope(); // Exit function scope
 
+        String restoreSpCode = "\tADD SP, " + stackOffset; // Adjust stack pointer
+        String cleanFuncCode;
+
         if($fn_name.equals("main")){
           // Exit program for main
-            String cleanMainCode = "\n\tPOP BP\n" + "\tMOV AX, 4Ch\n" 
-                      + "\tINT 21h\n" + "main ENDP"; 
-            writeTempCode(cleanMainCode);
+          cleanFuncCode = "\tPOP BP\n" + "\tMOV AX, 4Ch\n" 
+                  + "\tINT 21h\n" + "main ENDP"; 
         }
         else{
-          String cleanFuncCode = "\n\tPOP BP\n" + "\tRET\n" + $fn_name + " ENDP\n";
-          writeTempCode(cleanFuncCode);
+          // exit functions other than main
+          cleanFuncCode = "\tPOP BP\n" + "\tRET\n" + $fn_name + " ENDP\n";
         }
-
+        writeTempCode(currRETlabel + ":"); // Jump to return label
+        writeTempCode(restoreSpCode); // Restore stack pointer
+        writeTempCode(cleanFuncCode);
+        stackOffset = prevStackOffset; // Restore previous stack offset
       };
 
 parameter_list returns [int num_params]:
@@ -324,8 +336,8 @@ parameter_list returns [int num_params]:
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " parameter_list : parameter_list COMMA type_specifier ID");
         $num_params = $pl.num_params + 1; // Count this parameter
-        int offset = -1 * getOffset();
-        pOffsets.add(offset); // Add offset to parameter offsets
+        paramOffset = paramOffset - 2; // Get current parameter offset
+        pOffsets.add(paramOffset); // Add offset to parameter offsets
         params.add($ID.getText()); // Add id to params list
       }
 	| parameter_list COMMA type_specifier {
@@ -339,9 +351,9 @@ parameter_list returns [int num_params]:
         logParse("Line No : " + lineNo + " parameter_list : type_specifier ID");
         $num_params = 1; // Count this parameter
         // insert into ST
-        int offset = -1 * getOffset();
+        paramOffset = paramOffset - 2;
 
-        pOffsets.add(offset); // Add offset to parameter offsets
+        pOffsets.add(paramOffset); // Add offset to parameter offsets
         params.add($ID.getText()); // Add id to params list
       }
 
@@ -592,7 +604,9 @@ statement:
         logParse("Line No : " + lineNo + " statement : RETURN expression SEMICOLON");
         // Result currently at top of the stack, Pop to AX
         writeTempCode("\tPOP AX \t\t; Line " + lineNo);
-
+        String retLabel = getLabel();
+        writeTempCode("\tJMP " + retLabel); // Jump to return label
+        currRETlabel = retLabel; // Set current return label
       };
 
 expression_statement:
@@ -629,7 +643,6 @@ expression:
         writeTempCode("\tPOP AX"); // Pop the result of logic_expression to AX
         String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX" + "\t\t; Line " + lineNo;
 
-        System.out.println(cmd);
         writeTempCode(cmd);
         writeTempCode("\tPUSH AX"); // Push the value back to stack
       };
