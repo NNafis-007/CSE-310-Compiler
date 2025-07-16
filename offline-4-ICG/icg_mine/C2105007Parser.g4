@@ -19,7 +19,7 @@ import java.util.ArrayList;
     public int labelCount = 0;
     String currRETlabel = "";
     public int paramOffset = -2;
-
+    
     // Arraylist of params
     public ArrayList<String> params = new ArrayList<>();
     public ArrayList<Integer> pOffsets = new ArrayList<>();
@@ -110,16 +110,18 @@ import java.util.ArrayList;
 
     String getAsmVar(String varName){
       SymbolInfo varInfo = STlookup(varName);
-        if(varInfo.getScope() == "global"){
-          return varInfo.getName();
-        }
-        else{
-          int offset = varInfo.getOffset();
-          String op = (offset < 0) ? "+" : "-";
+      System.out.println("Var Type: " + varInfo.getDataType());
 
-          String cmd = "[BP" + op + Math.abs(offset) + "]";
-          return cmd;
-        }
+      if(varInfo.getScope() == "global"){
+        return varInfo.getName();
+      }
+      else{
+        int offset = varInfo.getOffset();
+        String op = (offset < 0) ? "+" : "-";
+
+        String cmd = "[BP" + op + Math.abs(offset) + "]";
+        return cmd;
+      }
     }
 
     public int getOffset(){
@@ -201,7 +203,20 @@ import java.util.ArrayList;
     //     }
     // }
 
-
+    public boolean isArrayVar(String varName) {
+        SymbolInfo varInfo = Main.st.currentScopeLookup(new SymbolInfo(varName, "ID", null, null));
+        if(varInfo == null){
+            varInfo = Main.st.lookUp(new SymbolInfo(varName, "ID", null, null));
+        }
+        if (varInfo != null) {
+            String varType = varInfo.getDataType();
+            System.out.println("Checking if var " + varName + " is Array? : " + varType);
+            if (varType.trim().endsWith("[]")) {
+                return true; // It's an array variable
+            }
+        }
+        return false; // Not found or not an array variable
+    }
     
 }
 
@@ -441,6 +456,7 @@ declaration_list:
         else{
           String asmCode = "\t" + $ID.getText() + " DW " + noElems + " DUP (0000h)";
           writeCode(asmCode);
+          boolean isInserted = STinsert($ID.getText(), "global", "int[]", null, false, 0);          
           logParse("----- " + $ID.getText() + " NO OFFSET, (BUT DUP " + noElems + ") Dec in DS" + "----");
         }
       }
@@ -479,6 +495,7 @@ declaration_list:
         else{
             String asmCode = "\t" + $ID.getText() + " DW " + noElems + " DUP (0000h)";
             writeCode(asmCode);
+            boolean isInserted = STinsert($ID.getText(), "global", "int[]", null, false, 0);
             logParse("----- " + $ID.getText() + " NO OFFSET, (BUT DUP " + noElems + ") Dec in DS" + "----");
         }
       };
@@ -648,12 +665,16 @@ expression:
 	| v=variable ASSIGNOP l=logic_expression {
         int lineNo = $ASSIGNOP.getLine();
         logParse("Line No : " + lineNo + " expression : variable ASSIGNOP logic_expression");
+        // Check if array variable
+        if(!isArrayVar($v.varName)){
+          writeTempCode("\tPOP AX"); // Pop the result of logic_expression to AX
+          String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX" + "\t\t; Line " + lineNo;
+          writeTempCode(cmd);
+          writeTempCode("\tPUSH AX"); // Push the value back to stack
+        }
+        else {
 
-        writeTempCode("\tPOP AX"); // Pop the result of logic_expression to AX
-        String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX" + "\t\t; Line " + lineNo;
-
-        writeTempCode(cmd);
-        writeTempCode("\tPUSH AX"); // Push the value back to stack
+        }
       };
 
 logic_expression:

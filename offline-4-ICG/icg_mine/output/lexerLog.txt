@@ -14,15 +14,15 @@ Line# 4: Token <ID> Lexeme x
 Line# 4: Token <LTHIRD> Lexeme [
 Line# 4: Token <CONST_INT> Lexeme 10
 Line# 4: Token <RTHIRD> Lexeme ]
-Line# 4: Token <COMMA> Lexeme ,
-Line# 4: Token <ID> Lexeme a
-Line# 4: Token <COMMA> Lexeme ,
-Line# 4: Token <ID> Lexeme b
-Line# 4: Token <LTHIRD> Lexeme [
-Line# 4: Token <CONST_INT> Lexeme 4
-Line# 4: Token <RTHIRD> Lexeme ]
 Line# 4: Token <SEMICOLON> Lexeme ;
-Line# 5: Token <SINGLE LINE COMMENT> Lexeme // w[0]=-2;
+Line# 5: Token <ID> Lexeme w
+Line# 5: Token <LTHIRD> Lexeme [
+Line# 5: Token <CONST_INT> Lexeme 0
+Line# 5: Token <RTHIRD> Lexeme ]
+Line# 5: Token <ASSIGNOP> Lexeme =
+Line# 5: Token <ADDOP> Lexeme -
+Line# 5: Token <CONST_INT> Lexeme 2
+Line# 5: Token <SEMICOLON> Lexeme ;
 Line# 6: Token <SINGLE LINE COMMENT> Lexeme // x[0]=w[0];
 Line# 7: Token <SINGLE LINE COMMENT> Lexeme // i=x[0];	
 Line# 8: Token <SINGLE LINE COMMENT> Lexeme // println(i);
