@@ -17,6 +17,9 @@ import java.util.ArrayList;
     public boolean isGlobal = true;
     public int stackOffset = 0;
     public int labelCount = 0;
+    // Arraylist of params
+    public ArrayList<String> params = new ArrayList<>();
+    public ArrayList<Integer> pOffsets = new ArrayList<>();
     
     
 
@@ -249,10 +252,22 @@ func_definition
         writeTempCode(asmCode);
         int prevStackOffset = stackOffset; // Save current stack offset
         stackOffset = 2;
+        params.clear(); // Clear previous params
+        pOffsets.clear(); // Clear previous parameter offsets
+
       } LPAREN parameter_list 
         RPAREN
           {
-            String funcName = $ID.getText();            
+            String funcName = $ID.getText();
+            int Nparams = params.size();
+            for(int i = 0; i < Nparams; i++){
+              String paramName = params.get(i);
+              int offset = pOffsets.get(Nparams - i - 1);
+              System.out.println("Param " + (i+1) + ": " + paramName 
+                + ", Offset: " + offset);
+
+              boolean isInserted = STinsert(paramName, "local", "int", null, false, offset);
+            }            
           } 
         compound_statement {
         int lineNo = $ID.getLine();
@@ -263,8 +278,9 @@ func_definition
         Main.st.printAllScopeTable(); // Print scope table for function
         exitScope(); // Exit function scope
         
-        int retBytes = stackOffset / 2; // Calculate return bytes
+        int retBytes = stackOffset - 2; // Calculate return bytes
         String retBytesStr = (retBytes > 0)? String.valueOf(retBytes) : "";
+        System.out.println("Return bytes for " + $fn_name + ": " + retBytesStr);
         stackOffset = prevStackOffset; // Restore previous stack offset
         String cleanFuncCode = "\tPOP BP\n" + "\tRET " + retBytesStr + "\n"    
               + $fn_name + " ENDP\n";
@@ -309,7 +325,8 @@ parameter_list returns [int num_params]:
         logParse("Line No : " + lineNo + " parameter_list : parameter_list COMMA type_specifier ID");
         $num_params = $pl.num_params + 1; // Count this parameter
         int offset = -1 * getOffset();
-        boolean isInserted = STinsert($ID.getText(), "local", "int", null, false, offset);
+        pOffsets.add(offset); // Add offset to parameter offsets
+        params.add($ID.getText()); // Add id to params list
       }
 	| parameter_list COMMA type_specifier {
         int lineNo = $COMMA.getLine();
@@ -323,7 +340,9 @@ parameter_list returns [int num_params]:
         $num_params = 1; // Count this parameter
         // insert into ST
         int offset = -1 * getOffset();
-        boolean isInserted = STinsert($ID.getText(), "local", "int", null, false, offset);
+
+        pOffsets.add(offset); // Add offset to parameter offsets
+        params.add($ID.getText()); // Add id to params list
       }
 
 	| type_specifier {
@@ -608,7 +627,7 @@ expression:
         logParse("Line No : " + lineNo + " expression : variable ASSIGNOP logic_expression");
 
         writeTempCode("\tPOP AX"); // Pop the result of logic_expression to AX
-        String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX";
+        String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX" + "\t\t; Line " + lineNo;
 
         System.out.println(cmd);
         writeTempCode(cmd);
@@ -716,7 +735,14 @@ simple_expression :
         // POP into DX and AX then ADD
         writeTempCode("\tPOP AX"); // Pop the previous result to DX
         writeTempCode("\tPOP DX"); // Pop the current term to AX
-        writeTempCode("\tADD AX, DX"); // Add DX to AX
+
+        if($ADDOP.getText().equals("+")){
+          writeTempCode("\tADD AX, DX"); // Add DX to AX
+        }
+        else{
+          writeTempCode("\tXCHG DX, AX"); // Exchange DX and AX for subtraction
+          writeTempCode("\tSUB AX, DX"); // Subtract DX from AX
+        }
         writeTempCode("\tPUSH AX"); // Push the result back to stack
       };
 

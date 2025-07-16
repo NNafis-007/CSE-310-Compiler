@@ -4,9 +4,9 @@ void func_a()
 	a=7;
 }
 
-int bar(int a, int b)
+int bar(int a, int b, int k)
 {
-	c=4*a+2*b;
+	c=4*a+2*b+k;
 	return c;
 }
 int main()
@@ -16,14 +16,14 @@ int main()
 	i=5;
 	j=6;
 
-	func_a();
+
+
+
+
+
+
+	l=bar(i, j, k);
 	println(();
-
-
-
-
-
-
 
 
 

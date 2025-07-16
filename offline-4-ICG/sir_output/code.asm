@@ -21,19 +21,24 @@ func_a ENDP
 bar PROC
 	PUSH BP
 	MOV BP, SP
-	MOV AX, [BP+6]       ; Line 9
+	MOV AX, [BP+8]       ; Line 9
 	MOV CX, AX
 	MOV AX, 4       ; Line 9
 	CWD
 	MUL CX
 	PUSH AX
-	MOV AX, [BP+4]       ; Line 9
+	MOV AX, [BP+6]       ; Line 9
 	MOV CX, AX
 	MOV AX, 2       ; Line 9
 	CWD
 	MUL CX
 	PUSH AX
 	POP AX       ; Line 9
+	MOV DX, AX
+	POP AX       ; Line 9
+	ADD AX, DX
+	PUSH AX
+	MOV AX, [BP+4]       ; Line 9
 	MOV DX, AX
 	POP AX       ; Line 9
 	ADD AX, DX
@@ -48,7 +53,7 @@ L3:
 L4:
 L5:
 	POP BP
-	RET 4
+	RET 6
 bar ENDP
 main PROC
 	MOV AX, @DATA
@@ -70,11 +75,20 @@ L7:
 	PUSH AX
 	POP AX
 L8:
-	CALL func_a       ; Line 20
+	MOV AX, [BP-2]       ; Line 26
+	PUSH AX
+	MOV AX, [BP-4]       ; Line 26
+	PUSH AX
+	MOV AX, [BP-6]       ; Line 26
+	PUSH AX
+	CALL bar
+	PUSH AX
+	POP AX       ; Line 26
+	MOV [BP-8], AX
 	PUSH AX
 	POP AX
 L9:
-	MOV AX, a       ; Line 21
+	MOV AX, [BP-8]       ; Line 27
 	CALL print_output
 	CALL new_line
 L10:
