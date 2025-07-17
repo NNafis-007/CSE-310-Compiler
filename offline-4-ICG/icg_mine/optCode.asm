@@ -12,33 +12,19 @@ main PROC
 	MOV BP, SP
 
 	MOV AX, 5		; Line 5
-	PUSH AX
-	POP AX
 	MOV x, AX		; Line 5
-	PUSH AX
-	POP AX 		; Line 5
 
 	MOV AX, x
-	PUSH AX
-	POP AX
 	MOV y, AX		; Line 6
-	PUSH AX
-	POP AX 		; Line 6
 
 	MOV AX, y
-	PUSH AX
-	POP AX
 	MOV x, AX		; Line 7
-	PUSH AX
-	POP AX 		; Line 7
 
 	MOV AX, x		; Line 8
 	CALL print_output
 	CALL new_line
 
 	MOV AX, 0		; Line 9
-	PUSH AX
-	POP AX 		; Line 9
 	JMP L1
 L1:
 	ADD SP, 0

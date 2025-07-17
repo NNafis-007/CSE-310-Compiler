@@ -1,8 +1,11 @@
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
+
 import SymbolTable.SymbolTable;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
     public static BufferedWriter parserLogFile;
@@ -10,12 +13,145 @@ public class Main {
     public static BufferedWriter lexLogFile;
     public static BufferedWriter ICGFile;
     public static BufferedWriter tempFile;
-    
 
     public static SymbolTable st;
 
-
     public static int syntaxErrorCount = 0;
+
+    // Helper method to find the next line that contains an actual instruction
+    private static int findNextNonEmptyLine(List<String> lines, int startIndex) {
+        for (int i = startIndex; i < lines.size(); i++) {
+            String line = lines.get(i).trim();
+            if (!line.isEmpty() && !line.startsWith(";")) { // Not empty and not just a comment
+                return i;
+            }
+        }
+        return -1; // No non-empty line found
+    }
+
+    public static void optimizeMov(String inFile, BufferedWriter writer) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(inFile));
+        List<String> lines = new ArrayList<>();
+        String line;
+
+        while ((line = reader.readLine()) != null) {
+            lines.add(line);
+        }
+        reader.close();
+
+        List<String> optimizedLines = new ArrayList<>();
+
+        for (int i = 0; i < lines.size(); i++) {
+            String currentLine = lines.get(i).trim();
+            boolean isRedundant = false;
+
+            if (i < lines.size() - 1 && currentLine.startsWith("MOV ")) {
+                int nextIndex = findNextNonEmptyLine(lines, i + 1);
+                if (nextIndex == -1) {
+                    // No next instruction found, add current line
+                    optimizedLines.add(lines.get(i));
+                    continue;
+                }
+
+                String nextLine = lines.get(nextIndex).trim();
+
+                if (nextLine.startsWith("MOV ")) {
+                    // Extract operands
+                    int currCmntIdx = currentLine.indexOf(';');
+                    int nextCmntIdx = nextLine.indexOf(';');
+                    if (currCmntIdx == -1)
+                        currCmntIdx = currentLine.length();
+                    if (nextCmntIdx == -1)
+                        nextCmntIdx = nextLine.length();
+
+                    // Extract operands from MOV instructions
+                    String[] currentParts = currentLine.substring(4, currCmntIdx).split(",");
+                    String[] nextParts = nextLine.substring(4, nextCmntIdx).split(",");
+
+                    if (currentParts.length == 2 && nextParts.length == 2) {
+                        String src1 = currentParts[0].trim();
+                        String dest1 = currentParts[1].trim();
+                        String src2 = nextParts[0].trim();
+                        String dest2 = nextParts[1].trim();
+
+                        // Check if second MOV reverses the first one
+                        if (src1.equals(dest2) && dest1.equals(src2)) {
+                            isRedundant = true;
+                            // Add the FIRST MOV instruction
+                            optimizedLines.add(lines.get(i));
+
+                            // Add any lines between the two MOV instructions (comments, empty lines, etc.)
+                            for (int j = i + 1; j < nextIndex; j++) {
+                                optimizedLines.add(lines.get(j));
+                            }
+
+                            // Skip the redundant second MOV instruction
+                            i = nextIndex; // This will skip the second MOV
+                        }
+                    }
+                }
+            }
+
+            if (!isRedundant) {
+                optimizedLines.add(lines.get(i));
+            }
+        }
+
+        // Write optimized content back to file
+        for (String optimizedLine : optimizedLines) {
+            writer.write(optimizedLine + "\n");
+        }
+    }
+
+    public static void optimizePushPop(String inFile, BufferedWriter writer) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(inFile));
+        List<String> lines = new ArrayList<>();
+        String line;
+
+        while ((line = reader.readLine()) != null) {
+            lines.add(line);
+        }
+        reader.close();
+
+        List<String> optimizedLines = new ArrayList<>();
+
+        for (int i = 0; i < lines.size(); i++) {
+            String currentLine = lines.get(i).trim();
+            boolean isRedundant = false;
+
+            if (i < lines.size() - 1 && currentLine.startsWith("PUSH ")) {
+                String nextLine = lines.get(i + 1).trim();
+
+                if (nextLine.startsWith("POP ")) {
+                    // Extract operands
+                    int pushCmntIdx = currentLine.indexOf(';');
+                    int nextCmntIdx = nextLine.indexOf(';');
+                    if (pushCmntIdx == -1)
+                        pushCmntIdx = currentLine.length();
+                    if (nextCmntIdx == -1)
+                        nextCmntIdx = nextLine.length();
+
+                    String pushOperand = currentLine.substring(5, pushCmntIdx).trim();
+                    String popOperand = nextLine.substring(4, nextCmntIdx).trim();
+
+                    // Check if PUSH and POP operate on same register/address
+                    if (pushOperand.equals(popOperand)) {
+                        isRedundant = true;
+                        i++; // Skip the next line as well
+                    }
+                }
+            }
+
+            if (!isRedundant) {
+                optimizedLines.add(lines.get(i));
+            }
+        }
+
+        // Write optimized content back to file
+        for (String optimizedLine : optimizedLines) {
+            writer.write(optimizedLine + "\n");
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         if (args.length < 1) {
@@ -45,7 +181,6 @@ public class Main {
         tempFile = new BufferedWriter(new FileWriter(tempFileName));
 
         st = new SymbolTable(7, parserLogFile);
-        
 
         // write boilerplate code to the ICG file
         ICGFile.write(".MODEL SMALL\n");
@@ -78,20 +213,29 @@ public class Main {
         ICGFile.flush();
         tempReader.close();
 
+        // optimize push/pop instructions
+        BufferedWriter optICGFile = new BufferedWriter(new FileWriter("optCode.asm"));
+        optimizePushPop(ICGFileName, optICGFile);
+        optimizeMov("optCode.asm", optICGFile);
+        optICGFile.flush();
+
         // merge printProcLib into ICGFILE
         BufferedReader printLibReader = new BufferedReader(new FileReader("printProc.lib"));
         while ((line = printLibReader.readLine()) != null) {
             ICGFile.write(line + "\n");
+            optICGFile.write(line + "\n");
         }
         ICGFile.write("END main\n");
+        optICGFile.write("END main\n");
         ICGFile.flush();
-        printLibReader.close();
-        
+
         // Close files
+        printLibReader.close();
         parserLogFile.close();
         errorFile.close();
         lexLogFile.close();
         ICGFile.close();
+        optICGFile.close();
         tempFile.close();
 
         System.out.println("Parsing completed. Check the output files for details.");

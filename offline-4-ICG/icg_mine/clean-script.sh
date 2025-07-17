@@ -4,7 +4,7 @@
 shopt -s extglob
 
 # Loop through all files that do NOT match *.sh, *.g4, or Ctester.cpp
-for file in !(*.sh|*.g4|Main.java|*.txt|test.java|*.c); do
+for file in !(*.sh|*.g4|Main.java|*.txt|test.java|*.c|*.lib|*.asm); do
     # Only delete if it's a regular file
     if [[ -f "$file" ]]; then
         rm -f "$file"

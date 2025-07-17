@@ -824,10 +824,12 @@ term :
         if($MULOP.getText().equals("*")){
           asmCode = "\tCWD\n" + "\tMUL CX\n" + "\tPUSH AX";
         }
-        else{
+        else if($MULOP.getText().equals("%")){
           // XCHG CX and AX for division
           asmCode = "\tXCHG CX, AX\n" + "\tCWD\n" + "\tDIV CX\n" + "\tPUSH DX";
         }
+        else{
+          asmCode = "\tXCHG CX, AX\n" + "\tCWD\n" + "\tIDIV CX\n" + "\tPUSH AX";
         writeTempCode(asmCode);
       };
 

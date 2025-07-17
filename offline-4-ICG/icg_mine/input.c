@@ -1,23 +1,11 @@
-int w[10];
-int func (int n){
-  int i;
-  if (n==0) return 0;
-  i=n;
-  return func(n-1)+i;
-}
 
-int func2 (int n){
-  int i;
-  if (n==0) return 0;
-  i=n;
-  return func(n-1)+i;
-}
 
-int x;
+int x, y;
 int main() {
-	int a;
-	a = func(7);
-	println(a);
+  x = 5;
+  y = x;
+  x = y;
+  println(x);
 	return 0;
 }
 
