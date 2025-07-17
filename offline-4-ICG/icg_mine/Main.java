@@ -2,13 +2,6 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
 import SymbolTable.SymbolTable;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,91 +30,49 @@ public class Main {
         return -1; // No non-empty line found
     }
 
-    public static void optimizeMov(String inFile, BufferedWriter writer) throws IOException {
-        System.out.println("Optimizing MOV instructions...");
-        BufferedReader reader = new BufferedReader(new FileReader(inFile));
-        List<String> lines = new ArrayList<>();
-        String line;
-
-        while ((line = reader.readLine()) != null) {
-            lines.add(line);
-        }
-        reader.close();
-
-        List<String> optimizedLines = new ArrayList<>();
-
-        for (int i = 0; i < lines.size(); i++) {
-            String currentLine = lines.get(i).trim();
-            boolean isRedundant = false;
-
-            if (currentLine.startsWith("MOV ")) {
-                int nextIndex = findNextNonEmptyLine(lines, i + 1);
-                if (nextIndex != -1) {
-                    String nextLine = lines.get(nextIndex).trim();
-
-                    if (nextLine.startsWith("MOV ")) {
-                        // Extract operands
-                        int currCmntIdx = currentLine.indexOf(';');
-                        int nextCmntIdx = nextLine.indexOf(';');
-                        if (currCmntIdx == -1)
-                            currCmntIdx = currentLine.length();
-                        if (nextCmntIdx == -1)
-                            nextCmntIdx = nextLine.length();
-
-                        // Extract operands from MOV instructions
-                        String[] currentParts = currentLine.substring(4, currCmntIdx).split(",");
-                        String[] nextParts = nextLine.substring(4, nextCmntIdx).split(",");
-
-                        if (currentParts.length == 2 && nextParts.length == 2) {
-                            String src1 = currentParts[0].trim();
-                            String dest1 = currentParts[1].trim();
-                            String src2 = nextParts[0].trim();
-                            String dest2 = nextParts[1].trim();
-
-                            // Check if second MOV reverses the first one OR if they are identical
-                            if ((src1.equals(dest2) && dest1.equals(src2)) || (src1.equals(src2) && dest1.equals(dest2))) {
-                                isRedundant = true;
-
-
-                                // Add the FIRST MOV instruction only
-                                optimizedLines.add(lines.get(i));
-
-                                // Add any lines between the two MOV instructions (comments, empty lines, etc.)
-                                for (int j = i + 1; j < nextIndex; j++) {
-                                    optimizedLines.add(lines.get(j));
-                                }
-
-                                // Skip to after the redundant second MOV instruction
-                                i = nextIndex;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!isRedundant) {
-                optimizedLines.add(lines.get(i));
-            }
-        }
-
-        // Write optimized content back to file
-        for (String optimizedLine : optimizedLines) {
-            writer.write(optimizedLine + "\n");
-        }
-        System.out.println("---- DONE Optimizing MOV instructions...");
+    /**
+     * Performs all optimizations in place using minimal file I/O operations
+     * Uses only one temporary file to reduce disk operations
+     */
+    public static void performAllOptimizations(String inputFile, String outputFile, String tempFile) throws IOException {
+        System.out.println("------- Optimizing ---------");
+        
+        // Read the input file once into memory
+        List<String> lines = readFileToList(inputFile);
+        
+        // Apply all optimizations in sequence on the in-memory data
+        lines = optimizePushPop(lines);
+        lines = optimizeOps(lines);
+        lines = optimizeMov(lines);
+        lines = optimizeLabels(lines);
+        
+        // Write optimized content to output file
+        writeListToFile(lines, outputFile);
+        
+        System.out.println("Comprehensive optimization completed.");
     }
-
-    public static void optimizePushPop(String inFile, BufferedWriter writer) throws IOException {
-        System.out.println("Optimizing PUSH POP instructions...");
-        BufferedReader reader = new BufferedReader(new FileReader(inFile));
+    
+    private static List<String> readFileToList(String filename) throws IOException {
         List<String> lines = new ArrayList<>();
-        String line;
-
-        while ((line = reader.readLine()) != null) {
-            lines.add(line);
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
         }
-        reader.close();
-
+        return lines;
+    }
+    
+    private static void writeListToFile(List<String> lines, String filename) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+            for (String line : lines) {
+                writer.write(line + "\n");
+            }
+        }
+    }
+    
+    private static List<String> optimizePushPop(List<String> lines) {
+        System.out.println("Optimizing PUSH POP instructions in memory...");
         List<String> optimizedLines = new ArrayList<>();
 
         for (int i = 0; i < lines.size(); i++) {
@@ -155,26 +106,13 @@ public class Main {
                 optimizedLines.add(lines.get(i));
             }
         }
-
-        // Write optimized content back to file
-        for (String optimizedLine : optimizedLines) {
-            writer.write(optimizedLine + "\n");
-        }
-        System.out.println("**** DONE Optimizing PUSH POP instructions...");
-
+        
+        System.out.println("**** DONE Optimizing PUSH POP instructions in memory...");
+        return optimizedLines;
     }
-
-    public static void optimizeRedundantOperations(String inFile, BufferedWriter writer) throws IOException {
-        System.out.println("Optimizing redundant operations...");
-        BufferedReader reader = new BufferedReader(new FileReader(inFile));
-        List<String> lines = new ArrayList<>();
-        String line;
-
-        while ((line = reader.readLine()) != null) {
-            lines.add(line);
-        }
-        reader.close();
-
+    
+    private static List<String> optimizeOps(List<String> lines) {
+        System.out.println("Optimizing redundant operations in memory...");
         List<String> optimizedLines = new ArrayList<>();
         boolean[] skipLines = new boolean[lines.size()]; // Track which lines to skip
 
@@ -252,24 +190,73 @@ public class Main {
             }
         }
 
-        // Write optimized content back to file
-        for (String optimizedLine : optimizedLines) {
-            writer.write(optimizedLine + "\n");
-        }
-        System.out.println("---- DONE Optimizing redundant operations...");
+        System.out.println("---- DONE Optimizing redundant operations in memory...");
+        return optimizedLines;
     }
+    
+    private static List<String> optimizeMov(List<String> lines) {
+        System.out.println("Optimizing MOV instructions in memory...");
+        List<String> optimizedLines = new ArrayList<>();
 
-    public static void optimizeRedundantLabels(String inFile, BufferedWriter writer) throws IOException {
-        System.out.println("Optimizing redundant labels...");
-        BufferedReader reader = new BufferedReader(new FileReader(inFile));
-        List<String> lines = new ArrayList<>();
-        String line;
+        for (int i = 0; i < lines.size(); i++) {
+            String currentLine = lines.get(i).trim();
+            boolean isRedundant = false;
 
-        while ((line = reader.readLine()) != null) {
-            lines.add(line);
+            if (currentLine.startsWith("MOV ")) {
+                int nextIndex = findNextNonEmptyLine(lines, i + 1);
+                if (nextIndex != -1) {
+                    String nextLine = lines.get(nextIndex).trim();
+
+                    if (nextLine.startsWith("MOV ")) {
+                        // Extract operands
+                        int currCmntIdx = currentLine.indexOf(';');
+                        int nextCmntIdx = nextLine.indexOf(';');
+                        if (currCmntIdx == -1)
+                            currCmntIdx = currentLine.length();
+                        if (nextCmntIdx == -1)
+                            nextCmntIdx = nextLine.length();
+
+                        // Extract operands from MOV instructions
+                        String[] currentParts = currentLine.substring(4, currCmntIdx).split(",");
+                        String[] nextParts = nextLine.substring(4, nextCmntIdx).split(",");
+
+                        if (currentParts.length == 2 && nextParts.length == 2) {
+                            String src1 = currentParts[0].trim();
+                            String dest1 = currentParts[1].trim();
+                            String src2 = nextParts[0].trim();
+                            String dest2 = nextParts[1].trim();
+
+                            // Check if second MOV reverses the first one OR if they are identical
+                            if ((src1.equals(dest2) && dest1.equals(src2)) || (src1.equals(src2) && dest1.equals(dest2))) {
+                                isRedundant = true;
+
+                                // Add the FIRST MOV instruction only
+                                optimizedLines.add(lines.get(i));
+
+                                // Add any lines between the two MOV instructions (comments, empty lines, etc.)
+                                for (int j = i + 1; j < nextIndex; j++) {
+                                    optimizedLines.add(lines.get(j));
+                                }
+
+                                // Skip to after the redundant second MOV instruction
+                                i = nextIndex;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!isRedundant) {
+                optimizedLines.add(lines.get(i));
+            }
         }
-        reader.close();
 
+        System.out.println("---- DONE Optimizing MOV instructions in memory...");
+        return optimizedLines;
+    }
+    
+    private static List<String> optimizeLabels(List<String> lines) {
+        System.out.println("Optimizing redundant labels in memory...");
         List<String> optimizedLines = new ArrayList<>();
         Map<String, String> labelReplacements = new HashMap<>(); // Map of removed labels -> replacement label
         boolean[] skipLines = new boolean[lines.size()]; // Track which lines to skip
@@ -307,7 +294,6 @@ public class Main {
                     for (int k = 0; k < consecutiveLabels.size() - 1; k++) {
                         String removeLabel = consecutiveLabels.get(k);
                         labelReplacements.put(removeLabel, keepLabel);
-                        System.out.println("Will replace " + removeLabel + " with " + keepLabel);
                         
                         // Find the line index of this label and mark for skipping
                         for (int lineIdx = i; lineIdx < j; lineIdx++) {
@@ -361,11 +347,8 @@ public class Main {
             optimizedLines.set(i, modifiedLine);
         }
 
-        // Write optimized content back to file
-        for (String optimizedLine : optimizedLines) {
-            writer.write(optimizedLine + "\n");
-        }
-        System.out.println("---- DONE Optimizing redundant labels...");
+        System.out.println("---- DONE Optimizing redundant labels in memory...");
+        return optimizedLines;
     }
 
     public static void main(String[] args) throws Exception {
@@ -428,37 +411,13 @@ public class Main {
         ICGFile.flush();
         tempReader.close();
 
-        // 1: optimize push/pop instructions
-        BufferedWriter optICGFile = new BufferedWriter(new FileWriter("optCode.asm"));
-        optimizePushPop(ICGFileName, optICGFile);
-        optICGFile.close(); // Close after first optimization
-
-        // 2: optimize redundant operations - read from optCode.asm and write to temp.txt
-        tempFile = new BufferedWriter(new FileWriter(tempFileName));
-        optimizeRedundantOperations("optCode.asm", tempFile);
-        tempFile.close(); // Close after second optimization
-        
-        // 3: optimize mov instructions - read from temp.txt and write back to optCode.asm
-        optICGFile = new BufferedWriter(new FileWriter("optCode.asm"));
-        optimizeMov(tempFileName, optICGFile);
-        optICGFile.close(); // Close after third optimization
-
-        // 4: optimize redundant labels - read from optCode.asm and write to temp.txt
-        tempFile = new BufferedWriter(new FileWriter(tempFileName));
-        optimizeRedundantLabels("optCode.asm", tempFile);
-        tempFile.close(); // Close after fourth optimization
-        
-        // 5: Finally read from temp.txt and write back to optCode.asm
-        optICGFile = new BufferedWriter(new FileWriter("optCode.asm"));
-        BufferedReader finalReader = new BufferedReader(new FileReader(tempFileName));
-        while ((line = finalReader.readLine()) != null) {
-            optICGFile.write(line + "\n");
-        }
-        finalReader.close();
+        // Perform all optimizations in place with minimal file I/O
+        performAllOptimizations(ICGFileName, "optCode.asm", tempFileName);
 
 
-        // merge printProcLib into ICGFILE
+        // merge printProcLib into both ICG files
         BufferedReader printLibReader = new BufferedReader(new FileReader("printProc.lib"));
+        BufferedWriter optICGFile = new BufferedWriter(new FileWriter("optCode.asm", true)); // Append
         while ((line = printLibReader.readLine()) != null) {
             ICGFile.write(line + "\n");
             optICGFile.write(line + "\n");
@@ -466,6 +425,7 @@ public class Main {
         ICGFile.write("END main\n");
         optICGFile.write("END main\n");
         ICGFile.flush();
+        optICGFile.flush();
 
         // Close files
         printLibReader.close();

@@ -212,22 +212,6 @@ import java.util.ArrayList;
          System.err.println("Symbol Table EXIT scope error : " + e.getMessage());
         }
     }   
-
-    public boolean isArrayVar(String varName) {
-        SymbolInfo varInfo = Main.st.currentScopeLookup(new SymbolInfo(varName, "ID", null, null));
-        if(varInfo == null){
-            varInfo = Main.st.lookUp(new SymbolInfo(varName, "ID", null, null));
-        }
-        if (varInfo != null) {
-            String varType = varInfo.getDataType();
-            System.out.println("Checking if var " + varName + " is Array? : " + varType);
-            if (varType.trim().endsWith("[]")) {
-                return true; // It's an array variable
-            }
-        }
-        return false; // Not found or not an array variable
-    }
-
     
     
 }
@@ -262,14 +246,9 @@ unit:
       };
 
 func_declaration:
-	type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {
-        int lineNo = $SEMICOLON.getLine();
-        logParse("Line No : " + lineNo + " func_declaration : type_specifier ID LPAREN parameter_list RPAREN SEMICOLON");
-      }
-	| type_specifier ID LPAREN RPAREN SEMICOLON {
-        int lineNo = $SEMICOLON.getLine();
-        logParse("Line No : " + lineNo + " func_declaration : type_specifier ID LPAREN RPAREN SEMICOLON");
-      };
+	type_specifier ID LPAREN parameter_list RPAREN SEMICOLON {}
+	| type_specifier ID LPAREN RPAREN SEMICOLON {};
+
 
 func_definition
 	returns[String fn_name]:
@@ -295,9 +274,6 @@ func_definition
             for(int i = 0; i < Nparams; i++){
               String paramName = params.get(i);
               int offset = pOffsets.get(Nparams - i - 1);
-              System.out.println("Param " + (i+1) + ": " + paramName 
-                + ", Offset: " + offset);
-
               boolean isInserted = STinsert(paramName, "local", "int", null, false, offset);
             }            
           } 
@@ -311,7 +287,6 @@ func_definition
         
         int retBytes = Math.abs(paramOffset) - 2; // Calculate return bytes
         String retBytesStr = (retBytes > 0)? String.valueOf(retBytes) : "";
-        System.out.println("Return bytes for " + $fn_name + ": " + retBytes);
         
         for(String retLabel : currRETlabel){
           writeTempCode(retLabel + ":"); // Jump to return label
@@ -397,16 +372,8 @@ parameter_list returns [int num_params]:
       };
 
 compound_statement:
-	LCURL statements RCURL {
-        // func only defined globally
-
-        int lineNo = $LCURL.getLine();
-        logParse("Line No : " + lineNo + " compound_statement : LCURL statements RCURL");
-      }
-	| LCURL RCURL {
-        int lineNo = $LCURL.getLine();
-        logParse("Line No : " + lineNo + " compound_statement : LCURL RCURL");
-      };
+	LCURL statements RCURL {}
+	| LCURL RCURL {};
 
 var_declaration:
 	t = type_specifier dl = declaration_list sm = SEMICOLON {
@@ -521,12 +488,8 @@ declaration_list:
       };
 
 statements:
-	statement {
-        logParse("statements : statement");
-      }
-	| statements statement {
-        logParse("statements : statements statement");
-      };
+	  statement {}
+	| statements statement {};
 
 statement:
 	var_declaration {
@@ -668,6 +631,7 @@ expression_statement:
 
 variable returns [String varName]:
 	ID {
+        // Handled in declaration_list
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " variable : ID " + $ID.getText());
         $varName = $ID.getText();
@@ -854,9 +818,7 @@ unary_expression :
         writeTempCode("\tNOT AX"); // Negate the value in AX
         writeTempCode("\tPUSH AX"); // Push the negated value back to stack
       }
-	| f=factor {
-        logParse("unary_expression : factor");
-      };
+	| f=factor {};
 
 factor:
 	variable {
@@ -874,10 +836,7 @@ factor:
         writeTempCode("\tCALL " + funcName + "\t\t; Line " + lineNo);
         writeTempCode("\tPUSH AX"); // Push the return value of the function
       }
-	| LPAREN expression RPAREN {
-        int lineNo = $LPAREN.getLine();
-        logParse("Line No : " + lineNo + " factor : LPAREN expression RPAREN");
-      }
+	| LPAREN expression RPAREN
 	| CONST_INT {
         int lineNo = $CONST_INT.getLine();
         int val = Integer.parseInt($CONST_INT.getText());
@@ -910,21 +869,12 @@ factor:
       };
 
 argument_list:
-	arguments {
-        logParse("argument_list : arguments");
-      }
+	arguments {}
 	| /* empty */ {
         logParse("argument_list : empty");
       };
 
 arguments:
-	arguments COMMA logic_expression {
-        int lineNo = $COMMA.getLine();
-        logParse("Line No : " + lineNo + " arguments : arguments COMMA logic_expression");
-        // ----- Stack top has the argument value, NO PUSH needed ----
-
-      }
-	| logic_expression {
-        logParse("arguments : logic_expression");
-        // ----- Stack top has the argument value, NO PUSH needed ----
-      };
+	arguments COMMA logic_expression
+	| logic_expression
+  ;

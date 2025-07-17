@@ -1,9 +1,5 @@
 Line No : 1 type_specifier : INT
 
-Line No : 1 type_specifier : INT
-
-Line No : 1 parameter_list : type_specifier ID
-
 Line No : 2 type_specifier : INT
 
 Line No : 2 declaration_list : ID
@@ -14,21 +10,15 @@ Line No : 2 var_declaration : type_specifier dec_list SEMICOLON
 
 statement : var_declaration
 
-statements : statement
-
-Line No : 3 variable : ID n
+Line No : 3 variable : ID i
 
 factor : variable
-
-unary_expression : factor
 
 term : unary_expression
 
 simple_expression : term
 
 Line No : 3 factor : CONST_INT 0
-
-unary_expression : factor
 
 term : unary_expression
 
@@ -36,39 +26,29 @@ simple_expression : term
 
 Line No : 3 rel_expression : simple_expression RELOP simple_expression
 
-logic_expression : rel_expression
+Line No : 3 variable : ID i
 
-expression : logic_expression
-
-Line No : 3 statement : IF LPAREN expression RPAREN statement
-
-Line No : 3 factor : CONST_INT 0
-
-unary_expression : factor
+factor : variable
 
 term : unary_expression
 
 simple_expression : term
 
-rel_expression : simple_expression
+Line No : 3 factor : CONST_INT 10
 
-logic_expression : rel_expression
+term : unary_expression
+
+simple_expression : term
+
+Line No : 3 rel_expression : simple_expression RELOP simple_expression
+
+Line No : 3 logic_expression : rel_expression LOGICOP rel_expression
 
 expression : logic_expression
 
-Line No : 3 statement : RETURN expression SEMICOLON
-
-Line No : 3 statement : IF LPAREN expression RPAREN statement
-
-statements : statements statement
-
 Line No : 4 variable : ID i
 
-Line No : 4 variable : ID n
-
-factor : variable
-
-unary_expression : factor
+Line No : 4 factor : CONST_INT 100
 
 term : unary_expression
 
@@ -84,126 +64,9 @@ Line No : 4 expression_statement : expression SEMICOLON
 
 statement : expression_statement
 
-statements : statements statement
+Line No : 6 variable : ID i
 
-Line No : 5 variable : ID n
-
-factor : variable
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-Line No : 5 (IN ADDOP) simple_expression : simple_expression ADDOP term
-
-Line No : 5 factor : CONST_INT 1
-
-unary_expression : factor
-
-term : unary_expression
-
-Line No : 5 simple_expression : simple_expression ADDOP term
-
-rel_expression : simple_expression
-
-logic_expression : rel_expression
-
-arguments : logic_expression
-
-argument_list : arguments
-
-Line No : 5 factor : ID LPAREN argument_list RPAREN
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-Line No : 5 (IN ADDOP) simple_expression : simple_expression ADDOP term
-
-Line No : 5 variable : ID i
-
-factor : variable
-
-unary_expression : factor
-
-term : unary_expression
-
-Line No : 5 simple_expression : simple_expression ADDOP term
-
-rel_expression : simple_expression
-
-logic_expression : rel_expression
-
-expression : logic_expression
-
-Line No : 5 statement : RETURN expression SEMICOLON
-
-statements : statements statement
-
-Line No : 1 compound_statement : LCURL statements RCURL
-
-Line No : 1 (func) func_definition  : type_specifier ID LPAREN parameter_list RPAREN compound_statement
-
-ScopeTable # 1.1
-0 --> < i : local, Offset: 2 >
-5 --> < n : local, Offset: -4 >
-ScopeTable # 1
-
-unit : func_definition
-
-program : unit
-
-Line No : 8 type_specifier : INT
-
-Line No : 8 type_specifier : INT
-
-Line No : 8 parameter_list : type_specifier ID
-
-Line No : 9 type_specifier : INT
-
-Line No : 9 declaration_list : ID
-
------ i, offest : 2 ----
-
-Line No : 9 var_declaration : type_specifier dec_list SEMICOLON
-
-statement : var_declaration
-
-statements : statement
-
-Line No : 10 variable : ID n
-
-factor : variable
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-Line No : 10 factor : CONST_INT 0
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-Line No : 10 rel_expression : simple_expression RELOP simple_expression
-
-logic_expression : rel_expression
-
-expression : logic_expression
-
-Line No : 10 statement : IF LPAREN expression RPAREN statement
-
-Line No : 10 factor : CONST_INT 0
-
-unary_expression : factor
+Line No : 6 factor : CONST_INT 200
 
 term : unary_expression
 
@@ -213,21 +76,71 @@ rel_expression : simple_expression
 
 logic_expression : rel_expression
 
+Line No : 6 expression : variable ASSIGNOP logic_expression
+
+Line No : 6 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+Line No : 5 statement : IF LPAREN expression RPAREN statement ELSE statement
+
+Line No : 8 variable : ID i
+
+factor : variable
+
+term : unary_expression
+
+simple_expression : term
+
+Line No : 8 factor : CONST_INT 20
+
+term : unary_expression
+
+simple_expression : term
+
+Line No : 8 rel_expression : simple_expression RELOP simple_expression
+
+Line No : 8 variable : ID i
+
+factor : variable
+
+term : unary_expression
+
+simple_expression : term
+
+Line No : 8 factor : CONST_INT 30
+
+term : unary_expression
+
+simple_expression : term
+
+Line No : 8 rel_expression : simple_expression RELOP simple_expression
+
+Line No : 8 logic_expression : rel_expression LOGICOP rel_expression
+
 expression : logic_expression
 
-Line No : 10 statement : RETURN expression SEMICOLON
+Line No : 9 variable : ID i
 
-Line No : 10 statement : IF LPAREN expression RPAREN statement
+Line No : 9 factor : CONST_INT 300
 
-statements : statements statement
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+Line No : 9 expression : variable ASSIGNOP logic_expression
+
+Line No : 9 expression_statement : expression SEMICOLON
+
+statement : expression_statement
 
 Line No : 11 variable : ID i
 
-Line No : 11 variable : ID n
-
-factor : variable
-
-unary_expression : factor
+Line No : 11 factor : CONST_INT 400
 
 term : unary_expression
 
@@ -243,98 +156,99 @@ Line No : 11 expression_statement : expression SEMICOLON
 
 statement : expression_statement
 
-statements : statements statement
+Line No : 10 statement : IF LPAREN expression RPAREN statement ELSE statement
 
-Line No : 12 variable : ID n
+Line No : 13 variable : ID i
 
 factor : variable
-
-unary_expression : factor
 
 term : unary_expression
 
 simple_expression : term
 
-Line No : 12 (IN ADDOP) simple_expression : simple_expression ADDOP term
-
-Line No : 12 factor : CONST_INT 1
-
-unary_expression : factor
-
-term : unary_expression
-
-Line No : 12 simple_expression : simple_expression ADDOP term
-
-rel_expression : simple_expression
-
-logic_expression : rel_expression
-
-arguments : logic_expression
-
-argument_list : arguments
-
-Line No : 12 factor : ID LPAREN argument_list RPAREN
-
-unary_expression : factor
+Line No : 13 factor : CONST_INT 40
 
 term : unary_expression
 
 simple_expression : term
 
-Line No : 12 (IN ADDOP) simple_expression : simple_expression ADDOP term
+Line No : 13 rel_expression : simple_expression RELOP simple_expression
 
-Line No : 12 variable : ID i
+Line No : 13 variable : ID i
 
 factor : variable
 
-unary_expression : factor
+term : unary_expression
+
+simple_expression : term
+
+Line No : 13 factor : CONST_INT 50
 
 term : unary_expression
 
-Line No : 12 simple_expression : simple_expression ADDOP term
+simple_expression : term
 
-rel_expression : simple_expression
+Line No : 13 rel_expression : simple_expression RELOP simple_expression
 
-logic_expression : rel_expression
+Line No : 13 logic_expression : rel_expression LOGICOP rel_expression
 
 expression : logic_expression
 
-Line No : 12 statement : RETURN expression SEMICOLON
+term : unary_expression
 
-statements : statements statement
+simple_expression : term
 
-Line No : 8 compound_statement : LCURL statements RCURL
+rel_expression : simple_expression
 
-Line No : 8 (func2) func_definition  : type_specifier ID LPAREN parameter_list RPAREN compound_statement
+Line No : 13 variable : ID i
 
-ScopeTable # 1.2
-0 --> < i : local, Offset: 2 >
-5 --> < n : local, Offset: -4 >
-ScopeTable # 1
+factor : variable
 
-unit : func_definition
+term : unary_expression
 
-program : program unit
+simple_expression : term
 
-Line No : 15 type_specifier : INT
+Line No : 13 factor : CONST_INT 60
 
-Line No : 16 type_specifier : INT
+term : unary_expression
 
-Line No : 16 declaration_list : ID
+simple_expression : term
 
------ a, offest : 2 ----
+Line No : 13 rel_expression : simple_expression RELOP simple_expression
 
-Line No : 16 var_declaration : type_specifier dec_list SEMICOLON
+Line No : 13 variable : ID i
 
-statement : var_declaration
+factor : variable
 
-statements : statement
+term : unary_expression
 
-Line No : 17 variable : ID a
+simple_expression : term
 
-Line No : 17 factor : CONST_INT 7
+Line No : 13 factor : CONST_INT 70
 
-unary_expression : factor
+term : unary_expression
+
+simple_expression : term
+
+Line No : 13 rel_expression : simple_expression RELOP simple_expression
+
+Line No : 13 logic_expression : rel_expression LOGICOP rel_expression
+
+expression : logic_expression
+
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+Line No : 13 logic_expression : rel_expression LOGICOP rel_expression
+
+expression : logic_expression
+
+Line No : 14 variable : ID i
+
+Line No : 14 factor : CONST_INT 500
 
 term : unary_expression
 
@@ -344,37 +258,35 @@ rel_expression : simple_expression
 
 logic_expression : rel_expression
 
-arguments : logic_expression
+Line No : 14 expression : variable ASSIGNOP logic_expression
 
-argument_list : arguments
-
-Line No : 17 factor : ID LPAREN argument_list RPAREN
-
-unary_expression : factor
-
-term : unary_expression
-
-simple_expression : term
-
-rel_expression : simple_expression
-
-logic_expression : rel_expression
-
-Line No : 17 expression : variable ASSIGNOP logic_expression
-
-Line No : 17 expression_statement : expression SEMICOLON
+Line No : 14 expression_statement : expression SEMICOLON
 
 statement : expression_statement
 
-statements : statements statement
+Line No : 16 variable : ID i
 
-Line No : 18 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
+Line No : 16 factor : CONST_INT 600
 
-statements : statements statement
+term : unary_expression
+
+simple_expression : term
+
+rel_expression : simple_expression
+
+logic_expression : rel_expression
+
+Line No : 16 expression : variable ASSIGNOP logic_expression
+
+Line No : 16 expression_statement : expression SEMICOLON
+
+statement : expression_statement
+
+Line No : 15 statement : IF LPAREN expression RPAREN statement ELSE statement
+
+Line No : 17 statement : PRINTLN LPAREN ID RPAREN SEMICOLON
 
 Line No : 19 factor : CONST_INT 0
-
-unary_expression : factor
 
 term : unary_expression
 
@@ -388,19 +300,15 @@ expression : logic_expression
 
 Line No : 19 statement : RETURN expression SEMICOLON
 
-statements : statements statement
+Line No : 1 (main) func_definition  : type_specifier ID LPAREN RPAREN compound_statement
 
-Line No : 15 compound_statement : LCURL statements RCURL
-
-Line No : 15 (main) func_definition  : type_specifier ID LPAREN RPAREN compound_statement
-
-ScopeTable # 1.3
-6 --> < a : local, Offset: 2 >
+ScopeTable # 1.1
+0 --> < i : local, Offset: 2 >
 ScopeTable # 1
 
 unit : func_definition
 
-program : program unit
+program : unit
 
 Parsing completed successfully with 0 syntax errors.
 
