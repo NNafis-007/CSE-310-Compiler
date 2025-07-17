@@ -17,39 +17,41 @@ Line# 2: Token <RPAREN> Lexeme ) found
 Line# 2: Token <LCURL> Lexeme { found
 Line# 4: Token <INT> Lexeme int found
 type_specifier	: INT 
-Line# 4: Token <ID> Lexeme a found
-Line# 4: Token <LSQUARE> Lexeme [ found
-Line# 4: Token <CONST_INT> Lexeme 3 found
-Line# 4: Token <RSQUARE> Lexeme ] found
-declaration_list : ID LSQUARE CONST_INT RSQUARE 
-Line# 4: Token <COMMA> Lexeme , found
-Line# 4: Token <ID> Lexeme x found
-Line# 4: Token <LSQUARE> Lexeme [ found
-Line# 4: Token <CONST_INT> Lexeme 10 found
-Line# 4: Token <RSQUARE> Lexeme ] found
-declaration_list : declaration_list COMMA ID LSQUARE CONST_INT RSQUARE 
+Line# 4: Token <ID> Lexeme i found
 Line# 4: Token <SEMICOLON> Lexeme ; found
+declaration_list : ID 
 var_declaration : type_specifier declaration_list SEMICOLON  
 statement : var_declaration 
 statements : statement  
+Line# 5: Token <INT> Lexeme int found
+type_specifier	: INT 
 Line# 5: Token <ID> Lexeme x found
 Line# 5: Token <LSQUARE> Lexeme [ found
-Line# 5: Token <CONST_INT> Lexeme 3 found
+Line# 5: Token <CONST_INT> Lexeme 10 found
+Line# 5: Token <RSQUARE> Lexeme ] found
+declaration_list : ID LSQUARE CONST_INT RSQUARE 
+Line# 5: Token <SEMICOLON> Lexeme ; found
+var_declaration : type_specifier declaration_list SEMICOLON  
+statement : var_declaration 
+statements : statements statement  
+Line# 6: Token <ID> Lexeme x found
+Line# 6: Token <LSQUARE> Lexeme [ found
+Line# 6: Token <CONST_INT> Lexeme 1 found
 factor	: CONST_INT   
 unary_expression : factor 
 term :	unary_expression 
-Line# 5: Token <RSQUARE> Lexeme ] found
+Line# 6: Token <RSQUARE> Lexeme ] found
 simple_expression : term 
 rel_expression	: simple_expression 
 logic_expression : rel_expression 	 
 expression 	: logic_expression	 
 variable : ID LSQUARE expression RSQUARE  	 
-Line# 5: Token <ASSIGNOP> Lexeme = found
-Line# 5: Token <CONST_INT> Lexeme 5 found
+Line# 6: Token <ASSIGNOP> Lexeme = found
+Line# 6: Token <CONST_INT> Lexeme 10 found
 factor	: CONST_INT   
 unary_expression : factor 
 term :	unary_expression 
-Line# 5: Token <SEMICOLON> Lexeme ; found
+Line# 6: Token <SEMICOLON> Lexeme ; found
 simple_expression : term 
 rel_expression	: simple_expression 
 logic_expression : rel_expression 	 
@@ -57,41 +59,78 @@ expression 	: variable ASSIGNOP logic_expression
 expression_statement : expression SEMICOLON 		 
 statement : expression_statement  
 statements : statements statement  
-Line# 6: Token <SINGLE LINE COMMENT> Lexeme // w[5]=-2; found
-Line# 7: Token <SINGLE LINE COMMENT> Lexeme // int i; found
-Line# 8: Token <SINGLE LINE COMMENT> Lexeme // i = w[5]; found
-Line# 9: Token <SINGLE LINE COMMENT> Lexeme // println(i); found
-Line# 11: Token <SINGLE LINE COMMENT> Lexeme // x[3] = 10; found
-Line# 12: Token <SINGLE LINE COMMENT> Lexeme // x[0]=w[0]; found
-Line# 13: Token <SINGLE LINE COMMENT> Lexeme // i=x[0];	 found
-Line# 14: Token <SINGLE LINE COMMENT> Lexeme // println(i); found
-Line# 15: Token <SINGLE LINE COMMENT> Lexeme // x[1]=w[0]++; found
-Line# 16: Token <SINGLE LINE COMMENT> Lexeme // i=x[1];	 found
-Line# 17: Token <SINGLE LINE COMMENT> Lexeme // println(i); found
-Line# 18: Token <SINGLE LINE COMMENT> Lexeme // i=w[0]; found
-Line# 19: Token <SINGLE LINE COMMENT> Lexeme // println(i);	 found
-Line# 21: Token <SINGLE LINE COMMENT> Lexeme // i=i+0; found
-Line# 22: Token <SINGLE LINE COMMENT> Lexeme // i=i-0; found
-Line# 23: Token <SINGLE LINE COMMENT> Lexeme // i=i*1; found
-Line# 24: Token <SINGLE LINE COMMENT> Lexeme // println(i);	 found
-Line# 26: Token <SINGLE LINE COMMENT> Lexeme // if((i>0 && i<10) || (i<0 && i>-10)) found
-Line# 27: Token <SINGLE LINE COMMENT> Lexeme // 	i=100; found
-Line# 28: Token <SINGLE LINE COMMENT> Lexeme // else  found
-Line# 29: Token <SINGLE LINE COMMENT> Lexeme // 	i=200; found
-Line# 30: Token <SINGLE LINE COMMENT> Lexeme // println(i);	 found
-Line# 32: Token <RETURN> Lexeme return found
-Line# 32: Token <CONST_INT> Lexeme 0 found
+Line# 7: Token <ID> Lexeme i found
+Line# 7: Token <ASSIGNOP> Lexeme = found
+variable : ID 	 
+Line# 7: Token <ID> Lexeme x found
+Line# 7: Token <LSQUARE> Lexeme [ found
+Line# 7: Token <CONST_INT> Lexeme 1 found
 factor	: CONST_INT   
 unary_expression : factor 
 term :	unary_expression 
-Line# 32: Token <SEMICOLON> Lexeme ; found
+Line# 7: Token <RSQUARE> Lexeme ] found
+simple_expression : term 
+rel_expression	: simple_expression 
+logic_expression : rel_expression 	 
+expression 	: logic_expression	 
+variable : ID LSQUARE expression RSQUARE  	 
+Line# 7: Token <SEMICOLON> Lexeme ; found
+factor	: variable 
+unary_expression : factor 
+term :	unary_expression 
+simple_expression : term 
+rel_expression	: simple_expression 
+logic_expression : rel_expression 	 
+expression 	: variable ASSIGNOP logic_expression 		 
+expression_statement : expression SEMICOLON 		 
+statement : expression_statement  
+statements : statements statement  
+Line# 8: Token <SINGLE LINE COMMENT> Lexeme // w[0]=-2; found
+Line# 9: Token <SINGLE LINE COMMENT> Lexeme // x[0]=w[0]; found
+Line# 10: Token <SINGLE LINE COMMENT> Lexeme // i=x[0];	 found
+Line# 11: Token <SINGLE LINE COMMENT> Lexeme // println(i); found
+Line# 12: Token <SINGLE LINE COMMENT> Lexeme // x[1]=w[0]; found
+Line# 13: Token <SINGLE LINE COMMENT> Lexeme // i=x[1];	 found
+Line# 14: Token <PRINTLN> Lexeme println found
+Line# 14: Token <LPAREN> Lexeme ( found
+Line# 14: Token <ID> Lexeme i found
+Line# 14: Token <RPAREN> Lexeme ) found
+Line# 14: Token <SEMICOLON> Lexeme ; found
+statement : PRINTLN LPAREN ID RPAREN SEMICOLON
+statements : statements statement  
+Line# 15: Token <SINGLE LINE COMMENT> Lexeme // i=w[0]; found
+Line# 16: Token <SINGLE LINE COMMENT> Lexeme // println(i);	 found
+Line# 19: Token <SINGLE LINE COMMENT> Lexeme // x[3] = 10; found
+Line# 20: Token <SINGLE LINE COMMENT> Lexeme // x[0]=w[0]; found
+Line# 21: Token <SINGLE LINE COMMENT> Lexeme // i=x[0];	 found
+Line# 22: Token <SINGLE LINE COMMENT> Lexeme // println(i); found
+Line# 23: Token <SINGLE LINE COMMENT> Lexeme // x[1]=w[0]++; found
+Line# 24: Token <SINGLE LINE COMMENT> Lexeme // i=x[1];	 found
+Line# 25: Token <SINGLE LINE COMMENT> Lexeme // println(i); found
+Line# 26: Token <SINGLE LINE COMMENT> Lexeme // i=w[0]; found
+Line# 27: Token <SINGLE LINE COMMENT> Lexeme // println(i);	 found
+Line# 29: Token <SINGLE LINE COMMENT> Lexeme // i=i+0; found
+Line# 30: Token <SINGLE LINE COMMENT> Lexeme // i=i-0; found
+Line# 31: Token <SINGLE LINE COMMENT> Lexeme // i=i*1; found
+Line# 32: Token <SINGLE LINE COMMENT> Lexeme // println(i);	 found
+Line# 34: Token <SINGLE LINE COMMENT> Lexeme // if((i>0 && i<10) || (i<0 && i>-10)) found
+Line# 35: Token <SINGLE LINE COMMENT> Lexeme // 	i=100; found
+Line# 36: Token <SINGLE LINE COMMENT> Lexeme // else  found
+Line# 37: Token <SINGLE LINE COMMENT> Lexeme // 	i=200; found
+Line# 38: Token <SINGLE LINE COMMENT> Lexeme // println(i);	 found
+Line# 40: Token <RETURN> Lexeme return found
+Line# 40: Token <CONST_INT> Lexeme 0 found
+factor	: CONST_INT   
+unary_expression : factor 
+term :	unary_expression 
+Line# 40: Token <SEMICOLON> Lexeme ; found
 simple_expression : term 
 rel_expression	: simple_expression 
 logic_expression : rel_expression 	 
 expression 	: logic_expression	 
 statement : RETURN expression SEMICOLON
 statements : statements statement  
-Line# 33: Token <RCURL> Lexeme } found
+Line# 41: Token <RCURL> Lexeme } found
 compound_statement : LCURL statements RCURL  
 	ScopeTable# 2
 
@@ -100,11 +139,11 @@ compound_statement : LCURL statements RCURL
 
 
 
+	7 --> <i, INT, Width: 2, Offset: 2, IsParam: 0, Scope: 2>
 
 
 
-	10 --> <a, ARRAY, Width: 6, Offset: 6, IsParam: 0, Scope: 2, Base Type: INT>
-	11 --> <x, ARRAY, Width: 20, Offset: 26, IsParam: 0, Scope: 2, Base Type: INT>
+	11 --> <x, ARRAY, Width: 20, Offset: 22, IsParam: 0, Scope: 2, Base Type: INT>
 	ScopeTable# 1
 
 	2 --> <main, FUNCTION, Width: 0, Offset: -1, IsParam: 0, Scope: 1, RetType: INT>
@@ -122,6 +161,6 @@ unit : func_definition
 program : program unit 
 start : program 
 
-Total Lines: 35
+Total Lines: 43
 
 Total Errors: 0

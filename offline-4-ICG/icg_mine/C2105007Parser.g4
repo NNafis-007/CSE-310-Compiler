@@ -112,7 +112,6 @@ import java.util.ArrayList;
       SymbolInfo varInfo = STlookup(varName);
       String varType = varInfo.getDataType();
       String varScope = varInfo.getScope();
-      System.out.println("Var " + varName + " is Array? : " + varType + ", Scope: " + varScope);
       
       // handle array variable
       if (varType.trim().endsWith("[]")) {
@@ -129,7 +128,8 @@ import java.util.ArrayList;
               + varName + ", starting at " + offset);
           writeTempCode("\tMOV SI, BX"); // Move offset to SI
           writeTempCode("\tADD SI, " + offset); // Add base address to SI
-          String asmCode = "[BP-SI]";
+          writeTempCode("\tNEG SI"); // Move SI to BX for access
+          String asmCode = "[BP+SI]";
           return asmCode;
         } 
           
@@ -694,21 +694,14 @@ expression:
 	logic_expression {
         logParse("expression : logic_expression");
       }
-	| v=variable ASSIGNOP l=logic_expression {
+	| v=variable {String asmVar = getAsmVar($v.varName);} ASSIGNOP l=logic_expression {
         int lineNo = $ASSIGNOP.getLine();
         logParse("Line No : " + lineNo + " expression : variable ASSIGNOP logic_expression");
         
         writeTempCode("\tPOP AX"); // Pop the result of logic_expression to AX
-        String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX" + "\t\t; Line " + lineNo;
+        String cmd = "\tMOV " + asmVar + ", AX" + "\t\t; Line " + lineNo;
         writeTempCode(cmd);
         writeTempCode("\tPUSH AX"); // Push the value back to stack
-
-        // else {
-        //   // BX has the offset
-        //   String arrVar = $v.varName + "[BX]";
-          
-
-        // }
       };
 
 logic_expression:

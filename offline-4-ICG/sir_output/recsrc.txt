@@ -1,9 +1,17 @@
 int w[10];
 int main()
 {
-	int , x[10];
-	x[3]=5;
+	int i;
+	int x[10];
+	x[1]=10;
+	i=x[1];
 
+
+
+
+
+
+	println(();
 
 
 

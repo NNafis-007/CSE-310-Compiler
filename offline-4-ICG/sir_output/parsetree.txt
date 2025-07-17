@@ -1,5 +1,5 @@
-start : program 	<Line: 1-33>
- program : program unit 	<Line: 1-33>
+start : program 	<Line: 1-41>
+ program : program unit 	<Line: 1-41>
   program : unit 	<Line: 1-1>
    unit : var_declaration 	<Line: 1-1>
     var_declaration : type_specifier declaration_list SEMICOLON 	<Line: 1-1>
@@ -11,67 +11,102 @@ start : program 	<Line: 1-33>
       CONST_INT : 10	<Line: 1>
       RSQUARE : ]	<Line: 1>
      SEMICOLON : ;	<Line: 1>
-  unit : func_definition 	<Line: 2-33>
-   func_definition : type_specifier ID LPAREN RPAREN compound_statement 	<Line: 2-33>
+  unit : func_definition 	<Line: 2-41>
+   func_definition : type_specifier ID LPAREN RPAREN compound_statement 	<Line: 2-41>
     type_specifier : INT 	<Line: 2-2>
      INT : int	<Line: 2>
     ID : main	<Line: 2>
     LPAREN : (	<Line: 2>
     RPAREN : )	<Line: 2>
-    compound_statement : LCURL statements RCURL 	<Line: 2-33>
+    compound_statement : LCURL statements RCURL 	<Line: 2-41>
      LCURL : {	<Line: 2>
-     statements : statements statement 	<Line: 4-32>
-      statements : statements statement 	<Line: 4-5>
-       statements : statement 	<Line: 4-4>
-        statement : var_declaration 	<Line: 4-4>
-         var_declaration : type_specifier declaration_list SEMICOLON 	<Line: 4-4>
-          type_specifier : INT 	<Line: 4-4>
-           INT : int	<Line: 4>
-          declaration_list : declaration_list COMMA ID LSQUARE CONST_INT RSQUARE 	<Line: 4-4>
-           declaration_list : ID LSQUARE CONST_INT RSQUARE 	<Line: 4-4>
-            ID : a	<Line: 4>
-            LSQUARE : [	<Line: 4>
-            CONST_INT : 3	<Line: 4>
-            RSQUARE : ]	<Line: 4>
-           COMMA : ,	<Line: 4>
-           ID : x	<Line: 4>
-           LSQUARE : [	<Line: 4>
-           CONST_INT : 10	<Line: 4>
-           RSQUARE : ]	<Line: 4>
-          SEMICOLON : ;	<Line: 4>
-       statement : expression_statement 	<Line: 5-5>
-        expression_statement : expression SEMICOLON 	<Line: 5-5>
-         expression : variable ASSIGNOP logic_expression 	<Line: 5-5>
-          variable : ID LSQUARE expression RSQUARE 	<Line: 5-5>
-           ID : x	<Line: 5>
-           LSQUARE : [	<Line: 5>
-           expression : logic_expression 	<Line: 5-5>
-            logic_expression : rel_expression 	<Line: 5-5>
-             rel_expression : simple_expression 	<Line: 5-5>
-              simple_expression : term 	<Line: 5-5>
-               term : unary_expression 	<Line: 5-5>
-                unary_expression : factor 	<Line: 5-5>
-                 factor : CONST_INT 	<Line: 5-5>
-                  CONST_INT : 3	<Line: 5>
-           RSQUARE : ]	<Line: 5>
-          ASSIGNOP : =	<Line: 5>
-          logic_expression : rel_expression 	<Line: 5-5>
-           rel_expression : simple_expression 	<Line: 5-5>
-            simple_expression : term 	<Line: 5-5>
-             term : unary_expression 	<Line: 5-5>
-              unary_expression : factor 	<Line: 5-5>
-               factor : CONST_INT 	<Line: 5-5>
-                CONST_INT : 5	<Line: 5>
-         SEMICOLON : ;	<Line: 5>
-      statement : RETURN expression SEMICOLON 	<Line: 32-32>
-       RETURN : return	<Line: 32>
-       expression : logic_expression 	<Line: 32-32>
-        logic_expression : rel_expression 	<Line: 32-32>
-         rel_expression : simple_expression 	<Line: 32-32>
-          simple_expression : term 	<Line: 32-32>
-           term : unary_expression 	<Line: 32-32>
-            unary_expression : factor 	<Line: 32-32>
-             factor : CONST_INT 	<Line: 32-32>
-              CONST_INT : 0	<Line: 32>
-       SEMICOLON : ;	<Line: 32>
-     RCURL : }	<Line: 33>
+     statements : statements statement 	<Line: 4-40>
+      statements : statements statement 	<Line: 4-14>
+       statements : statements statement 	<Line: 4-7>
+        statements : statements statement 	<Line: 4-6>
+         statements : statements statement 	<Line: 4-5>
+          statements : statement 	<Line: 4-4>
+           statement : var_declaration 	<Line: 4-4>
+            var_declaration : type_specifier declaration_list SEMICOLON 	<Line: 4-4>
+             type_specifier : INT 	<Line: 4-4>
+              INT : int	<Line: 4>
+             declaration_list : ID 	<Line: 4-4>
+              ID : i	<Line: 4>
+             SEMICOLON : ;	<Line: 4>
+          statement : var_declaration 	<Line: 5-5>
+           var_declaration : type_specifier declaration_list SEMICOLON 	<Line: 5-5>
+            type_specifier : INT 	<Line: 5-5>
+             INT : int	<Line: 5>
+            declaration_list : ID LSQUARE CONST_INT RSQUARE 	<Line: 5-5>
+             ID : x	<Line: 5>
+             LSQUARE : [	<Line: 5>
+             CONST_INT : 10	<Line: 5>
+             RSQUARE : ]	<Line: 5>
+            SEMICOLON : ;	<Line: 5>
+         statement : expression_statement 	<Line: 6-6>
+          expression_statement : expression SEMICOLON 	<Line: 6-6>
+           expression : variable ASSIGNOP logic_expression 	<Line: 6-6>
+            variable : ID LSQUARE expression RSQUARE 	<Line: 6-6>
+             ID : x	<Line: 6>
+             LSQUARE : [	<Line: 6>
+             expression : logic_expression 	<Line: 6-6>
+              logic_expression : rel_expression 	<Line: 6-6>
+               rel_expression : simple_expression 	<Line: 6-6>
+                simple_expression : term 	<Line: 6-6>
+                 term : unary_expression 	<Line: 6-6>
+                  unary_expression : factor 	<Line: 6-6>
+                   factor : CONST_INT 	<Line: 6-6>
+                    CONST_INT : 1	<Line: 6>
+             RSQUARE : ]	<Line: 6>
+            ASSIGNOP : =	<Line: 6>
+            logic_expression : rel_expression 	<Line: 6-6>
+             rel_expression : simple_expression 	<Line: 6-6>
+              simple_expression : term 	<Line: 6-6>
+               term : unary_expression 	<Line: 6-6>
+                unary_expression : factor 	<Line: 6-6>
+                 factor : CONST_INT 	<Line: 6-6>
+                  CONST_INT : 10	<Line: 6>
+           SEMICOLON : ;	<Line: 6>
+        statement : expression_statement 	<Line: 7-7>
+         expression_statement : expression SEMICOLON 	<Line: 7-7>
+          expression : variable ASSIGNOP logic_expression 	<Line: 7-7>
+           variable : ID 	<Line: 7-7>
+            ID : i	<Line: 7>
+           ASSIGNOP : =	<Line: 7>
+           logic_expression : rel_expression 	<Line: 7-7>
+            rel_expression : simple_expression 	<Line: 7-7>
+             simple_expression : term 	<Line: 7-7>
+              term : unary_expression 	<Line: 7-7>
+               unary_expression : factor 	<Line: 7-7>
+                factor : variable 	<Line: 7-7>
+                 variable : ID LSQUARE expression RSQUARE 	<Line: 7-7>
+                  ID : x	<Line: 7>
+                  LSQUARE : [	<Line: 7>
+                  expression : logic_expression 	<Line: 7-7>
+                   logic_expression : rel_expression 	<Line: 7-7>
+                    rel_expression : simple_expression 	<Line: 7-7>
+                     simple_expression : term 	<Line: 7-7>
+                      term : unary_expression 	<Line: 7-7>
+                       unary_expression : factor 	<Line: 7-7>
+                        factor : CONST_INT 	<Line: 7-7>
+                         CONST_INT : 1	<Line: 7>
+                  RSQUARE : ]	<Line: 7>
+          SEMICOLON : ;	<Line: 7>
+       statement : PRINTLN LPAREN ID RPAREN SEMICOLON 	<Line: 14-14>
+        PRINTLN : println	<Line: 14>
+        LPAREN : (	<Line: 14>
+        ID : i	<Line: 14>
+        RPAREN : )	<Line: 14>
+        SEMICOLON : ;	<Line: 14>
+      statement : RETURN expression SEMICOLON 	<Line: 40-40>
+       RETURN : return	<Line: 40>
+       expression : logic_expression 	<Line: 40-40>
+        logic_expression : rel_expression 	<Line: 40-40>
+         rel_expression : simple_expression 	<Line: 40-40>
+          simple_expression : term 	<Line: 40-40>
+           term : unary_expression 	<Line: 40-40>
+            unary_expression : factor 	<Line: 40-40>
+             factor : CONST_INT 	<Line: 40-40>
+              CONST_INT : 0	<Line: 40>
+       SEMICOLON : ;	<Line: 40>
+     RCURL : }	<Line: 41>
