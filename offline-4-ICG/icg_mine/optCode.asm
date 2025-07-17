@@ -15,23 +15,10 @@ main PROC
 	MOV AX, 4		; Line 6
 	MOV [BP-2], AX		; Line 6
 
-	PUSH AX
-	MOV AX, 0		; Line 7
-	POP DX
-	ADD AX, DX
 	MOV [BP-2], AX		; Line 7
 
-	PUSH AX
-	MOV AX, 0		; Line 8
-	POP DX
-	XCHG DX, AX
-	SUB AX, DX
 	MOV [BP-2], AX		; Line 8
 
-	PUSH AX
-	MOV AX, 1		; Line 9
-	POP CX
-	POP AX
 	MOV [BP-2], AX		; Line 9
 
 	CALL print_output

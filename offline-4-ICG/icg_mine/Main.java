@@ -71,13 +71,11 @@ public class Main {
                             String dest2 = nextParts[1].trim();
 
                             // Check if second MOV reverses the first one
-                            if (src1.equals(dest2) && dest1.equals(src2)) {
+                            if ((src1.equals(dest2) && dest1.equals(src2)) || (src1.equals(src2) && dest1.equals(dest2))) {
                                 isRedundant = true;
-                                System.out.println("Found redundant MOV: " + currentLine + " and " + nextLine);
 
                                 // Add the FIRST MOV instruction only
                                 optimizedLines.add(lines.get(i));
-                                System.out.println("Adding line to optimized lines: " + lines.get(i));
 
                                 // Add any lines between the two MOV instructions (comments, empty lines, etc.)
                                 for (int j = i + 1; j < nextIndex; j++) {
@@ -158,6 +156,7 @@ public class Main {
     }
 
     public static void optimizeRedundantOperations(String inFile, BufferedWriter writer) throws IOException {
+        System.out.println("Optimizing redundant operations...");
         BufferedReader reader = new BufferedReader(new FileReader(inFile));
         List<String> lines = new ArrayList<>();
         String line;
@@ -168,37 +167,78 @@ public class Main {
         reader.close();
 
         List<String> optimizedLines = new ArrayList<>();
+        boolean[] skipLines = new boolean[lines.size()]; // Track which lines to skip
 
         for (int i = 0; i < lines.size(); i++) {
             String currentLine = lines.get(i).trim();
-            boolean isRedundant = false;
 
             // Check for ADD, SUB, and MUL instructions
             if (currentLine.startsWith("ADD ") || currentLine.startsWith("SUB ") || currentLine.startsWith("MUL ")) {
-                // Extract operands
+                // Extract operands using same method as other functions
                 int cmntIdx = currentLine.indexOf(';');
                 if (cmntIdx == -1)
                     cmntIdx = currentLine.length();
 
                 String instructionPart = currentLine.substring(0, cmntIdx).trim();
-                String opcode = instructionPart.substring(0, 4).trim();
-                String operands = instructionPart.substring(4, cmntIdx).trim(); 
-                String[] operandParts = operands.split(",");
+                String opcode = instructionPart.substring(0, 4).trim(); // ADD, SUB, MUL are 3 chars
 
-                if (operandParts.length == 2) {
-                    String operand1 = operandParts[0].trim();
-                    String operand2 = operandParts[1].trim();
+                // Determine how many instructions to look back
+                int lookBackCount = 0;
+                String targetValue = "";
 
-                    // Check for redundant operations
-                    if ((opcode.equals("ADD") || opcode.equals("SUB")) && operand2.equals("0")) {
-                        isRedundant = true;
-                    } else if (opcode.equals("MUL") && operand2.equals("1")) {
-                        isRedundant = true;
+                if (opcode.equals("ADD")) {
+                    lookBackCount = 2;
+                    targetValue = "0";
+                } else if (opcode.equals("SUB")) {
+                    lookBackCount = 3;
+                    targetValue = "0";
+                } else if (opcode.trim().equals("MUL")) {
+                    lookBackCount = 3;
+                    targetValue = "1";
+                }
+
+                // Look backwards for the pattern
+                if (i >= lookBackCount) {
+                    String targetLine = lines.get(i - lookBackCount).trim();
+                    boolean shouldOptimize = false;
+
+                    // Check for MOV AX, targetValue pattern
+                    int targetCmntIdx = targetLine.indexOf(';');
+                    if (targetCmntIdx == -1)
+                        targetCmntIdx = targetLine.length();
+
+                    if (targetLine.startsWith("MOV ")) {
+                        String[] targetParts = targetLine.substring(4, targetCmntIdx).split(",");
+
+                        if (targetParts.length == 2) {
+                            String targetSrc = targetParts[0].trim();
+                            String targetDest = targetParts[1].trim();
+                            if (targetSrc.equals("AX") && targetDest.equals(targetValue)) {
+                                shouldOptimize = true;
+                            }
+                        }
+                    }
+
+                    if (shouldOptimize) {
+                        // PUSH AX is always right before MOV AX, targetValue
+                        int pushIndex = i - lookBackCount - 1;
+
+                        System.out.println("Optimizing redundant " + opcode + " operation at line " + (i + 1));
+                        System.out.println("Removing instructions from PUSH AX at line " + (pushIndex + 1) + " to "
+                                + opcode + " at line " + (i + 1));
+
+                        // Mark all lines from PUSH AX to current instruction for skipping
+                        for (int k = pushIndex; k <= i; k++) {
+                            skipLines[k] = true;
+                        }
                     }
                 }
             }
+        }
 
-            if (!isRedundant) {
+        // Add lines that are not marked for skipping
+        for (int i = 0; i < lines.size(); i++) {
+            if (!skipLines[i]) {
                 optimizedLines.add(lines.get(i));
             }
         }
@@ -207,6 +247,7 @@ public class Main {
         for (String optimizedLine : optimizedLines) {
             writer.write(optimizedLine + "\n");
         }
+        System.out.println("---- DONE Optimizing redundant operations...");
     }
 
     public static void main(String[] args) throws Exception {
@@ -269,19 +310,19 @@ public class Main {
         ICGFile.flush();
         tempReader.close();
 
-        // optimize push/pop instructions
+        // Step 1: optimize push/pop instructions
         BufferedWriter optICGFile = new BufferedWriter(new FileWriter("optCode.asm"));
         optimizePushPop(ICGFileName, optICGFile);
         optICGFile.close(); // Close after first optimization
+
+        // Step 2: optimize redundant operations - read from optCode.asm and write to temp.txt
+        tempFile = new BufferedWriter(new FileWriter(tempFileName));
+        optimizeRedundantOperations("optCode.asm", tempFile);
+        tempFile.close(); // Close after second optimization
         
-        // optimize mov instructions - read from optCode.asm and write to a temp file
-        BufferedWriter tempOptFile = new BufferedWriter(new FileWriter("optCode_temp.asm"));
-        optimizeMov("optCode.asm", tempOptFile);
-        tempOptFile.close(); // Close after second optimization
-        
-        // optimize redundant operations - read from temp and write back to optCode.asm
+        // Step 3: optimize mov instructions - read from temp.txt and write back to optCode.asm
         optICGFile = new BufferedWriter(new FileWriter("optCode.asm"));
-        optimizeRedundantOperations("optCode_temp.asm", optICGFile);
+        optimizeMov(tempFileName, optICGFile);
 
 
         // merge printProcLib into ICGFILE
@@ -301,9 +342,6 @@ public class Main {
         lexLogFile.close();
         ICGFile.close();
         optICGFile.close();
-        tempFile.close();
-        // Clean up temporary file
-        new File("optCode_temp.asm").delete();
 
         System.out.println("Parsing completed. Check the output files for details.");
     }
