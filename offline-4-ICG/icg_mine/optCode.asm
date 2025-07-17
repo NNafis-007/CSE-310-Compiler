@@ -27,7 +27,7 @@ L3:
 	CMP AX, 0
 	JE L4
 	MOV AX, 0		; Line 3
-	JMP L5
+	JMP L6
 L4:
 	MOV AX, [BP+4]
 	MOV [BP-2], AX		; Line 4
@@ -45,7 +45,6 @@ L4:
 	POP DX
 	ADD AX, DX
 	JMP L6
-L5:
 L6:
 	ADD SP, 2
 	POP BP
@@ -76,7 +75,7 @@ L9:
 	CMP AX, 0
 	JE L10
 	MOV AX, 0		; Line 10
-	JMP L11
+	JMP L12
 L10:
 	MOV AX, [BP+4]
 	MOV [BP-2], AX		; Line 11
@@ -94,7 +93,6 @@ L10:
 	POP DX
 	ADD AX, DX
 	JMP L12
-L11:
 L12:
 	ADD SP, 2
 	POP BP

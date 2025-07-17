@@ -5,7 +5,15 @@ import SymbolTable.SymbolTable;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Main {
     public static BufferedWriter parserLogFile;
@@ -251,6 +259,115 @@ public class Main {
         System.out.println("---- DONE Optimizing redundant operations...");
     }
 
+    public static void optimizeRedundantLabels(String inFile, BufferedWriter writer) throws IOException {
+        System.out.println("Optimizing redundant labels...");
+        BufferedReader reader = new BufferedReader(new FileReader(inFile));
+        List<String> lines = new ArrayList<>();
+        String line;
+
+        while ((line = reader.readLine()) != null) {
+            lines.add(line);
+        }
+        reader.close();
+
+        List<String> optimizedLines = new ArrayList<>();
+        Map<String, String> labelReplacements = new HashMap<>(); // Map of removed labels -> replacement label
+        boolean[] skipLines = new boolean[lines.size()]; // Track which lines to skip
+
+        // Step 1: Find consecutive labels and mark redundant ones for removal
+        for (int i = 0; i < lines.size(); i++) {
+            String currentLine = lines.get(i).trim();
+            
+            // Check if current line is a label (ends with :)
+            if (currentLine.endsWith(":") && !currentLine.startsWith(";")) {
+                List<String> consecutiveLabels = new ArrayList<>();
+                consecutiveLabels.add(currentLine);
+                
+                // Find all consecutive labels
+                int j = i + 1;
+                while (j < lines.size()) {
+                    String nextLine = lines.get(j).trim();
+                    if (nextLine.endsWith(":") && !nextLine.startsWith(";")) {
+                        consecutiveLabels.add(nextLine);
+                        j++;
+                    } else if (nextLine.isEmpty() || nextLine.startsWith(";")) {
+                        // Skip empty lines and comments between labels
+                        j++;
+                    } else {
+                        // Hit a non-label instruction, stop
+                        break;
+                    }
+                }
+                
+                // If we have more than one consecutive label, optimize
+                if (consecutiveLabels.size() > 1) {
+                    String keepLabel = consecutiveLabels.get(consecutiveLabels.size() - 1); // Keep the last label
+                    
+                    // Mark redundant labels for removal and store replacements
+                    for (int k = 0; k < consecutiveLabels.size() - 1; k++) {
+                        String removeLabel = consecutiveLabels.get(k);
+                        labelReplacements.put(removeLabel, keepLabel);
+                        System.out.println("Will replace " + removeLabel + " with " + keepLabel);
+                        
+                        // Find the line index of this label and mark for skipping
+                        for (int lineIdx = i; lineIdx < j; lineIdx++) {
+                            if (lines.get(lineIdx).trim().equals(removeLabel)) {
+                                skipLines[lineIdx] = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // Skip to after all consecutive labels
+                i = j - 1;
+            }
+        }
+
+        // Step 2: Build optimized lines (without redundant labels)
+        for (int i = 0; i < lines.size(); i++) {
+            if (!skipLines[i]) {
+                optimizedLines.add(lines.get(i));
+            }
+        }
+
+        // Step 3: Replace label references in the code
+        for (int i = 0; i < optimizedLines.size(); i++) {
+            String currentLine = optimizedLines.get(i);
+            String modifiedLine = currentLine;
+            
+            // Check for label references in jump instructions
+            for (Map.Entry<String, String> entry : labelReplacements.entrySet()) {
+                String oldLabel = entry.getKey().replace(":", ""); // Remove colon for comparison
+                String newLabel = entry.getValue().replace(":", ""); // Remove colon for comparison
+                
+                // Replace in various jump instructions
+                if (modifiedLine.contains("JMP " + oldLabel) || 
+                    modifiedLine.contains("JE " + oldLabel) || 
+                    modifiedLine.contains("JNE " + oldLabel) ||
+                    modifiedLine.contains("JL " + oldLabel) ||
+                    modifiedLine.contains("JLE " + oldLabel) ||
+                    modifiedLine.contains("JG " + oldLabel) ||
+                    modifiedLine.contains("JGE " + oldLabel) ||
+                    modifiedLine.contains("JZ " + oldLabel) ||
+                    modifiedLine.contains("JNZ " + oldLabel) ||
+                    modifiedLine.contains("CALL " + oldLabel)) {
+                    
+                    modifiedLine = modifiedLine.replace(" " + oldLabel, " " + newLabel);
+                    System.out.println("Replaced reference: " + oldLabel + " -> " + newLabel + " in line: " + currentLine.trim());
+                }
+            }
+            
+            optimizedLines.set(i, modifiedLine);
+        }
+
+        // Write optimized content back to file
+        for (String optimizedLine : optimizedLines) {
+            writer.write(optimizedLine + "\n");
+        }
+        System.out.println("---- DONE Optimizing redundant labels...");
+    }
+
     public static void main(String[] args) throws Exception {
         if (args.length < 1) {
             System.err.println("Usage: java Main <input_file>");
@@ -324,8 +441,20 @@ public class Main {
         // 3: optimize mov instructions - read from temp.txt and write back to optCode.asm
         optICGFile = new BufferedWriter(new FileWriter("optCode.asm"));
         optimizeMov(tempFileName, optICGFile);
+        optICGFile.close(); // Close after third optimization
 
-
+        // 4: optimize redundant labels - read from optCode.asm and write to temp.txt
+        tempFile = new BufferedWriter(new FileWriter(tempFileName));
+        optimizeRedundantLabels("optCode.asm", tempFile);
+        tempFile.close(); // Close after fourth optimization
+        
+        // 5: Finally read from temp.txt and write back to optCode.asm
+        optICGFile = new BufferedWriter(new FileWriter("optCode.asm"));
+        BufferedReader finalReader = new BufferedReader(new FileReader(tempFileName));
+        while ((line = finalReader.readLine()) != null) {
+            optICGFile.write(line + "\n");
+        }
+        finalReader.close();
 
 
         // merge printProcLib into ICGFILE
