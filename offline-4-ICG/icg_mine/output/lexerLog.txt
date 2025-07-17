@@ -10,37 +10,61 @@ Line# 2: Token <LPAREN> Lexeme (
 Line# 2: Token <RPAREN> Lexeme )
 Line# 2: Token <LCURL> Lexeme {
 Line# 4: Token <INT> Lexeme int
+Line# 4: Token <ID> Lexeme a
+Line# 4: Token <LTHIRD> Lexeme [
+Line# 4: Token <CONST_INT> Lexeme 3
+Line# 4: Token <RTHIRD> Lexeme ]
+Line# 4: Token <COMMA> Lexeme ,
 Line# 4: Token <ID> Lexeme x
 Line# 4: Token <LTHIRD> Lexeme [
 Line# 4: Token <CONST_INT> Lexeme 10
 Line# 4: Token <RTHIRD> Lexeme ]
 Line# 4: Token <SEMICOLON> Lexeme ;
-Line# 5: Token <ID> Lexeme w
+Line# 5: Token <ID> Lexeme x
 Line# 5: Token <LTHIRD> Lexeme [
-Line# 5: Token <CONST_INT> Lexeme 0
+Line# 5: Token <CONST_INT> Lexeme 3
 Line# 5: Token <RTHIRD> Lexeme ]
 Line# 5: Token <ASSIGNOP> Lexeme =
-Line# 5: Token <ADDOP> Lexeme -
-Line# 5: Token <CONST_INT> Lexeme 2
+Line# 5: Token <CONST_INT> Lexeme 5
 Line# 5: Token <SEMICOLON> Lexeme ;
-Line# 6: Token <SINGLE LINE COMMENT> Lexeme // x[0]=w[0];
-Line# 7: Token <SINGLE LINE COMMENT> Lexeme // i=x[0];	
-Line# 8: Token <SINGLE LINE COMMENT> Lexeme // println(i);
-Line# 9: Token <SINGLE LINE COMMENT> Lexeme // x[1]=w[0]++;
-Line# 10: Token <SINGLE LINE COMMENT> Lexeme // i=x[1];	
-Line# 11: Token <SINGLE LINE COMMENT> Lexeme // println(i);
-Line# 12: Token <SINGLE LINE COMMENT> Lexeme // i=w[0];
-Line# 13: Token <SINGLE LINE COMMENT> Lexeme // println(i);	
-Line# 15: Token <SINGLE LINE COMMENT> Lexeme // i=i+0;
-Line# 16: Token <SINGLE LINE COMMENT> Lexeme // i=i-0;
-Line# 17: Token <SINGLE LINE COMMENT> Lexeme // i=i*1;
-Line# 18: Token <SINGLE LINE COMMENT> Lexeme // println(i);	
-Line# 20: Token <SINGLE LINE COMMENT> Lexeme // if((i>0 && i<10) || (i<0 && i>-10))
-Line# 21: Token <SINGLE LINE COMMENT> Lexeme // 	i=100;
-Line# 22: Token <SINGLE LINE COMMENT> Lexeme // else 
-Line# 23: Token <SINGLE LINE COMMENT> Lexeme // 	i=200;
-Line# 24: Token <SINGLE LINE COMMENT> Lexeme // println(i);	
-Line# 26: Token <RETURN> Lexeme return
-Line# 26: Token <CONST_INT> Lexeme 0
-Line# 26: Token <SEMICOLON> Lexeme ;
-Line# 27: Token <RCURL> Lexeme }
+Line# 6: Token <INT> Lexeme int
+Line# 6: Token <ID> Lexeme i
+Line# 6: Token <SEMICOLON> Lexeme ;
+Line# 7: Token <ID> Lexeme i
+Line# 7: Token <ASSIGNOP> Lexeme =
+Line# 7: Token <ID> Lexeme x
+Line# 7: Token <LTHIRD> Lexeme [
+Line# 7: Token <CONST_INT> Lexeme 3
+Line# 7: Token <RTHIRD> Lexeme ]
+Line# 7: Token <SEMICOLON> Lexeme ;
+Line# 8: Token <PRINTLN> Lexeme println
+Line# 8: Token <LPAREN> Lexeme (
+Line# 8: Token <ID> Lexeme i
+Line# 8: Token <RPAREN> Lexeme )
+Line# 8: Token <SEMICOLON> Lexeme ;
+Line# 9: Token <SINGLE LINE COMMENT> Lexeme // w[5]=-2;
+Line# 10: Token <SINGLE LINE COMMENT> Lexeme // int i;
+Line# 11: Token <SINGLE LINE COMMENT> Lexeme // i = w[5];
+Line# 12: Token <SINGLE LINE COMMENT> Lexeme // println(i);
+Line# 14: Token <SINGLE LINE COMMENT> Lexeme // x[3] = 10;
+Line# 15: Token <SINGLE LINE COMMENT> Lexeme // x[0]=w[0];
+Line# 16: Token <SINGLE LINE COMMENT> Lexeme // i=x[0];	
+Line# 17: Token <SINGLE LINE COMMENT> Lexeme // println(i);
+Line# 18: Token <SINGLE LINE COMMENT> Lexeme // x[1]=w[0]++;
+Line# 19: Token <SINGLE LINE COMMENT> Lexeme // i=x[1];	
+Line# 20: Token <SINGLE LINE COMMENT> Lexeme // println(i);
+Line# 21: Token <SINGLE LINE COMMENT> Lexeme // i=w[0];
+Line# 22: Token <SINGLE LINE COMMENT> Lexeme // println(i);	
+Line# 24: Token <SINGLE LINE COMMENT> Lexeme // i=i+0;
+Line# 25: Token <SINGLE LINE COMMENT> Lexeme // i=i-0;
+Line# 26: Token <SINGLE LINE COMMENT> Lexeme // i=i*1;
+Line# 27: Token <SINGLE LINE COMMENT> Lexeme // println(i);	
+Line# 29: Token <SINGLE LINE COMMENT> Lexeme // if((i>0 && i<10) || (i<0 && i>-10))
+Line# 30: Token <SINGLE LINE COMMENT> Lexeme // 	i=100;
+Line# 31: Token <SINGLE LINE COMMENT> Lexeme // else 
+Line# 32: Token <SINGLE LINE COMMENT> Lexeme // 	i=200;
+Line# 33: Token <SINGLE LINE COMMENT> Lexeme // println(i);	
+Line# 35: Token <RETURN> Lexeme return
+Line# 35: Token <CONST_INT> Lexeme 0
+Line# 35: Token <SEMICOLON> Lexeme ;
+Line# 36: Token <RCURL> Lexeme }

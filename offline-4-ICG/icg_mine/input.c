@@ -1,8 +1,17 @@
 int w[10];
 int main(){
  
-	int x[10];	
-	w[0]=-2;
+	int a[3], x[10];
+	x[3] = 5;	
+	int i;
+	i = x[3];
+	println(i);
+	// w[5]=-2;
+	// int i;
+	// i = w[5];
+	// println(i);
+
+	// x[3] = 10;
 	// x[0]=w[0];
 	// i=x[0];	
 	// println(i);

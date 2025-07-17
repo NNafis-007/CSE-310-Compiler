@@ -110,17 +110,43 @@ import java.util.ArrayList;
 
     String getAsmVar(String varName){
       SymbolInfo varInfo = STlookup(varName);
-      System.out.println("Var Type: " + varInfo.getDataType());
-
-      if(varInfo.getScope() == "global"){
-        return varInfo.getName();
+      String varType = varInfo.getDataType();
+      String varScope = varInfo.getScope();
+      System.out.println("Var " + varName + " is Array? : " + varType + ", Scope: " + varScope);
+      
+      // handle array variable
+      if (varType.trim().endsWith("[]")) {
+        if(varScope.equals("global")){
+          // Global array variable
+          String asmCode = varName + "[BX]";
+          System.out.println("accessing Global array variable -> " + asmCode);
+          return asmCode; // Return array variable in global scope
+        }
+        else{
+          // Local array variable
+          int offset = varInfo.getOffset();
+          System.out.println("accessing Local array variable -> " 
+              + varName + ", starting at " + offset);
+          writeTempCode("\tMOV SI, BX"); // Move offset to SI
+          writeTempCode("\tADD SI, " + offset); // Add base address to SI
+          String asmCode = "[BP-SI]";
+          return asmCode;
+        } 
+          
       }
-      else{
-        int offset = varInfo.getOffset();
-        String op = (offset < 0) ? "+" : "-";
 
-        String cmd = "[BP" + op + Math.abs(offset) + "]";
-        return cmd;
+      // handle normal variable
+      else{
+        if(varInfo.getScope() == "global"){
+          return varInfo.getName();
+        }
+        else{
+          int offset = varInfo.getOffset();
+          String op = (offset < 0) ? "+" : "-";
+
+          String cmd = "[BP" + op + Math.abs(offset) + "]";
+          return cmd;
+        }
       }
     }
 
@@ -217,6 +243,8 @@ import java.util.ArrayList;
         }
         return false; // Not found or not an array variable
     }
+
+    
     
 }
 
@@ -656,6 +684,10 @@ variable returns [String varName]:
         int lineNo = $ID.getLine();
         logParse("Line No : " + lineNo + " variable : ID LTHIRD expression RTHIRD");
         $varName = $ID.getText();
+
+        // Result of the expression is at top of the stack
+        writeTempCode("\tPOP BX"); // Pop offset (expr result) to BX 
+        writeTempCode("\tSHL BX, 1" + "\t\t ; offset for array " + $ID.getText()); // Multiply offset by 2
       };
 
 expression:
@@ -665,16 +697,18 @@ expression:
 	| v=variable ASSIGNOP l=logic_expression {
         int lineNo = $ASSIGNOP.getLine();
         logParse("Line No : " + lineNo + " expression : variable ASSIGNOP logic_expression");
-        // Check if array variable
-        if(!isArrayVar($v.varName)){
-          writeTempCode("\tPOP AX"); // Pop the result of logic_expression to AX
-          String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX" + "\t\t; Line " + lineNo;
-          writeTempCode(cmd);
-          writeTempCode("\tPUSH AX"); // Push the value back to stack
-        }
-        else {
+        
+        writeTempCode("\tPOP AX"); // Pop the result of logic_expression to AX
+        String cmd = "\tMOV " + getAsmVar($v.varName) + ", AX" + "\t\t; Line " + lineNo;
+        writeTempCode(cmd);
+        writeTempCode("\tPUSH AX"); // Push the value back to stack
 
-        }
+        // else {
+        //   // BX has the offset
+        //   String arrVar = $v.varName + "[BX]";
+          
+
+        // }
       };
 
 logic_expression:

@@ -4,23 +4,45 @@ main PROC
 	PUSH BP
 	MOV BP, SP
 
+	SUB SP , 6
 	SUB SP , 20
-	MOV AX, 0		; Line 5
+	MOV AX, 3		; Line 5
+	PUSH AX
+	POP BX
+	SHL BX, 1		 ; offset for array x
+	MOV AX, 5		; Line 5
 	PUSH AX
 	POP AX
-	MOV AX, 2		; Line 5
-	PUSH AX
-	POP AX
-	NEG AX
+	MOV SI, BX
+	ADD SI, 8
+	MOV [BP-SI], AX		; Line 5
 	PUSH AX
 	POP AX 		; Line 5
 
-	MOV AX, 0		; Line 26
+	SUB SP , 2
+	MOV AX, 3		; Line 7
 	PUSH AX
-	POP AX 		; Line 26
+	POP BX
+	SHL BX, 1		 ; offset for array x
+	MOV SI, BX
+	ADD SI, 8
+	MOV AX, [BP-SI]
+	PUSH AX
+	POP AX
+	MOV [BP-28], AX		; Line 7
+	PUSH AX
+	POP AX 		; Line 7
+
+	MOV AX, [BP-28]		; Line 8
+	CALL print_output
+	CALL new_line
+
+	MOV AX, 0		; Line 35
+	PUSH AX
+	POP AX 		; Line 35
 	JMP L1
 L1:
-	ADD SP, 20
+	ADD SP, 28
 	POP BP
 	MOV AX, 4Ch
 	INT 21h

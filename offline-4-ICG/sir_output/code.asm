@@ -9,29 +9,32 @@ main PROC
 	MOV DS, AX
 	PUSH BP
 	MOV BP, SP
+	SUB SP, 6
 	SUB SP, 20
 L1:
-	MOV AX, 0       ; Line 5
+	MOV AX, 3       ; Line 5
 	PUSH AX
-	MOV AX, 2       ; Line 5
-	NEG AX
-	PUSH AX
-	POP AX       ; Line 5
+	MOV AX, 5       ; Line 5
 	POP BX
 	PUSH AX
 	MOV AX, 2
 	MUL BX
 	MOV BX, AX
+	MOV AX, 26
+	SUB AX, BX
+	MOV BX, AX
 	POP AX
-	MOV w[BX], AX
+	MOV SI, BX
+	NEG SI
+	MOV [BP+SI], AX
 	PUSH AX
 	POP AX
 L2:
-	MOV AX, 0       ; Line 26
+	MOV AX, 0       ; Line 32
 	JMP L4
 L3:
 L4:
-	ADD SP, 20
+	ADD SP, 26
 	POP BP
 	MOV AX,4CH
 	INT 21H
