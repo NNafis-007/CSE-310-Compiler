@@ -830,8 +830,10 @@ term :
         }
         else{
           asmCode = "\tXCHG CX, AX\n" + "\tCWD\n" + "\tIDIV CX\n" + "\tPUSH AX";
-        writeTempCode(asmCode);
-      };
+          writeTempCode(asmCode);
+        }
+    };
+
 
 unary_expression :
 	ADDOP unary_expression {
