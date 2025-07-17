@@ -17,7 +17,7 @@ import java.util.ArrayList;
     public boolean isGlobal = true;
     public int stackOffset = 0;
     public int labelCount = 0;
-    String currRETlabel = "";
+    public ArrayList<String> currRETlabel = new ArrayList<>();
     public int paramOffset = -2;
     
     // Arraylist of params
@@ -301,6 +301,7 @@ func_definition
         stackOffset = 0;
         params.clear(); // Clear previous params
         pOffsets.clear(); // Clear previous parameter offsets
+        currRETlabel.clear(); // Clear current return labels
 
       } LPAREN parameter_list 
         RPAREN
@@ -328,12 +329,17 @@ func_definition
         String retBytesStr = (retBytes > 0)? String.valueOf(retBytes) : "";
         System.out.println("Return bytes for " + $fn_name + ": " + retBytes);
         
-        writeTempCode(currRETlabel + ":"); // Jump to return label
+        for(String retLabel : currRETlabel){
+          writeTempCode(retLabel + ":"); // Jump to return label
+        }
+
         writeTempCode("\tADD SP, " + stackOffset); // Adjust stack pointer
         String cleanFuncCode = "\tPOP BP\n" + "\tRET " + retBytesStr + "\n"    
               + $fn_name + " ENDP\n";
         writeTempCode(cleanFuncCode);
         stackOffset = prevStackOffset; // Restore previous stack offset
+        currRETlabel.clear(); // Clear current return labels
+
       }
 	| type_specifier ID {
         isGlobal=false;
@@ -368,7 +374,9 @@ func_definition
           // exit functions other than main
           cleanFuncCode = "\tPOP BP\n" + "\tRET\n" + $fn_name + " ENDP\n";
         }
-        writeTempCode(currRETlabel + ":"); // Jump to return label
+        for(String retLabel : currRETlabel){
+          writeTempCode(retLabel + ":"); // Jump to return label
+        }
         writeTempCode(restoreSpCode); // Restore stack pointer
         writeTempCode(cleanFuncCode);
         stackOffset = prevStackOffset; // Restore previous stack offset
@@ -660,7 +668,7 @@ statement:
         writeTempCode("\tPOP AX \t\t; Line " + lineNo);
         String retLabel = getLabel();
         writeTempCode("\tJMP " + retLabel); // Jump to return label
-        currRETlabel = retLabel; // Set current return label
+        currRETlabel.add(retLabel); // Set current return label
       };
 
 expression_statement:
