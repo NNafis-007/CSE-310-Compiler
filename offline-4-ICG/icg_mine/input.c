@@ -1,3 +1,4 @@
+int w[10];
 int func (int n){
   int i;
   if (n==0) return 0;
@@ -12,6 +13,7 @@ int func2 (int n){
   return func(n-1)+i;
 }
 
+int x;
 int main() {
 	int a;
 	a = func(7);

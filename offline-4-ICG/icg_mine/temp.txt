@@ -5,7 +5,7 @@ func PROC
 	SUB SP , 2
 	MOV AX, [BP+4]
 	PUSH AX
-	MOV AX, 0		; Line 3
+	MOV AX, 0		; Line 4
 	PUSH AX
 	POP AX
 	POP DX
@@ -23,28 +23,28 @@ L3:
 	POP AX
 	CMP AX, 0
 	JE L4
-	MOV AX, 0		; Line 3
+	MOV AX, 0		; Line 4
 	PUSH AX
-	POP AX 		; Line 3
+	POP AX 		; Line 4
 	JMP L5
 L4:
 	MOV AX, [BP+4]
 	PUSH AX
 	POP AX
-	MOV [BP-2], AX		; Line 4
+	MOV [BP-2], AX		; Line 5
 	PUSH AX
-	POP AX 		; Line 4
+	POP AX 		; Line 5
 
 	MOV AX, [BP+4]
 	PUSH AX
-	MOV AX, 1		; Line 5
+	MOV AX, 1		; Line 6
 	PUSH AX
 	POP AX
 	POP DX
 	XCHG DX, AX
 	SUB AX, DX
 	PUSH AX
-	CALL func		; Line 5
+	CALL func		; Line 6
 	PUSH AX
 	MOV AX, [BP-2]
 	PUSH AX
@@ -52,7 +52,7 @@ L4:
 	POP DX
 	ADD AX, DX
 	PUSH AX
-	POP AX 		; Line 5
+	POP AX 		; Line 6
 	JMP L6
 L5:
 L6:
@@ -68,7 +68,7 @@ func2 PROC
 	SUB SP , 2
 	MOV AX, [BP+4]
 	PUSH AX
-	MOV AX, 0		; Line 10
+	MOV AX, 0		; Line 11
 	PUSH AX
 	POP AX
 	POP DX
@@ -86,28 +86,28 @@ L9:
 	POP AX
 	CMP AX, 0
 	JE L10
-	MOV AX, 0		; Line 10
+	MOV AX, 0		; Line 11
 	PUSH AX
-	POP AX 		; Line 10
+	POP AX 		; Line 11
 	JMP L11
 L10:
 	MOV AX, [BP+4]
 	PUSH AX
 	POP AX
-	MOV [BP-2], AX		; Line 11
+	MOV [BP-2], AX		; Line 12
 	PUSH AX
-	POP AX 		; Line 11
+	POP AX 		; Line 12
 
 	MOV AX, [BP+4]
 	PUSH AX
-	MOV AX, 1		; Line 12
+	MOV AX, 1		; Line 13
 	PUSH AX
 	POP AX
 	POP DX
 	XCHG DX, AX
 	SUB AX, DX
 	PUSH AX
-	CALL func		; Line 12
+	CALL func		; Line 13
 	PUSH AX
 	MOV AX, [BP-2]
 	PUSH AX
@@ -115,7 +115,7 @@ L10:
 	POP DX
 	ADD AX, DX
 	PUSH AX
-	POP AX 		; Line 12
+	POP AX 		; Line 13
 	JMP L12
 L11:
 L12:
@@ -131,22 +131,22 @@ main PROC
 	MOV BP, SP
 
 	SUB SP , 2
-	MOV AX, 7		; Line 17
+	MOV AX, 7		; Line 19
 	PUSH AX
-	CALL func		; Line 17
+	CALL func		; Line 19
 	PUSH AX
 	POP AX
-	MOV [BP-2], AX		; Line 17
+	MOV [BP-2], AX		; Line 19
 	PUSH AX
-	POP AX 		; Line 17
+	POP AX 		; Line 19
 
-	MOV AX, [BP-2]		; Line 18
+	MOV AX, [BP-2]		; Line 20
 	CALL print_output
 	CALL new_line
 
-	MOV AX, 0		; Line 19
+	MOV AX, 0		; Line 21
 	PUSH AX
-	POP AX 		; Line 19
+	POP AX 		; Line 21
 	JMP L13
 L13:
 	ADD SP, 2

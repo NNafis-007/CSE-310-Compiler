@@ -213,22 +213,6 @@ import java.util.ArrayList;
         }
     }   
 
-    // boolean STlookupCurrScope(String name){
-    //     try{
-    //         //currentScopeLookup
-    //         SymbolInfo2 s = new SymbolInfo2(name, "ID", null, null);
-    //         SymbolInfo2 found = Main.st.currentScopeLookup(s);
-    //         //
-    //         if(found == null){
-    //             return false;
-    //         }
-    //         return true;
-    //     } catch(Exception e) {
-    //         System.err.println("Symbol Table lookup error : " + e.getMessage());
-    //         return false;
-    //     }
-    // }
-
     public boolean isArrayVar(String varName) {
         SymbolInfo varInfo = Main.st.currentScopeLookup(new SymbolInfo(varName, "ID", null, null));
         if(varInfo == null){

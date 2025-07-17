@@ -10,6 +10,7 @@ public class Main {
     public static BufferedWriter lexLogFile;
     public static BufferedWriter ICGFile;
     public static BufferedWriter tempFile;
+    
 
     public static SymbolTable st;
 
@@ -50,6 +51,7 @@ public class Main {
         ICGFile.write(".MODEL SMALL\n");
         ICGFile.write(".STACK 1000H\n");
         ICGFile.write(".DATA\n");
+        ICGFile.write("\tnumber DB \"00000$\"\n");
         ICGFile.flush();
 
         // Create lexer and parser
@@ -65,6 +67,26 @@ public class Main {
         ParseTree tree = parser.start();
         // parserLogFile.write("Parse tree: " + tree.toStringTree(parser) + "\n");
 
+        ICGFile.write(".CODE\n");
+
+        // merge tempFile into ICGFile
+        BufferedReader tempReader = new BufferedReader(new FileReader(tempFileName));
+        String line;
+        while ((line = tempReader.readLine()) != null) {
+            ICGFile.write(line + "\n");
+        }
+        ICGFile.flush();
+        tempReader.close();
+
+        // merge printProcLib into ICGFILE
+        BufferedReader printLibReader = new BufferedReader(new FileReader("printProc.lib"));
+        while ((line = printLibReader.readLine()) != null) {
+            ICGFile.write(line + "\n");
+        }
+        ICGFile.write("END main\n");
+        ICGFile.flush();
+        printLibReader.close();
+        
         // Close files
         parserLogFile.close();
         errorFile.close();
