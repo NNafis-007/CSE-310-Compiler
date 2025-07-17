@@ -70,9 +70,10 @@ public class Main {
                             String src2 = nextParts[0].trim();
                             String dest2 = nextParts[1].trim();
 
-                            // Check if second MOV reverses the first one
+                            // Check if second MOV reverses the first one OR if they are identical
                             if ((src1.equals(dest2) && dest1.equals(src2)) || (src1.equals(src2) && dest1.equals(dest2))) {
                                 isRedundant = true;
+
 
                                 // Add the FIRST MOV instruction only
                                 optimizedLines.add(lines.get(i));
@@ -310,19 +311,21 @@ public class Main {
         ICGFile.flush();
         tempReader.close();
 
-        // Step 1: optimize push/pop instructions
+        // 1: optimize push/pop instructions
         BufferedWriter optICGFile = new BufferedWriter(new FileWriter("optCode.asm"));
         optimizePushPop(ICGFileName, optICGFile);
         optICGFile.close(); // Close after first optimization
 
-        // Step 2: optimize redundant operations - read from optCode.asm and write to temp.txt
+        // 2: optimize redundant operations - read from optCode.asm and write to temp.txt
         tempFile = new BufferedWriter(new FileWriter(tempFileName));
         optimizeRedundantOperations("optCode.asm", tempFile);
         tempFile.close(); // Close after second optimization
         
-        // Step 3: optimize mov instructions - read from temp.txt and write back to optCode.asm
+        // 3: optimize mov instructions - read from temp.txt and write back to optCode.asm
         optICGFile = new BufferedWriter(new FileWriter("optCode.asm"));
         optimizeMov(tempFileName, optICGFile);
+
+
 
 
         // merge printProcLib into ICGFILE
