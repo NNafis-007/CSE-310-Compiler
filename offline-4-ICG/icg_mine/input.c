@@ -2,10 +2,12 @@
 
 int x, y;
 int main() {
-  x = 5;
-  y = x;
-  x = y;
-  println(x);
+	int i; 
+  i = 4;
+	i=i+0;
+	i=i-0;
+	i=i*1;
+	println(i);	
 	return 0;
 }
 
