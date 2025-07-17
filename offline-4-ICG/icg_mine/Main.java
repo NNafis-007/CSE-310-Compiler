@@ -367,8 +367,9 @@ public class Main {
         String parserLogFileName = outputDirectory + "parserLog.txt";
         String errorFileName = outputDirectory + "errorLog.txt";
         String lexLogFileName = outputDirectory + "lexerLog.txt";
-        String ICGFileName = "code_asm.txt";
+        String ICGFileName = "code.asm";
         String tempFileName = "temp.txt";
+        String optimizedFileName = "optimized_code.asm";
 
         new File(outputDirectory).mkdirs();
 
@@ -412,12 +413,12 @@ public class Main {
         tempReader.close();
 
         // Perform all optimizations in place with minimal file I/O
-        performAllOptimizations(ICGFileName, "optCode.asm", tempFileName);
+        performAllOptimizations(ICGFileName, optimizedFileName, tempFileName);
 
 
         // merge printProcLib into both ICG files
         BufferedReader printLibReader = new BufferedReader(new FileReader("printProc.lib"));
-        BufferedWriter optICGFile = new BufferedWriter(new FileWriter("optCode.asm", true)); // Append
+        BufferedWriter optICGFile = new BufferedWriter(new FileWriter(optimizedFileName, true)); // Append
         while ((line = printLibReader.readLine()) != null) {
             ICGFile.write(line + "\n");
             optICGFile.write(line + "\n");
