@@ -12,4 +12,4 @@ for file in !(*.sh|*.g4|Main.java|test.java|*.c|*.lib|*.txt|*.asm); do
 done
 
 # Remove the 'output' directory if it exists
-rm -rfi output
+rm -rf output

@@ -47,9 +47,7 @@ public class Main {
         lines = optimizeLabels(lines);
         
         // Write optimized content to output file
-        writeListToFile(lines, outputFile);
-        
-        System.out.println("Comprehensive optimization completed.");
+        writeListToFile(lines, outputFile);    
     }
     
     private static List<String> readFileToList(String filename) throws IOException {

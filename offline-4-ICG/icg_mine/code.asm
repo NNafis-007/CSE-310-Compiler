@@ -1,0 +1,213 @@
+.MODEL SMALL
+.STACK 1000H
+.DATA
+	number DB "00000$"
+.CODE
+func PROC
+	PUSH BP
+	MOV BP, SP
+
+	SUB SP , 2
+	MOV AX, [BP+4]
+	PUSH AX
+	MOV AX, 0		; Line 3
+	PUSH AX
+	POP AX
+	POP DX
+	CMP DX, AX
+	JE L1
+	JMP L2
+L1:
+	MOV AX, 1
+	PUSH AX
+	JMP L3
+L2:
+	MOV AX, 0
+	PUSH AX
+L3:
+	POP AX
+	CMP AX, 0
+	JE L4
+	MOV AX, 0		; Line 3
+	PUSH AX
+	POP AX 		; Line 3
+	JMP L5
+L4:
+	MOV AX, [BP+4]
+	PUSH AX
+	POP AX
+	MOV [BP-2], AX		; Line 4
+	PUSH AX
+	POP AX 		; Line 4
+
+	MOV AX, [BP+4]
+	PUSH AX
+	MOV AX, 1		; Line 5
+	PUSH AX
+	POP AX
+	POP DX
+	XCHG DX, AX
+	SUB AX, DX
+	PUSH AX
+	CALL func		; Line 5
+	PUSH AX
+	MOV AX, [BP-2]
+	PUSH AX
+	POP AX
+	POP DX
+	ADD AX, DX
+	PUSH AX
+	POP AX 		; Line 5
+	JMP L6
+L5:
+L6:
+	ADD SP, 2
+	POP BP
+	RET 2
+func ENDP
+
+func2 PROC
+	PUSH BP
+	MOV BP, SP
+
+	SUB SP , 2
+	MOV AX, [BP+4]
+	PUSH AX
+	MOV AX, 0		; Line 10
+	PUSH AX
+	POP AX
+	POP DX
+	CMP DX, AX
+	JE L7
+	JMP L8
+L7:
+	MOV AX, 1
+	PUSH AX
+	JMP L9
+L8:
+	MOV AX, 0
+	PUSH AX
+L9:
+	POP AX
+	CMP AX, 0
+	JE L10
+	MOV AX, 0		; Line 10
+	PUSH AX
+	POP AX 		; Line 10
+	JMP L11
+L10:
+	MOV AX, [BP+4]
+	PUSH AX
+	POP AX
+	MOV [BP-2], AX		; Line 11
+	PUSH AX
+	POP AX 		; Line 11
+
+	MOV AX, [BP+4]
+	PUSH AX
+	MOV AX, 1		; Line 12
+	PUSH AX
+	POP AX
+	POP DX
+	XCHG DX, AX
+	SUB AX, DX
+	PUSH AX
+	CALL func		; Line 12
+	PUSH AX
+	MOV AX, [BP-2]
+	PUSH AX
+	POP AX
+	POP DX
+	ADD AX, DX
+	PUSH AX
+	POP AX 		; Line 12
+	JMP L12
+L11:
+L12:
+	ADD SP, 2
+	POP BP
+	RET 2
+func2 ENDP
+
+main PROC
+	MOV AX, @DATA
+	MOV DS, AX
+	PUSH BP
+	MOV BP, SP
+
+	SUB SP , 2
+	MOV AX, 7		; Line 17
+	PUSH AX
+	CALL func		; Line 17
+	PUSH AX
+	POP AX
+	MOV [BP-2], AX		; Line 17
+	PUSH AX
+	POP AX 		; Line 17
+
+	MOV AX, [BP-2]		; Line 18
+	CALL print_output
+	CALL new_line
+
+	MOV AX, 0		; Line 19
+	PUSH AX
+	POP AX 		; Line 19
+	JMP L13
+L13:
+	ADD SP, 2
+	POP BP
+	MOV AX, 4Ch
+	INT 21h
+main ENDP
+new_line proc
+    push ax
+    push dx
+    mov ah,2
+    mov dl,0Dh
+    int 21h
+    mov ah,2
+    mov dl,0Ah
+    int 21h
+    pop dx
+    pop ax
+    ret
+    new_line endp
+print_output proc  ;print what is in ax
+    push ax
+    push bx
+    push cx
+    push dx
+    push si
+    lea si,number
+    mov bx,10
+    add si,4
+    cmp ax,0
+    jnge negate
+    print:
+    xor dx,dx
+    div bx
+    mov [si],dl
+    add [si],'0'
+    dec si
+    cmp ax,0
+    jne print
+    inc si
+    lea dx,si
+    mov ah,9
+    int 21h
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+    negate:
+    push ax
+    mov ah,2
+    mov dl,'-'
+    int 21h
+    pop ax
+    neg ax
+    jmp print
+    print_output endp
+END main
